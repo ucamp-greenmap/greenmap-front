@@ -1,0 +1,19 @@
+{
+    "short_name": "그린맵",
+    "name": "그린맵 - 녹색 발자국과 함께하는 지속가능한 생활 지도",
+    "description": "친환경 시설 찾기, 환경 활동 인증, 포인트 적립 서비스",
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#4CAF50",
+    "background_color": "#ffffff",
+    "scope": "/",
+    "lang": "ko-KR"
+}
