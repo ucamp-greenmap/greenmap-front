@@ -19,7 +19,6 @@ import MyPageScreen from './components/screens/MyPageScreen';
 import PointHistoryScreen from './components/screens/PointHistoryScreen';
 import RankingScreen from './components/screens/RankingScreen';
 import './App.css';
-import LoginScreen from './components/screens/LoginScreen';
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -31,7 +30,6 @@ const TAB_TO_PATH = {
     mypage: '/mypage',
     points: '/points',
     ranking: '/ranking',
-    login: '/login',
 };
 
 export default function App() {
@@ -107,10 +105,6 @@ export default function App() {
                     <Route
                         path='/ranking'
                         element={<RankingScreen onNavigate={navigate} />}
-                    />
-                    <Route
-                        path='/login'
-                        element={<LoginScreen onNavigate={navigate} />}
                     />
                 </Routes>
 
