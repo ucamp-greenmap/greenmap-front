@@ -52,97 +52,67 @@ function extractDistance(text) {
 }
 
 // =================================================================
-// ⚙️ 2. 금액 또는 충전량 추출 함수
+// ⚙️ 2. 충전량 및 금액을 동시에 추출하여 객체로 반환하는 함수
 // =================================================================
-function extractAmount(text, isEV = false) {
-    if (isEV) {
-        // 공백 제거한 텍스트로도 검색
-        const flatText = text.replace(/\s/g, '');
+function extractAmounts(text) {
+    const flatText = text.replace(/\s/g, '');
+    const searchTexts = [text, flatText];
 
-        // 충전량 추출 (소수점 포함)
-        const chargePatterns = [
-            // 원본 텍스트에서 검색 (띄어쓰기 포함)
-            /충\s*전\s*량[:\s(빠)]*([0-9]+\.[0-9]{1,4})/i,
-            /([0-9]+\.[0-9]{1,4})\s*kWh/i,
-            /([0-9]+\.[0-9]{1,4})\s*공/i, // "공" = "kWh"가 깨진 경우
-            // 공백 제거한 텍스트에서 검색
-        ];
+    let maxCharge = 0; // 충전량 (소수점)
+    let maxPrice = 0; // 금액 (정수)
 
-        const flatPatterns = [
-            /충전량[:\s(빠)]*([0-9]+\.[0-9]{1,4})/i,
-            /([0-9]+\.[0-9]{1,4})kWh/i,
-        ];
+    // --- A. 충전량 (kWh) 추출 ---
+    const chargePatterns = [
+        // 1. 충전량/용량 키워드 뒤의 소수점 숫자
+        /충\s*전\s*량?[:\s(빠)]*([0-9]+\.[0-9]{1,4})/i,
+        /용\s*량[:\s]*([0-9]+\.[0-9]{1,4})/i,
+        // 2. kWh, kW, kwh, KWH, 공, ㅐwh 등 오인식 패턴 앞의 소수점 숫자
+        /([0-9]+\.[0-9]{1,4})\s*k[w\s]?[h\s공ㅐ]{1,3}/i,
+        // 3. 공백이 제거된 텍스트용 패턴
+        /충전량[:\s( 빠)]*([0-9]+\.[0-9]{1,4})/i,
+        /([0-9]+\.[0-9]{1,4})kwh/i,
+    ];
 
-        // 원본 텍스트 검색
+    for (const searchText of searchTexts) {
         for (const pattern of chargePatterns) {
-            const match = text.match(pattern);
+            const match = searchText.match(pattern);
             if (match) {
                 const num = parseFloat(match[1]);
-                if (!isNaN(num) && num > 0) {
-                    return num;
-                }
-            }
-        }
-
-        // 공백 제거한 텍스트 검색
-        for (const pattern of flatPatterns) {
-            const match = flatText.match(pattern);
-            if (match) {
-                const num = parseFloat(match[1]);
-                if (!isNaN(num) && num > 0) {
-                    return num;
+                if (!isNaN(num) && num > maxCharge) {
+                    maxCharge = num;
                 }
             }
         }
     }
 
-    // 공백 제거한 텍스트로도 검색 (OCR이 띄어쓰기를 많이 넣는 경우 대비)
-    const flatText = text.replace(/\s/g, '');
-
-    // 일반 금액 추출 (정수만 필요하다고 가정)
+    // --- B. 금액 (원) 추출 ---
     const pricePatterns = [
-        // 원본 텍스트에서 검색
         /결\s*제\s*금\s*액[:\s(원)]*([0-9,]+)/i,
         /합\s*계[:\s(원)]*([0-9,]+)/i,
         /총\s*금\s*액[:\s(원)]*([0-9,]+)/i,
         /충\s*전\s*금\s*액[:\s(원)]*([0-9,]+)/i,
-    ];
-
-    // 공백 제거한 텍스트에서 검색
-    const flatPatterns = [
+        // 공백 제거된 텍스트 패턴
         /결제금액[:\s(원)]*([0-9,]+)/i,
         /합계[:\s(원)]*([0-9,]+)/i,
         /총금액[:\s(원)]*([0-9,]+)/i,
         /충전금액[:\s(원)]*([0-9,]+)/i,
     ];
 
-    let maxAmount = 0;
-
-    // 원본 텍스트 검색
-    for (const pattern of pricePatterns) {
-        const match = text.match(pattern);
-        if (match) {
-            const numStr = match[1].replace(/,/g, '');
-            const num = parseInt(numStr);
-            if (!isNaN(num) && num > maxAmount) {
-                maxAmount = num;
+    for (const searchText of searchTexts) {
+        for (const pattern of pricePatterns) {
+            const match = searchText.match(pattern);
+            if (match) {
+                const numStr = match[1].replace(/,/g, '');
+                const num = parseInt(numStr);
+                if (!isNaN(num) && num > maxPrice) {
+                    maxPrice = num;
+                }
             }
         }
     }
 
-    // 공백 제거한 텍스트 검색
-    for (const pattern of flatPatterns) {
-        const match = flatText.match(pattern);
-        if (match) {
-            const numStr = match[1].replace(/,/g, '');
-            const num = parseInt(numStr);
-            if (!isNaN(num) && num > maxAmount) {
-                maxAmount = num;
-            }
-        }
-    }
-
-    return maxAmount;
+    // 최종 결과 반환
+    return { charge: maxCharge, price: maxPrice };
 }
 
 // =================================================================
@@ -170,6 +140,7 @@ function extractApiData(text) {
         // "D-" 형식 (기존)
         flatText.match(/D-\s*?(\d{5,})/i);
 
+    // 💡 시간 추출 로직: HH:MM 형태를 찾습니다.
     const timeMatches = text.match(/(\d{1,2}:\d{2})/g) || [];
 
     const nameMatch = text.match(/[가-힣a-zA-Z]{2,}\s*(주|센터|점|소)/);
@@ -179,8 +150,8 @@ function extractApiData(text) {
         bike_number: bikeNumMatch
             ? bikeNumMatch[1].replace(/[A-Z\s-]/gi, '').slice(-5)
             : '', // 알파벳/공백/하이픈 제거 후 뒤 5자리
-        startTime: timeMatches[0] || '',
-        endTime: timeMatches[1] || '',
+        startTime: timeMatches[0] || '', // 첫 번째 시간
+        endTime: timeMatches[1] || '', // 두 번째 시간
         name: nameMatch ? nameMatch[0].trim() : '미확인 상호',
     };
 }
@@ -199,9 +170,11 @@ export default function CertificationScreen() {
     const [ocrResult, setOcrResult] = useState('');
     const [showModal, setShowModal] = useState(false);
 
-    const [extractedAmount, setExtractedAmount] = useState(0);
+    // 💡 추출된 값 상태 분리
+    const [extractedPrice, setExtractedPrice] = useState(0); // 금액 (Z카테고리 및 EV chargeFee 사용)
+    const [extractedCharge, setExtractedCharge] = useState(0); // 충전량 (EV chargeAmount 사용)
     const [extractedDistance, setExtractedDistance] = useState(0);
-    const [detectedCategory, setDetectedCategory] = useState(''); // 자동 감지된 카테고리
+    const [detectedCategory, setDetectedCategory] = useState('');
     const [extraData, setExtraData] = useState({
         approveNum: '',
         bike_number: '',
@@ -287,9 +260,10 @@ export default function CertificationScreen() {
     async function processImageWithOCR(file, type) {
         setIsProcessing(true);
         setOcrResult('');
-        setExtractedAmount(0);
+        setExtractedPrice(0);
+        setExtractedCharge(0);
         setExtractedDistance(0);
-        setDetectedCategory(''); // 초기화
+        setDetectedCategory('');
 
         try {
             const reader = new FileReader();
@@ -312,16 +286,14 @@ export default function CertificationScreen() {
             const text = result.data.text;
             setOcrResult(text);
 
-            let distance = 0;
-            let amount = 0;
-
             if (type.id === 'bike') {
-                distance = extractDistance(text);
+                const distance = extractDistance(text);
                 setExtractedDistance(distance);
             } else {
-                const isEV = type.id === 'ev';
-                amount = extractAmount(text, isEV);
-                setExtractedAmount(amount);
+                // 💡 extractAmounts 호출 및 결과 분리 저장
+                const { charge, price } = extractAmounts(text);
+                setExtractedCharge(charge);
+                setExtractedPrice(price);
             }
 
             const extractedExtraData = extractApiData(text);
@@ -378,16 +350,24 @@ export default function CertificationScreen() {
     }
 
     // ==========================================================
-    // ⭐ API 전송 대신 JSON 데이터를 보여주는 로직
+    // ⭐ API 전송 대신 JSON 데이터를 보여주는 로직 (최종 수정됨)
     // ==========================================================
     const handleCertification = async () => {
-        const isValid =
-            selectedType.id === 'bike'
-                ? extractedDistance > 0
-                : extractedAmount > 0;
+        let isValid = false;
+
+        if (selectedType.id === 'bike') {
+            isValid = extractedDistance > 0;
+        } else if (selectedType.id === 'ev') {
+            // EV는 충전량 > 0 이거나 금액 > 0 이면 유효
+            isValid = extractedCharge > 0 || extractedPrice > 0;
+        } else {
+            // Z는 금액 > 0 이면 유효
+            isValid = extractedPrice > 0;
+        }
+
         if (!isValid) {
             alert(
-                '❌ 인증에 필요한 거리/금액 값을 인식하지 못했습니다. 더 선명한 이미지로 다시 시도해주세요.'
+                '❌ 인증에 필요한 거리/금액/충전량 값을 인식하지 못했습니다. 더 선명한 이미지로 다시 시도해주세요.'
             );
             return;
         }
@@ -397,7 +377,7 @@ export default function CertificationScreen() {
         let body = {};
         const categoryId = selectedType.id;
 
-        // 1. 카테고리별 Body 데이터 매핑
+        // 1. 카테고리별 Body 데이터 매핑 (수정됨)
         try {
             if (categoryId === 'bike') {
                 body = {
@@ -408,18 +388,34 @@ export default function CertificationScreen() {
                     end_time: extraData.endTime,
                 };
             } else if (categoryId === 'ev') {
+                // 💡 EV 로직 수정: 충전량과 금액 필드를 동시에 전송하는 API 스펙 반영
+
+                // 전송할 충전량 및 금액 값을 준비합니다.
+                const finalChargeAmount =
+                    extractedCharge > 0 ? extractedCharge : 0.0;
+                const finalChargeFee = extractedPrice > 0 ? extractedPrice : 0;
+
+                if (finalChargeAmount === 0.0 && finalChargeFee === 0) {
+                    // 이 경로는 isValid에서 이미 걸러지지만 안전을 위해 throw 처리
+                    throw new Error(
+                        'EV 인증에 유효한 값(충전량/금액)이 없습니다.'
+                    );
+                }
+
                 body = {
                     category: 'car',
-                    chargeAmount: parseInt(extractedAmount),
-                    approveNum: parseInt(extraData.approveNum) || 0,
+                    chargeAmount: finalChargeAmount, // 충전량 (kWh, 소수점)
+                    chargeFee: finalChargeFee, // 결제 금액 (원, 정수)
+                    start_time: extraData.startTime,
+                    end_time: extraData.endTime,
                 };
             } else if (categoryId === 'z') {
-                // OCR로 자동 감지된 카테고리 사용
+                // Z 카테고리는 금액만 price 필드로 전송
                 const finalCategory = detectedCategory || 'zero'; // 기본값은 zero
                 body = {
                     category: finalCategory,
                     name: extraData.name,
-                    price: parseInt(extractedAmount),
+                    price: extractedPrice,
                     approveNum: parseInt(extraData.approveNum) || 0,
                 };
             } else {
@@ -460,9 +456,10 @@ export default function CertificationScreen() {
     function resetModal() {
         setPreviewImage(null);
         setOcrResult('');
-        setExtractedAmount(0);
+        setExtractedPrice(0);
+        setExtractedCharge(0);
         setExtractedDistance(0);
-        setDetectedCategory(''); // 초기화 추가
+        setDetectedCategory('');
         setExtraData({
             approveNum: '',
             bike_number: '',
@@ -745,32 +742,99 @@ export default function CertificationScreen() {
                                             </div>
                                         )}
 
-                                    {/* 추출 값 표시 */}
-                                    {(extractedAmount > 0 ||
+                                    {/* 추출 값 표시 (수정됨) */}
+                                    {(extractedPrice > 0 ||
+                                        extractedCharge > 0 ||
                                         extractedDistance > 0) && (
                                         <div className='bg-green-50 rounded-2xl p-4 border-2 border-green-200'>
                                             <div className='flex items-center justify-between'>
                                                 <span className='text-green-800 font-semibold'>
                                                     {selectedType.id === 'bike'
                                                         ? '🚴 추출된 거리'
-                                                        : '💰 추출된 값'}
+                                                        : selectedType.id ===
+                                                          'ev'
+                                                        ? extractedCharge > 0 &&
+                                                          extractedPrice > 0
+                                                            ? '⚡ 충전량 / 💰 금액'
+                                                            : extractedCharge >
+                                                              0
+                                                            ? '⚡ 충전량'
+                                                            : '💰 금액'
+                                                        : '💰 추출된 금액'}
                                                 </span>
-                                                <span className='text-2xl font-bold text-green-600'>
-                                                    {selectedType.id === 'bike'
-                                                        ? `${extractedDistance.toFixed(
-                                                              2
-                                                          )}km`
-                                                        : `${extractedAmount.toLocaleString()}${
-                                                              selectedType.id ===
-                                                                  'ev' &&
-                                                              extractedAmount %
-                                                                  1 !==
-                                                                  0
-                                                                  ? 'kWh'
-                                                                  : '원'
-                                                          }`}
+                                                <span className='text-xl font-bold text-green-600 flex flex-col items-end'>
+                                                    {selectedType.id ===
+                                                    'bike' ? (
+                                                        `${extractedDistance.toFixed(
+                                                            2
+                                                        )}km`
+                                                    ) : selectedType.id ===
+                                                      'ev' ? (
+                                                        <>
+                                                            {extractedCharge >
+                                                                0 && (
+                                                                <span className='text-2xl font-bold'>
+                                                                    {extractedCharge.toFixed(
+                                                                        2
+                                                                    )}
+                                                                    kWh
+                                                                </span>
+                                                            )}
+                                                            {extractedPrice >
+                                                                0 && (
+                                                                <span
+                                                                    className={`${
+                                                                        extractedCharge >
+                                                                        0
+                                                                            ? 'text-base font-normal text-gray-500'
+                                                                            : 'text-2xl font-bold'
+                                                                    }`}
+                                                                >
+                                                                    {extractedPrice.toLocaleString()}
+                                                                    원
+                                                                </span>
+                                                            )}
+                                                            {extractedCharge <=
+                                                                0 &&
+                                                                extractedPrice <=
+                                                                    0 &&
+                                                                '값 없음'}
+                                                        </>
+                                                    ) : (
+                                                        `${extractedPrice.toLocaleString()}원`
+                                                    )}
                                                 </span>
                                             </div>
+                                            {/* 💡 EV 시간 표시 (추출된 경우에만) */}
+                                            {selectedType.id === 'ev' &&
+                                                (extraData.startTime ||
+                                                    extraData.endTime) && (
+                                                    <div className='text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200'>
+                                                        <p>
+                                                            ⏱️ 시간:{' '}
+                                                            {extraData.startTime ||
+                                                                '??:??'}{' '}
+                                                            ~{' '}
+                                                            {extraData.endTime ||
+                                                                '??:??'}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            {/* 💡 Bike 시간 표시 (추출된 경우에만) */}
+                                            {selectedType.id === 'bike' &&
+                                                (extraData.startTime ||
+                                                    extraData.endTime) && (
+                                                    <div className='text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200'>
+                                                        <p>
+                                                            ⏱️ 시간:{' '}
+                                                            {extraData.startTime ||
+                                                                '??:??'}{' '}
+                                                            ~{' '}
+                                                            {extraData.endTime ||
+                                                                '??:??'}
+                                                        </p>
+                                                    </div>
+                                                )}
                                         </div>
                                     )}
 
@@ -795,8 +859,11 @@ export default function CertificationScreen() {
                                 disabled={
                                     isSubmitting ||
                                     isProcessing ||
-                                    (extractedAmount <= 0 &&
-                                        extractedDistance <= 0)
+                                    (selectedType?.id === 'bike' &&
+                                        extractedDistance <= 0) ||
+                                    (selectedType?.id !== 'bike' &&
+                                        extractedCharge <= 0 &&
+                                        extractedPrice <= 0)
                                 }
                                 className={`w-full py-4 rounded-xl text-white font-bold transition-all 
                                     ${
