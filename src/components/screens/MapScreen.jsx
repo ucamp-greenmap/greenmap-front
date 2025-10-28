@@ -8,7 +8,7 @@ export default function MapScreen() {
     // Dummy facility data with coordinates (used if store has none)
     const dummyFacilities = useMemo(
         () =>
-            (facilities && facilities.length) || 0
+            facilities && facilities.length > 0
                 ? facilities
                 : [
                       {
@@ -75,7 +75,7 @@ export default function MapScreen() {
     const startYRef = useRef(0);
     const startHeightRef = useRef(0);
 
-    // Load Kakao SDK and initialize map + markers
+    // Load Kakao SDK and initialize map only once
     useEffect(() => {
         if (!KAKAO_KEY) return;
 
@@ -83,6 +83,8 @@ export default function MapScreen() {
 
         const initMap = () => {
             if (!mapRef.current || !window.kakao || !window.kakao.maps) return;
+            if (mapInstanceRef.current) return; // Prevent re-initialization
+
             const container = mapRef.current;
             const options = {
                 center: new window.kakao.maps.LatLng(37.5665, 126.978),
@@ -90,60 +92,6 @@ export default function MapScreen() {
             };
             const map = new window.kakao.maps.Map(container, options);
             mapInstanceRef.current = map;
-
-            // create markers for dummyFacilities
-            markersRef.current.forEach(
-                (m) => m.marker && m.marker.setMap(null)
-            );
-            // helper to create a small SVG data URL marker per category
-            const colorFor = (cat) => {
-                return (
-                    {
-                        recycle: '#4CAF50',
-                        ev: '#2196F3',
-                        store: '#9C27B0',
-                        bike: '#FF9800',
-                    }[cat] || '#666'
-                );
-            };
-
-            const makeMarkerImage = (color) => {
-                const svg =
-                    `<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'>` +
-                    `<circle cx='18' cy='12' r='8' fill='${color}' />` +
-                    `<path d='M18 20 L13 33 L23 33 Z' fill='${color}' />` +
-                    `</svg>`;
-                const url =
-                    'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-                return new window.kakao.maps.MarkerImage(
-                    url,
-                    new window.kakao.maps.Size(36, 36),
-                    new window.kakao.maps.Point(18, 36)
-                );
-            };
-
-            markersRef.current = dummyFacilities.map((f) => {
-                const position = new window.kakao.maps.LatLng(f.lat, f.lng);
-                const color = colorFor(f.category);
-                const markerImage = makeMarkerImage(color);
-                const marker = new window.kakao.maps.Marker({
-                    position,
-                    image: markerImage,
-                });
-                marker.setMap(map);
-
-                const infoContent = `<div style="padding:8px"><strong>${f.name}</strong><div style="font-size:12px;color:#666">${f.category}</div></div>`;
-                const infowindow = new window.kakao.maps.InfoWindow({
-                    content: infoContent,
-                });
-
-                window.kakao.maps.event.addListener(marker, 'click', () => {
-                    infowindow.open(map, marker);
-                });
-
-                return { id: f.id, marker, infowindow, data: f };
-            });
-
             setMapLoaded(true);
         };
 
@@ -158,21 +106,74 @@ export default function MapScreen() {
             script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_KEY}&autoload=false`;
             script.async = true;
             script.onload = () => {
-                try {
+                if (window.kakao && window.kakao.maps) {
                     window.kakao.maps.load(initMap);
-                } catch {
-                    // ignore
                 }
             };
             document.head.appendChild(script);
-        } else {
-            const existing = document.getElementById(scriptId);
-            if (existing)
-                existing.addEventListener('load', () =>
-                    window.kakao.maps.load(initMap)
-                );
         }
-    }, [KAKAO_KEY, dummyFacilities]);
+    }, [KAKAO_KEY]);
+
+    // Create/update markers based on dummyFacilities
+    useEffect(() => {
+        const map = mapInstanceRef.current;
+        if (!map || !window.kakao || !window.kakao.maps) return;
+
+        // Clear existing markers
+        markersRef.current.forEach((m) => {
+            if (m.marker) m.marker.setMap(null);
+            if (m.infowindow) m.infowindow.close();
+        });
+
+        // Helper functions
+        const colorFor = (cat) => {
+            return (
+                {
+                    recycle: '#4CAF50',
+                    ev: '#2196F3',
+                    store: '#9C27B0',
+                    bike: '#FF9800',
+                }[cat] || '#666'
+            );
+        };
+
+        const makeMarkerImage = (color) => {
+            const svg =
+                `<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'>` +
+                `<circle cx='18' cy='12' r='8' fill='${color}' />` +
+                `<path d='M18 20 L13 33 L23 33 Z' fill='${color}' />` +
+                `</svg>`;
+            const url = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+            return new window.kakao.maps.MarkerImage(
+                url,
+                new window.kakao.maps.Size(36, 36),
+                new window.kakao.maps.Point(18, 36)
+            );
+        };
+
+        // Create new markers
+        markersRef.current = dummyFacilities.map((f) => {
+            const position = new window.kakao.maps.LatLng(f.lat, f.lng);
+            const color = colorFor(f.category);
+            const markerImage = makeMarkerImage(color);
+            const marker = new window.kakao.maps.Marker({
+                position,
+                image: markerImage,
+            });
+            marker.setMap(map);
+
+            const infoContent = `<div style="padding:8px"><strong>${f.name}</strong><div style="font-size:12px;color:#666">${f.category}</div></div>`;
+            const infowindow = new window.kakao.maps.InfoWindow({
+                content: infoContent,
+            });
+
+            window.kakao.maps.event.addListener(marker, 'click', () => {
+                infowindow.open(map, marker);
+            });
+
+            return { id: f.id, marker, infowindow, data: f };
+        });
+    }, [mapLoaded, dummyFacilities]);
 
     // update markers visibility based on filter/bookmarks
     useEffect(() => {
@@ -207,13 +208,15 @@ export default function MapScreen() {
         return () => window.removeEventListener('resize', onResize);
     }, [mapLoaded, sheetHeight]);
 
-    // cleanup markers on unmount
+    // cleanup markers and map on unmount
     useEffect(() => {
         return () => {
-            markersRef.current.forEach(
-                (m) => m.marker && m.marker.setMap(null)
-            );
+            markersRef.current.forEach((m) => {
+                if (m.marker) m.marker.setMap(null);
+                if (m.infowindow) m.infowindow.close();
+            });
             markersRef.current = [];
+            mapInstanceRef.current = null;
         };
     }, []);
 
@@ -307,7 +310,10 @@ export default function MapScreen() {
                                         key={c.key}
                                         onClick={() => setSelectedFilter(c.key)}
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
+                                            if (
+                                                e.key === 'Enter' ||
+                                                e.key === ' '
+                                            ) {
                                                 e.preventDefault();
                                                 setSelectedFilter(c.key);
                                             }
@@ -356,19 +362,24 @@ export default function MapScreen() {
                                 onKeyDown={(e) => {
                                     const expanded =
                                         typeof window !== 'undefined'
-                                            ? sheetHeight > window.innerHeight * 0.25
+                                            ? sheetHeight >
+                                              window.innerHeight * 0.25
                                             : sheetHeight > 200;
                                     if (e.key === 'Enter' || e.key === ' ') {
                                         e.preventDefault();
                                         if (expanded) {
                                             setSheetHeight(80);
                                         } else {
-                                            setSheetHeight(window.innerHeight * 0.6);
+                                            setSheetHeight(
+                                                window.innerHeight * 0.6
+                                            );
                                         }
                                     }
                                     if (e.key === 'ArrowUp') {
                                         e.preventDefault();
-                                        setSheetHeight(window.innerHeight * 0.6);
+                                        setSheetHeight(
+                                            window.innerHeight * 0.6
+                                        );
                                     }
                                     if (e.key === 'ArrowDown') {
                                         e.preventDefault();
@@ -378,7 +389,8 @@ export default function MapScreen() {
                                 aria-label='시설 목록 열기/닫기'
                                 aria-expanded={
                                     typeof window !== 'undefined'
-                                        ? sheetHeight > window.innerHeight * 0.25
+                                        ? sheetHeight >
+                                          window.innerHeight * 0.25
                                         : sheetHeight > 200
                                 }
                             >
@@ -392,7 +404,11 @@ export default function MapScreen() {
                             <h3 className='text-base font-bold mb-3 px-1'>
                                 시설 목록
                             </h3>
-                            <ul className='space-y-2' role='list' aria-label='시설 목록'>
+                            <ul
+                                className='space-y-2'
+                                role='list'
+                                aria-label='시설 목록'
+                            >
                                 {filtered.map((f) => (
                                     <li
                                         key={f.id}
@@ -410,27 +426,41 @@ export default function MapScreen() {
                                         <div className='flex items-center gap-2'>
                                             <button
                                                 className='text-2xl text-gray-400 hover:text-yellow-500 transition-colors'
-                                                onClick={() => toggleBookmarkLocal(f.id)}
+                                                onClick={() =>
+                                                    toggleBookmarkLocal(f.id)
+                                                }
                                                 onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                    if (
+                                                        e.key === 'Enter' ||
+                                                        e.key === ' '
+                                                    ) {
                                                         e.preventDefault();
-                                                        toggleBookmarkLocal(f.id);
+                                                        toggleBookmarkLocal(
+                                                            f.id
+                                                        );
                                                     }
                                                 }}
-                                                aria-pressed={bookmarkedIds.includes(f.id)}
+                                                aria-pressed={bookmarkedIds.includes(
+                                                    f.id
+                                                )}
                                                 aria-label={
                                                     bookmarkedIds.includes(f.id)
                                                         ? `${f.name} 즐겨찾기 해제`
                                                         : `${f.name} 즐겨찾기 추가`
                                                 }
                                             >
-                                                {bookmarkedIds.includes(f.id) ? '★' : '☆'}
+                                                {bookmarkedIds.includes(f.id)
+                                                    ? '★'
+                                                    : '☆'}
                                             </button>
                                             <button
                                                 className='text-sm px-4 py-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors'
                                                 onClick={() => focusOn(f.id)}
                                                 onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                    if (
+                                                        e.key === 'Enter' ||
+                                                        e.key === ' '
+                                                    ) {
                                                         e.preventDefault();
                                                         focusOn(f.id);
                                                     }
