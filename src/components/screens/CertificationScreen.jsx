@@ -1,250 +1,3 @@
-// import React, { useState } from 'react';
-// import { useSelector, useDispatch } from 'react-redux';
-// import { addCertification, addPendingCert } from '../../store/slices/certSlice';
-// import { addPoints } from '../../store/slices/pointSlice';
-// import Tesseract from 'tesseract.js';
-
-// export default function CertificationScreen() {
-//     const isOnline = useSelector((s) => s.app.isOnline);
-//     const dispatch = useDispatch();
-
-//     // OCR 관련 상태
-//     const [selectedType, setSelectedType] = useState(null);
-//     const [isProcessing, setIsProcessing] = useState(false);
-//     const [previewImage, setPreviewImage] = useState(null);
-//     const [ocrResult, setOcrResult] = useState('');
-//     const [showModal, setShowModal] = useState(false);
-
-//     const types = [
-//         {
-//             id: 'r',
-//             label: '재활용 센터 영수증',
-//             points: 30,
-//             keywords: [
-//                 '재활용',
-//                 '고물상',
-//                 '분리수거',
-//                 '폐기물',
-//                 '폐 기 물',
-//                 '재 활 용',
-//                 '제 활 용 센 터',
-//             ],
-//         },
-//         {
-//             id: 'ev',
-//             label: '전기차/수소차 충전 영수증',
-//             points: 50,
-//             keywords: [
-//                 '전기',
-//                 '충전',
-//                 'kWh',
-//                 'EV',
-//                 '수소',
-//                 '환경',
-//                 '환 경',
-//                 '',
-//             ],
-//         },
-//         {
-//             id: 'z',
-//             label: '제로웨이스트 스토어 영수증',
-//             points: 25,
-//             keywords: [
-//                 '텀블러',
-//                 '에코백',
-//                 '다회용',
-//                 '리필',
-//                 '제로',
-//                 '제 로 웨 이 스 트',
-//             ],
-//         },
-//         {
-//             id: 'bike',
-//             label: '따릉이 이용 인증',
-//             points: 20,
-//             keywords: ['따릉이', '자전거', '대여', '반납', '따 릉 이'],
-//         },
-//     ];
-
-//     // OCR 실행 함수
-//     async function processImageWithOCR(file, type) {
-//         setIsProcessing(true);
-//         setOcrResult('');
-
-//         try {
-//             // 이미지 미리보기
-//             const reader = new FileReader();
-//             reader.onload = (e) => setPreviewImage(e.target.result);
-//             reader.readAsDataURL(file);
-
-//             // OCR 실행
-//             const result = await Tesseract.recognize(file, 'kor+eng', {
-//                 logger: (m) => {
-//                     if (m.status === 'recognizing text') {
-//                         console.log(`진행률: ${Math.round(m.progress * 100)}%`);
-//                     }
-//                 },
-//                 workerPath:
-//                     'https://unpkg.com/tesseract.js@v4.0.1/dist/worker.min.js',
-//                 langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-//                 corePath:
-//                     'https://unpkg.com/tesseract.js-core@v4.0.1/tesseract-core.wasm.js',
-//             });
-
-//             const text = result.data.text;
-//             setOcrResult(text);
-
-//             // 키워드 검증
-//             const hasKeyword = type.keywords.some((keyword) =>
-//                 text.toLowerCase().includes(keyword.toLowerCase())
-//             );
-
-//             if (hasKeyword) {
-//                 // 인증 성공
-//                 handleCertification(type, file);
-//                 alert(`✅ ${type.label} 인증 완료!`);
-//                 setShowModal(false);
-//             } else {
-//                 alert(
-//                     `❌ 인증 실패: ${type.label} 관련 내용을 찾을 수 없습니다.`
-//                 );
-//             }
-//         } catch (error) {
-//             console.error('OCR 오류:', error);
-//             alert('이미지 인식에 실패했습니다. 다시 시도해주세요.');
-//         } finally {
-//             setIsProcessing(false);
-//         }
-//     }
-
-//     // 파일 선택 처리
-//     function handleFileSelect(e) {
-//         const file = e.target.files[0];
-//         if (file && selectedType) {
-//             processImageWithOCR(file, selectedType);
-//         }
-//     }
-
-//     // 인증 처리 (기존 로직에 사진 추가)
-//     function handleCertification(type, photoFile = null) {
-//         const cert = {
-//             id: Date.now(),
-//             type: type.label,
-//             points: type.points,
-//             photo: photoFile ? URL.createObjectURL(photoFile) : null,
-//             memo: ocrResult || null,
-//             date: new Date().toISOString(),
-//         };
-
-//         if (isOnline) {
-//             dispatch(addCertification(cert));
-//             dispatch(
-//                 addPoints({
-//                     points: type.points,
-//                     type: `${type.label} 인증`,
-//                     category: '인증',
-//                 })
-//             );
-//         } else {
-//             dispatch(addPendingCert(cert));
-//         }
-//     }
-
-//     // 버튼 클릭 시 모달 열기
-//     function openCertModal(type) {
-//         setSelectedType(type);
-//         setShowModal(true);
-//         setPreviewImage(null);
-//         setOcrResult('');
-//     }
-
-//     return (
-//         <div className='p-4'>
-//             <h2 className='text-lg font-bold'>인증</h2>
-//             <div className='grid grid-cols-2 gap-3 mt-3'>
-//                 {types.map((t) => (
-//                     <button
-//                         key={t.id}
-//                         onClick={() => openCertModal(t)}
-//                         className='bg-white rounded-2xl p-4 shadow flex flex-col items-start gap-2 hover:shadow-lg transition'
-//                     >
-//                         <div className='text-2xl'>
-//                             {t.id === 'r'
-//                                 ? '♻️'
-//                                 : t.id === 'ev'
-//                                 ? '⚡'
-//                                 : t.id === 'z'
-//                                 ? '🛍️'
-//                                 : '🚴'}
-//                         </div>
-//                         <div className='font-medium'>{t.label}</div>
-//                         <div className='text-xs text-gray-500'>{t.points}P</div>
-//                     </button>
-//                 ))}
-//             </div>
-
-//             {/* OCR 모달 */}
-//             {showModal && (
-//                 <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-//                     <div className='bg-white rounded-3xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto'>
-//                         <h3 className='text-xl font-bold mb-4'>
-//                             {selectedType?.label} 인증
-//                         </h3>
-
-//                         <p className='text-sm text-gray-600 mb-4'>
-//                             📸 영수증이나 이용내역 사진을 올려주세요
-//                         </p>
-
-//                         {/* 파일 선택 버튼 */}
-//                         <label className='block w-full bg-blue-500 text-white rounded-xl p-4 text-center cursor-pointer hover:bg-blue-600 transition mb-4'>
-//                             {isProcessing ? '분석 중...' : '📷 사진 선택'}
-//                             <input
-//                                 type='file'
-//                                 accept='image/*'
-//                                 onChange={handleFileSelect}
-//                                 disabled={isProcessing}
-//                                 className='hidden'
-//                             />
-//                         </label>
-
-//                         {/* 미리보기 */}
-//                         {previewImage && (
-//                             <div className='mb-4'>
-//                                 <img
-//                                     src={previewImage}
-//                                     alt='미리보기'
-//                                     className='w-full rounded-xl'
-//                                 />
-//                             </div>
-//                         )}
-
-//                         {/* 인식된 텍스트 */}
-//                         {ocrResult && (
-//                             <div className='bg-gray-100 rounded-xl p-4 mb-4 max-h-40 overflow-y-auto'>
-//                                 <p className='text-xs font-semibold mb-2'>
-//                                     인식된 텍스트:
-//                                 </p>
-//                                 <p className='text-xs whitespace-pre-wrap'>
-//                                     {ocrResult}
-//                                 </p>
-//                             </div>
-//                         )}
-
-//                         {/* 닫기 버튼 */}
-//                         <button
-//                             onClick={() => setShowModal(false)}
-//                             className='w-full bg-gray-200 text-gray-700 rounded-xl p-3 hover:bg-gray-300 transition'
-//                             disabled={isProcessing}
-//                         >
-//                             닫기
-//                         </button>
-//                     </div>
-//                 </div>
-//             )}
-//         </div>
-//     );
-// }
-
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addCertification, addPendingCert } from '../../store/slices/certSlice';
@@ -268,8 +21,14 @@ function extractDistance(text) {
     const normalizedText = text.replace(/\s{2,}/g, ' ');
 
     const patterns = [
-        /([이주]\s*동|[이주]\s*행)?\s*거\s*리\s*[:/\s]*([0-9]+\.[0-9]{1,4})\s*km/i,
+        // 기본 패턴들
+        /거\s*리\s*[:/\s]*([0-9]+\.[0-9]{1,4})\s*km/i,
+        /이\s*동\s*거\s*리\s*[:/\s]*([0-9]+\.[0-9]{1,4})/i,
         /([0-9]+\.[0-9]{1,4})\s*km/i,
+        // km이 깨진 경우 (ㅁ, ㅠ, m, 미터 등)
+        /거\s*리\s*[:/\s]*([0-9]+\.[0-9]{1,4})\s*[ㅁㅠkm미터]/i,
+        /이\s*동\s*거\s*리\s*[:/\s]*([0-9]+\.[0-9]{1,4})\s*[ㅁㅠkm미터]/i,
+        /([0-9]+\.[0-9]{1,4})\s*[ㅁㅠ]/i,
     ];
 
     let maxDistance = 0;
@@ -278,7 +37,7 @@ function extractDistance(text) {
         const match = normalizedText.match(pattern);
 
         if (match) {
-            const numStr = match[2] || match[1];
+            const numStr = match[1];
             const num = parseFloat(numStr);
 
             if (!isNaN(num) && num > 0) {
@@ -297,28 +56,83 @@ function extractDistance(text) {
 // =================================================================
 function extractAmount(text, isEV = false) {
     if (isEV) {
+        // 공백 제거한 텍스트로도 검색
+        const flatText = text.replace(/\s/g, '');
+
         // 충전량 추출 (소수점 포함)
-        const chargePattern = /([0-9]+\.[0-9]{1,4})\s*kWh/i;
-        const match = text.match(chargePattern);
-        if (match) {
-            const num = parseFloat(match[1]);
-            if (!isNaN(num) && num > 0) {
-                return num;
+        const chargePatterns = [
+            // 원본 텍스트에서 검색 (띄어쓰기 포함)
+            /충\s*전\s*량[:\s(빠)]*([0-9]+\.[0-9]{1,4})/i,
+            /([0-9]+\.[0-9]{1,4})\s*kWh/i,
+            /([0-9]+\.[0-9]{1,4})\s*공/i, // "공" = "kWh"가 깨진 경우
+            // 공백 제거한 텍스트에서 검색
+        ];
+
+        const flatPatterns = [
+            /충전량[:\s(빠)]*([0-9]+\.[0-9]{1,4})/i,
+            /([0-9]+\.[0-9]{1,4})kWh/i,
+        ];
+
+        // 원본 텍스트 검색
+        for (const pattern of chargePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                const num = parseFloat(match[1]);
+                if (!isNaN(num) && num > 0) {
+                    return num;
+                }
+            }
+        }
+
+        // 공백 제거한 텍스트 검색
+        for (const pattern of flatPatterns) {
+            const match = flatText.match(pattern);
+            if (match) {
+                const num = parseFloat(match[1]);
+                if (!isNaN(num) && num > 0) {
+                    return num;
+                }
             }
         }
     }
 
+    // 공백 제거한 텍스트로도 검색 (OCR이 띄어쓰기를 많이 넣는 경우 대비)
+    const flatText = text.replace(/\s/g, '');
+
     // 일반 금액 추출 (정수만 필요하다고 가정)
     const pricePatterns = [
-        /결제\s*금액[:\s]*([0-9,]+)/i,
-        /합\s*계[:\s]*([0-9,]+)/i,
-        /총\s*금액[:\s]*([0-9,]+)/i,
-        /([0-9,]+)\s*원/,
+        // 원본 텍스트에서 검색
+        /결\s*제\s*금\s*액[:\s(원)]*([0-9,]+)/i,
+        /합\s*계[:\s(원)]*([0-9,]+)/i,
+        /총\s*금\s*액[:\s(원)]*([0-9,]+)/i,
+        /충\s*전\s*금\s*액[:\s(원)]*([0-9,]+)/i,
+    ];
+
+    // 공백 제거한 텍스트에서 검색
+    const flatPatterns = [
+        /결제금액[:\s(원)]*([0-9,]+)/i,
+        /합계[:\s(원)]*([0-9,]+)/i,
+        /총금액[:\s(원)]*([0-9,]+)/i,
+        /충전금액[:\s(원)]*([0-9,]+)/i,
     ];
 
     let maxAmount = 0;
+
+    // 원본 텍스트 검색
     for (const pattern of pricePatterns) {
         const match = text.match(pattern);
+        if (match) {
+            const numStr = match[1].replace(/,/g, '');
+            const num = parseInt(numStr);
+            if (!isNaN(num) && num > maxAmount) {
+                maxAmount = num;
+            }
+        }
+    }
+
+    // 공백 제거한 텍스트 검색
+    for (const pattern of flatPatterns) {
+        const match = flatText.match(pattern);
         if (match) {
             const numStr = match[1].replace(/,/g, '');
             const num = parseInt(numStr);
@@ -341,9 +155,20 @@ function extractApiData(text) {
         text.match(/승인\s*번\s*호?[:\s]*(\d{8,16})/i) ||
         text.match(/거래\s*번\s*호?[:\s]*(\d{8,16})/i);
 
+    // 자전거 번호 추출 개선
     const bikeNumMatch =
-        flatText.match(/D-\s*?(\d{5,})/i) ||
-        text.match(/자전거번호?[:\s]*(\d{5,})/i);
+        // "0 508-00063783 ( 자 전 거 번호)" 형식 - 자전거번호 앞의 숫자-숫자 패턴
+        text.match(/(\d[-\s]?\d{3}[-\s]?\d{8,})\s*\([^)]*자\s*전\s*거/i) ||
+        flatText.match(/(\d[-]?\d{3}[-]?\d{8,})\([^)]*자전거/i) ||
+        // "SPA-00063783" 형식 (알파벳 3자리 + 하이픈 + 숫자)
+        text.match(/([A-Z]{3}[-\s]?\d{8,})/i) ||
+        // 공백 제거한 텍스트에서 검색
+        flatText.match(/([A-Z]{3}[-]?\d{8,})/i) ||
+        // "자전거번호" 뒤의 숫자
+        text.match(/자\s*전\s*거\s*번\s*호?[:\s]*(\d{5,})/i) ||
+        flatText.match(/자전거번호[:\s]*(\d{5,})/i) ||
+        // "D-" 형식 (기존)
+        flatText.match(/D-\s*?(\d{5,})/i);
 
     const timeMatches = text.match(/(\d{1,2}:\d{2})/g) || [];
 
@@ -351,7 +176,9 @@ function extractApiData(text) {
 
     return {
         approveNum: approveMatch ? approveMatch[1] : '',
-        bike_number: bikeNumMatch ? bikeNumMatch[1] : '',
+        bike_number: bikeNumMatch
+            ? bikeNumMatch[1].replace(/[A-Z\s-]/gi, '').slice(-5)
+            : '', // 알파벳/공백/하이픈 제거 후 뒤 5자리
         startTime: timeMatches[0] || '',
         endTime: timeMatches[1] || '',
         name: nameMatch ? nameMatch[0].trim() : '미확인 상호',
@@ -361,7 +188,7 @@ function extractApiData(text) {
 // =================================================================
 // 🌟 4. 메인 컴포넌트
 // =================================================================
-export default function CertificationScreen({ onNavigate }) {
+export default function CertificationScreen() {
     const isOnline = useSelector((s) => s.app.isOnline);
     const dispatch = useDispatch();
 
@@ -374,6 +201,7 @@ export default function CertificationScreen({ onNavigate }) {
 
     const [extractedAmount, setExtractedAmount] = useState(0);
     const [extractedDistance, setExtractedDistance] = useState(0);
+    const [detectedCategory, setDetectedCategory] = useState(''); // 자동 감지된 카테고리
     const [extraData, setExtraData] = useState({
         approveNum: '',
         bike_number: '',
@@ -385,19 +213,43 @@ export default function CertificationScreen({ onNavigate }) {
     const types = [
         {
             id: 'z',
-            label: '제로웨이스트 스토어 영수증',
+            label: '제로웨이스트 스토어 / 재활용센터 영수증',
             icon: '🛍️',
             description: '영수증 + GPS 위치 인증',
             points: 25,
             color: 'from-[#8BC34A] to-[#7cb342]',
             iconComponent: Receipt,
-            keywords: [
-                '텀블러',
-                '에코백',
+            Recycle,
+            // 제로웨이스트 키워드
+            zeroKeywords: [
                 '다회용',
                 '리필',
                 '제로',
                 '제 로 웨 이 스 트',
+                '제로웨이스트',
+            ],
+            // 재활용 키워드
+            recycleKeywords: [
+                '재활용',
+                '고물상',
+                '분리수거',
+                '폐기물',
+                '폐 기 물',
+                '재 활 용',
+                '고철',
+                '폐지',
+            ],
+            keywords: [
+                '다회용',
+                '리필',
+                '제로',
+                '제 로 웨 이 스 트',
+                '재활용',
+                '고물상',
+                '분리수거',
+                '폐기물',
+                '폐 기 물',
+                '재 활 용',
             ],
         },
         {
@@ -408,23 +260,15 @@ export default function CertificationScreen({ onNavigate }) {
             points: 50,
             color: 'from-[#2196F3] to-[#1976D2]',
             iconComponent: Battery,
-            keywords: ['전기', '충전', 'kWh', 'EV', '수소', '환경', '환 경'],
-        },
-        {
-            id: 'r',
-            label: '재활용센터 영수증',
-            icon: '♻️',
-            description: '영수증 금액 기반 포인트 적립',
-            points: 30,
-            color: 'from-[#4CAF50] to-[#45a049]',
-            iconComponent: Recycle,
             keywords: [
-                '재활용',
-                '고물상',
-                '분리수거',
-                '폐기물',
-                '폐 기 물',
-                '재 활 용',
+                '전기',
+                '충전',
+                'kWh',
+                'EV',
+                '수소',
+                '환경',
+                '환 경',
+                '충 전 량',
             ],
         },
         {
@@ -445,6 +289,7 @@ export default function CertificationScreen({ onNavigate }) {
         setOcrResult('');
         setExtractedAmount(0);
         setExtractedDistance(0);
+        setDetectedCategory(''); // 초기화
 
         try {
             const reader = new FileReader();
@@ -482,14 +327,40 @@ export default function CertificationScreen({ onNavigate }) {
             const extractedExtraData = extractApiData(text);
             setExtraData(extractedExtraData);
 
-            const hasKeyword = type.keywords.some((keyword) =>
-                text.toLowerCase().includes(keyword.toLowerCase())
-            );
+            // 제로웨이스트 vs 재활용 자동 구분
+            if (type.id === 'z') {
+                const hasRecycleKeyword = type.recycleKeywords.some((keyword) =>
+                    text.toLowerCase().includes(keyword.toLowerCase())
+                );
+                const hasZeroKeyword = type.zeroKeywords.some((keyword) =>
+                    text.toLowerCase().includes(keyword.toLowerCase())
+                );
 
-            if (hasKeyword) {
-                alert(`✅ OCR 인식 완료! 값을 확인 후 인증 요청을 눌러주세요.`);
+                if (hasRecycleKeyword) {
+                    setDetectedCategory('recycle');
+                    alert(`✅ OCR 인식 완료! [재활용센터]로 감지되었습니다.`);
+                } else if (hasZeroKeyword) {
+                    setDetectedCategory('zero');
+                    alert(`✅ OCR 인식 완료! [제로웨이스트]로 감지되었습니다.`);
+                } else {
+                    alert(
+                        `❌ 키워드 인식 실패! 영수증/내역을 다시 확인해주세요.`
+                    );
+                }
             } else {
-                alert(`❌ 키워드 인식 실패! 영수증/내역을 다시 확인해주세요.`);
+                const hasKeyword = type.keywords.some((keyword) =>
+                    text.toLowerCase().includes(keyword.toLowerCase())
+                );
+
+                if (hasKeyword) {
+                    alert(
+                        `✅ OCR 인식 완료! 값을 확인 후 인증 요청을 눌러주세요.`
+                    );
+                } else {
+                    alert(
+                        `❌ 키워드 인식 실패! 영수증/내역을 다시 확인해주세요.`
+                    );
+                }
             }
         } catch (error) {
             console.error('OCR 오류:', error);
@@ -507,7 +378,7 @@ export default function CertificationScreen({ onNavigate }) {
     }
 
     // ==========================================================
-    // ⭐ API 전송 대신 JSON 데이터를 보여주는 로직 (수정된 부분)
+    // ⭐ API 전송 대신 JSON 데이터를 보여주는 로직
     // ==========================================================
     const handleCertification = async () => {
         const isValid =
@@ -542,9 +413,11 @@ export default function CertificationScreen({ onNavigate }) {
                     chargeAmount: parseInt(extractedAmount),
                     approveNum: parseInt(extraData.approveNum) || 0,
                 };
-            } else if (categoryId === 'r' || categoryId === 'z') {
+            } else if (categoryId === 'z') {
+                // OCR로 자동 감지된 카테고리 사용
+                const finalCategory = detectedCategory || 'zero'; // 기본값은 zero
                 body = {
-                    category: categoryId === 'r' ? 'recycle' : 'zero',
+                    category: finalCategory,
                     name: extraData.name,
                     price: parseInt(extractedAmount),
                     approveNum: parseInt(extraData.approveNum) || 0,
@@ -589,6 +462,7 @@ export default function CertificationScreen({ onNavigate }) {
         setOcrResult('');
         setExtractedAmount(0);
         setExtractedDistance(0);
+        setDetectedCategory(''); // 초기화 추가
         setExtraData({
             approveNum: '',
             bike_number: '',
@@ -631,7 +505,7 @@ export default function CertificationScreen({ onNavigate }) {
     return (
         <>
             <div className='min-h-screen bg-gray-50 pb-24'>
-                {/* Header, 인증 옵션, 팁 섹션, 최근 인증 내역 (생략) */}
+                {/* Header */}
                 <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
                     <h1 className='text-3xl font-bold text-white mb-2'>
                         인증하기
@@ -853,6 +727,24 @@ export default function CertificationScreen({ onNavigate }) {
                             {/* OCR 결과 및 추출 값 표시 */}
                             {ocrResult && (
                                 <div className='space-y-3'>
+                                    {/* 감지된 카테고리 표시 (제로웨이스트/재활용만) */}
+                                    {selectedType.id === 'z' &&
+                                        detectedCategory && (
+                                            <div className='bg-purple-50 rounded-2xl p-4 border-2 border-purple-200'>
+                                                <div className='flex items-center justify-between'>
+                                                    <span className='text-purple-800 font-semibold'>
+                                                        🏷️ 감지된 카테고리
+                                                    </span>
+                                                    <span className='text-xl font-bold text-purple-600'>
+                                                        {detectedCategory ===
+                                                        'recycle'
+                                                            ? '재활용센터'
+                                                            : '제로웨이스트'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                     {/* 추출 값 표시 */}
                                     {(extractedAmount > 0 ||
                                         extractedDistance > 0) && (
