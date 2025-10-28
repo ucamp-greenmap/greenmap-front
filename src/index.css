@@ -9,6 +9,8 @@
     --color-gold: #ffd700;
     --text-strong: #2d384c;
     --bg-default: #f5f5f5;
+    --bottom-nav-height: 84px; /* space to leave above fixed bottom navigation */
+    --bottom-nav-inset: calc(var(--bottom-nav-height) + 12px);
 }
 
 html,

@@ -14,7 +14,12 @@ export function BottomNavigation({ active = 'home', onChange = () => {} }) {
         <nav
             aria-label='하단 네비게이션'
             role='navigation'
-            className='fixed bottom-4 left-4 right-4 bg-white rounded-3xl shadow-lg p-2 flex justify-between items-center'
+            className='fixed left-4 right-4 bg-white rounded-3xl shadow-lg p-2 flex justify-between items-center'
+            style={{
+                zIndex: 50,
+                height: 'var(--bottom-nav-height)',
+                bottom: '12px',
+            }}
         >
             {tabs.map((t) => {
                 const Icon = t.icon;
