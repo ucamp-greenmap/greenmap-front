@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, {
+    useEffect,
+    useRef,
+    useState,
+    useMemo,
+    useCallback,
+} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleBookmark as toggleBookmarkAction } from '../../store/slices/facilitySlice';
 
@@ -65,6 +71,7 @@ export default function MapScreen() {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
+    const currentInfoWindowRef = useRef(null); // Track currently open infowindow
     const [mapLoaded, setMapLoaded] = useState(false);
     const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_KEY || '';
 
@@ -74,6 +81,20 @@ export default function MapScreen() {
     const isDraggingRef = useRef(false);
     const startYRef = useRef(0);
     const startHeightRef = useRef(0);
+    const [selectedFacility, setSelectedFacility] = useState(null); // Track selected facility for detail view
+
+    // Define closeDetail before it's used in useEffect
+    const closeDetail = useCallback(() => {
+        setSelectedFacility(null);
+        // Don't collapse the sheet, just return to list view
+        // setSheetHeight(80);
+
+        // Close infowindow
+        if (currentInfoWindowRef.current) {
+            currentInfoWindowRef.current.close();
+            currentInfoWindowRef.current = null;
+        }
+    }, []);
 
     // Load Kakao SDK and initialize map only once
     useEffect(() => {
@@ -92,6 +113,16 @@ export default function MapScreen() {
             };
             const map = new window.kakao.maps.Map(container, options);
             mapInstanceRef.current = map;
+
+            // Add click event listener to map to collapse bottom sheet
+            window.kakao.maps.event.addListener(map, 'click', () => {
+                if (selectedFacility) {
+                    closeDetail();
+                } else {
+                    setSheetHeight(80);
+                }
+            });
+
             setMapLoaded(true);
         };
 
@@ -112,7 +143,7 @@ export default function MapScreen() {
             };
             document.head.appendChild(script);
         }
-    }, [KAKAO_KEY]);
+    }, [KAKAO_KEY, selectedFacility, closeDetail]);
 
     // Create/update markers based on dummyFacilities
     useEffect(() => {
@@ -168,7 +199,12 @@ export default function MapScreen() {
             });
 
             window.kakao.maps.event.addListener(marker, 'click', () => {
+                // Close previously open infowindow
+                if (currentInfoWindowRef.current) {
+                    currentInfoWindowRef.current.close();
+                }
                 infowindow.open(map, marker);
+                currentInfoWindowRef.current = infowindow;
             });
 
             return { id: f.id, marker, infowindow, data: f };
@@ -216,6 +252,7 @@ export default function MapScreen() {
                 if (m.infowindow) m.infowindow.close();
             });
             markersRef.current = [];
+            currentInfoWindowRef.current = null;
             mapInstanceRef.current = null;
         };
     }, []);
@@ -260,15 +297,27 @@ export default function MapScreen() {
         dispatch(toggleBookmarkAction(id));
     };
 
-    const focusOn = (id) => {
-        const entry = markersRef.current.find((m) => m.id === id);
-        if (!entry || !mapInstanceRef.current) return;
-        const { marker, infowindow, data } = entry;
-        mapInstanceRef.current.setCenter(
-            new window.kakao.maps.LatLng(data.lat, data.lng)
-        );
-        infowindow.open(mapInstanceRef.current, marker);
-        setSheetHeight(80); // collapse
+    const showDetail = (facility) => {
+        // Show detail view and expand sheet
+        setSelectedFacility(facility);
+        setSheetHeight(window.innerHeight * 0.6);
+
+        // Focus on map marker
+        const entry = markersRef.current.find((m) => m.id === facility.id);
+        if (entry && mapInstanceRef.current) {
+            const { marker, infowindow, data } = entry;
+
+            // Close previously open infowindow
+            if (currentInfoWindowRef.current) {
+                currentInfoWindowRef.current.close();
+            }
+
+            mapInstanceRef.current.setCenter(
+                new window.kakao.maps.LatLng(data.lat, data.lng)
+            );
+            infowindow.open(mapInstanceRef.current, marker);
+            currentInfoWindowRef.current = infowindow;
+        }
     };
 
     return (
@@ -401,78 +450,211 @@ export default function MapScreen() {
                             className='px-4 overflow-auto'
                             style={{ height: `calc(${sheetHeight}px - 40px)` }}
                         >
-                            <h3 className='text-base font-bold mb-3 px-1'>
-                                시설 목록
-                            </h3>
-                            <ul
-                                className='space-y-2'
-                                role='list'
-                                aria-label='시설 목록'
-                            >
-                                {filtered.map((f) => (
-                                    <li
-                                        key={f.id}
-                                        role='listitem'
-                                        className='flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors'
+                            {selectedFacility ? (
+                                // Detail view
+                                <div className='relative'>
+                                    <button
+                                        onClick={closeDetail}
+                                        className='absolute top-0 right-0 p-2 text-gray-500 hover:text-gray-700 transition-colors'
+                                        aria-label='닫기'
                                     >
-                                        <div>
-                                            <div className='font-semibold text-gray-800'>
-                                                {f.name}
-                                            </div>
-                                            <div className='text-sm text-gray-500'>
-                                                {f.category}
-                                            </div>
-                                        </div>
-                                        <div className='flex items-center gap-2'>
-                                            <button
-                                                className='text-2xl text-gray-400 hover:text-yellow-500 transition-colors'
-                                                onClick={() =>
-                                                    toggleBookmarkLocal(f.id)
-                                                }
-                                                onKeyDown={(e) => {
-                                                    if (
-                                                        e.key === 'Enter' ||
-                                                        e.key === ' '
-                                                    ) {
-                                                        e.preventDefault();
-                                                        toggleBookmarkLocal(
+                                        <svg
+                                            className='w-6 h-6'
+                                            fill='none'
+                                            stroke='currentColor'
+                                            viewBox='0 0 24 24'
+                                        >
+                                            <path
+                                                strokeLinecap='round'
+                                                strokeLinejoin='round'
+                                                strokeWidth={2}
+                                                d='M6 18L18 6M6 6l12 12'
+                                            />
+                                        </svg>
+                                    </button>
+
+                                    <h3 className='text-xl font-bold mb-4 pr-10'>
+                                        {selectedFacility.name}
+                                    </h3>
+
+                                    {/* Image placeholder */}
+                                    <div className='w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-4'>
+                                        <span className='text-gray-500'>
+                                            이미지 없음
+                                        </span>
+                                    </div>
+
+                                    {/* Category */}
+                                    <div className='mb-4'>
+                                        <span className='inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium'>
+                                            {selectedFacility.category ===
+                                                'recycle' && '재활용 센터'}
+                                            {selectedFacility.category ===
+                                                'ev' && '전기차 충전소'}
+                                            {selectedFacility.category ===
+                                                'store' && '제로웨이스트'}
+                                            {selectedFacility.category ===
+                                                'bike' && '따릉이'}
+                                        </span>
+                                    </div>
+
+                                    {/* Address */}
+                                    <div className='mb-4'>
+                                        <h4 className='text-sm font-semibold text-gray-600 mb-1'>
+                                            주소
+                                        </h4>
+                                        <p className='text-gray-800'>
+                                            {selectedFacility.address ||
+                                                '서울시 중구 을지로 123'}
+                                        </p>
+                                    </div>
+
+                                    {/* Coordinates */}
+                                    <div className='mb-4'>
+                                        <h4 className='text-sm font-semibold text-gray-600 mb-1'>
+                                            위치
+                                        </h4>
+                                        <p className='text-gray-800 text-sm'>
+                                            위도: {selectedFacility.lat}, 경도:{' '}
+                                            {selectedFacility.lng}
+                                        </p>
+                                    </div>
+
+                                    {/* Bookmark button */}
+                                    <button
+                                        onClick={() =>
+                                            toggleBookmarkLocal(
+                                                selectedFacility.id
+                                            )
+                                        }
+                                        className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
+                                            bookmarkedIds.includes(
+                                                selectedFacility.id
+                                            )
+                                                ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        <svg
+                                            className='w-5 h-5'
+                                            fill={
+                                                bookmarkedIds.includes(
+                                                    selectedFacility.id
+                                                )
+                                                    ? 'currentColor'
+                                                    : 'none'
+                                            }
+                                            stroke='currentColor'
+                                            viewBox='0 0 24 24'
+                                        >
+                                            <path
+                                                strokeLinecap='round'
+                                                strokeLinejoin='round'
+                                                strokeWidth={2}
+                                                d='M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z'
+                                            />
+                                        </svg>
+                                        {bookmarkedIds.includes(
+                                            selectedFacility.id
+                                        )
+                                            ? '북마크 해제'
+                                            : '북마크 추가'}
+                                    </button>
+                                </div>
+                            ) : (
+                                // List view
+                                <>
+                                    <h3 className='text-base font-bold mb-3 px-1'>
+                                        시설 목록
+                                    </h3>
+                                    <ul
+                                        className='space-y-2'
+                                        role='list'
+                                        aria-label='시설 목록'
+                                    >
+                                        {filtered.map((f) => (
+                                            <li
+                                                key={f.id}
+                                                role='listitem'
+                                                onClick={() => showDetail(f)}
+                                                className='flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer'
+                                            >
+                                                <div>
+                                                    <div className='font-semibold text-gray-800'>
+                                                        {f.name}
+                                                    </div>
+                                                    <div className='text-sm text-gray-500'>
+                                                        {f.category ===
+                                                            'recycle' &&
+                                                            '재활용 센터'}
+                                                        {f.category === 'ev' &&
+                                                            '전기차 충전소'}
+                                                        {f.category ===
+                                                            'store' &&
+                                                            '제로웨이스트'}
+                                                        {f.category ===
+                                                            'bike' && '따릉이'}
+                                                    </div>
+                                                </div>
+                                                <div className='flex items-center gap-2'>
+                                                    <button
+                                                        className='text-2xl text-gray-400 hover:text-blue-500 transition-colors'
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            toggleBookmarkLocal(
+                                                                f.id
+                                                            );
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (
+                                                                e.key ===
+                                                                    'Enter' ||
+                                                                e.key === ' '
+                                                            ) {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                toggleBookmarkLocal(
+                                                                    f.id
+                                                                );
+                                                            }
+                                                        }}
+                                                        aria-pressed={bookmarkedIds.includes(
                                                             f.id
-                                                        );
-                                                    }
-                                                }}
-                                                aria-pressed={bookmarkedIds.includes(
-                                                    f.id
-                                                )}
-                                                aria-label={
-                                                    bookmarkedIds.includes(f.id)
-                                                        ? `${f.name} 즐겨찾기 해제`
-                                                        : `${f.name} 즐겨찾기 추가`
-                                                }
-                                            >
-                                                {bookmarkedIds.includes(f.id)
-                                                    ? '★'
-                                                    : '☆'}
-                                            </button>
-                                            <button
-                                                className='text-sm px-4 py-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors'
-                                                onClick={() => focusOn(f.id)}
-                                                onKeyDown={(e) => {
-                                                    if (
-                                                        e.key === 'Enter' ||
-                                                        e.key === ' '
-                                                    ) {
-                                                        e.preventDefault();
-                                                        focusOn(f.id);
-                                                    }
-                                                }}
-                                                aria-label={`${f.name} 위치 보기`}
-                                            >
-                                                보기
-                                            </button>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
+                                                        )}
+                                                        aria-label={
+                                                            bookmarkedIds.includes(
+                                                                f.id
+                                                            )
+                                                                ? `${f.name} 북마크 해제`
+                                                                : `${f.name} 북마크 추가`
+                                                        }
+                                                    >
+                                                        <svg
+                                                            className='w-6 h-6'
+                                                            fill={
+                                                                bookmarkedIds.includes(
+                                                                    f.id
+                                                                )
+                                                                    ? 'currentColor'
+                                                                    : 'none'
+                                                            }
+                                                            stroke='currentColor'
+                                                            viewBox='0 0 24 24'
+                                                        >
+                                                            <path
+                                                                strokeLinecap='round'
+                                                                strokeLinejoin='round'
+                                                                strokeWidth={2}
+                                                                d='M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z'
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
                         </div>
                     </div>
                 </>
