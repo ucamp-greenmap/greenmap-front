@@ -25,7 +25,7 @@ import './App.css';
 const TAB_TO_PATH = {
     home: '/',
     map: '/map',
-    cert: '/cert',
+    cert: '/verification',
     challenge: '/challenge',
     mypage: '/mypage',
     points: '/points',
@@ -72,16 +72,10 @@ export default function App() {
                         path='/map'
                         element={<MapScreen onNavigate={navigate} />}
                     />
+                    {/* 인증 */}
                     <Route
-                        path='/cert'
-                        element={
-                            <div className='p-4'>
-                                <h2 className='text-xl font-bold'>인증</h2>
-                                <p className='mt-2 text-sm'>
-                                    인증 화면 플레이스홀더
-                                </p>
-                            </div>
-                        }
+                        path='/verification'
+                        element={<CertificationScreen onNavigate={navigate} />}
                     />
                     <Route
                         path='/challenge'
