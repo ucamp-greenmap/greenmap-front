@@ -262,31 +262,22 @@ import {
 } from 'lucide-react';
 
 // =================================================================
-// ⭐ 1. 거리 추출 함수 (따릉이용)
-// 모든 공백과 구분 기호를 무시하고 '거리' + 숫자 + 'km'를 찾는 데 집중
+// ⚙️ 1. 거리 추출 함수 (따릉이용)
 // =================================================================
 function extractDistance(text) {
-    // 공백을 하나의 띄어쓰기로 정규화하여 분석 유연성을 높입니다.
     const normalizedText = text.replace(/\s{2,}/g, ' ');
 
-    // 패턴 1: '이동' 또는 '주행' 키워드와 '거리' 키워드 사이에 띄어쓰기를 허용
-    //         숫자와 'km' 사이에도 띄어쓰기를 허용
     const patterns = [
-        // 1. (이동/주행) (거리) 키워드 + 숫자 + km (예: 이동 거리: 1.46 km)
         /([이주]\s*동|[이주]\s*행)?\s*거\s*리\s*[:/\s]*([0-9]+\.[0-9]{1,4})\s*km/i,
-
-        // 2. 키워드 없이 가장 단순하게 숫자 + km 조합만 찾기 (가장 흔한 형식)
         /([0-9]+\.[0-9]{1,4})\s*km/i,
     ];
 
     let maxDistance = 0;
 
     for (const pattern of patterns) {
-        // 정규화된 텍스트를 사용 (OCR 결과가 너무 엉망인 경우 flatText 대신 사용)
         const match = normalizedText.match(pattern);
 
         if (match) {
-            // 패턴 1은 match[2], 패턴 2는 match[1]에 숫자가 잡힙니다.
             const numStr = match[2] || match[1];
             const num = parseFloat(numStr);
 
@@ -302,25 +293,22 @@ function extractDistance(text) {
 }
 
 // =================================================================
-// ⭐ 2. 금액 또는 충전량 추출 함수
-// isEV에 따라 충전량(Float)을 먼저 찾고, 없으면 금액(Int)을 찾도록 분리
+// ⚙️ 2. 금액 또는 충전량 추출 함수
 // =================================================================
 function extractAmount(text, isEV = false) {
     if (isEV) {
-        // 1. 전기차/수소차 (충전량 추출 - 소수점 포함)
-        // 충전량[:\s]*([0-9.]+)와 kWh 사이에 띄어쓰기를 최대한 허용
-        const chargePattern = /충전량[:\s]*([0-9.]+)\s*kWh/i;
+        // 충전량 추출 (소수점 포함)
+        const chargePattern = /([0-9]+\.[0-9]{1,4})\s*kWh/i;
         const match = text.match(chargePattern);
         if (match) {
-            const num = parseFloat(match[1]); // 소수점 처리를 위해 parseFloat 사용
+            const num = parseFloat(match[1]);
             if (!isNaN(num) && num > 0) {
-                return num; // 충전량(kWh) 반환
+                return num;
             }
         }
-        // 충전량이 없으면 금액을 찾습니다 (아래 일반 금액 로직 사용).
     }
 
-    // 2. 일반 금액 추출 (재활용/제로웨이스트 및 충전 금액)
+    // 일반 금액 추출 (정수만 필요하다고 가정)
     const pricePatterns = [
         /결제\s*금액[:\s]*([0-9,]+)/i,
         /합\s*계[:\s]*([0-9,]+)/i,
@@ -344,7 +332,34 @@ function extractAmount(text, isEV = false) {
 }
 
 // =================================================================
-// ⭐ 3. 메인 컴포넌트
+// ⚙️ 3. API 요청에 필요한 추가 데이터 (번호, 시간, 이름) 추출 함수
+// =================================================================
+function extractApiData(text) {
+    const flatText = text.replace(/\s/g, '');
+
+    const approveMatch =
+        text.match(/승인\s*번\s*호?[:\s]*(\d{8,16})/i) ||
+        text.match(/거래\s*번\s*호?[:\s]*(\d{8,16})/i);
+
+    const bikeNumMatch =
+        flatText.match(/D-\s*?(\d{5,})/i) ||
+        text.match(/자전거번호?[:\s]*(\d{5,})/i);
+
+    const timeMatches = text.match(/(\d{1,2}:\d{2})/g) || [];
+
+    const nameMatch = text.match(/[가-힣a-zA-Z]{2,}\s*(주|센터|점|소)/);
+
+    return {
+        approveNum: approveMatch ? approveMatch[1] : '',
+        bike_number: bikeNumMatch ? bikeNumMatch[1] : '',
+        startTime: timeMatches[0] || '',
+        endTime: timeMatches[1] || '',
+        name: nameMatch ? nameMatch[0].trim() : '미확인 상호',
+    };
+}
+
+// =================================================================
+// 🌟 4. 메인 컴포넌트
 // =================================================================
 export default function CertificationScreen({ onNavigate }) {
     const isOnline = useSelector((s) => s.app.isOnline);
@@ -352,11 +367,20 @@ export default function CertificationScreen({ onNavigate }) {
 
     const [selectedType, setSelectedType] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [ocrResult, setOcrResult] = useState('');
     const [showModal, setShowModal] = useState(false);
+
     const [extractedAmount, setExtractedAmount] = useState(0);
     const [extractedDistance, setExtractedDistance] = useState(0);
+    const [extraData, setExtraData] = useState({
+        approveNum: '',
+        bike_number: '',
+        startTime: '',
+        endTime: '',
+        name: '',
+    });
 
     const types = [
         {
@@ -415,10 +439,12 @@ export default function CertificationScreen({ onNavigate }) {
         },
     ];
 
-    // OCR 실행
+    // OCR 실행 및 데이터 추출
     async function processImageWithOCR(file, type) {
         setIsProcessing(true);
         setOcrResult('');
+        setExtractedAmount(0);
+        setExtractedDistance(0);
 
         try {
             const reader = new FileReader();
@@ -444,44 +470,26 @@ export default function CertificationScreen({ onNavigate }) {
             let distance = 0;
             let amount = 0;
 
-            // 값 추출 (함수 호출)
             if (type.id === 'bike') {
                 distance = extractDistance(text);
+                setExtractedDistance(distance);
             } else {
                 const isEV = type.id === 'ev';
                 amount = extractAmount(text, isEV);
+                setExtractedAmount(amount);
             }
 
-            setExtractedDistance(distance);
-            setExtractedAmount(amount);
+            const extractedExtraData = extractApiData(text);
+            setExtraData(extractedExtraData);
 
             const hasKeyword = type.keywords.some((keyword) =>
                 text.toLowerCase().includes(keyword.toLowerCase())
             );
 
-            // --- 인증 성공/실패 Alert (추출된 값 사용) ---
             if (hasKeyword) {
-                if (type.id === 'bike') {
-                    alert(
-                        `✅ ${
-                            type.label
-                        } 인증 성공!\n이동거리: ${distance.toFixed(2)}km`
-                    );
-                } else {
-                    const unit =
-                        type.id === 'ev' && amount % 1 !== 0 ? 'kWh' : '원';
-                    alert(
-                        `✅ ${
-                            type.label
-                        } 인증 성공!\n추출된 값: ${amount.toLocaleString()}${unit}`
-                    );
-                }
-                // ⭐ 인증 처리 (실제 API 호출) 로직은 여기에 추가되어야 합니다.
-                // await handleCertification(type, file);
+                alert(`✅ OCR 인식 완료! 값을 확인 후 인증 요청을 눌러주세요.`);
             } else {
-                alert(
-                    `❌ 인증 실패: ${type.label} 관련 내용을 찾을 수 없습니다.`
-                );
+                alert(`❌ 키워드 인식 실패! 영수증/내역을 다시 확인해주세요.`);
             }
         } catch (error) {
             console.error('OCR 오류:', error);
@@ -498,30 +506,77 @@ export default function CertificationScreen({ onNavigate }) {
         }
     }
 
-    async function handleCertification(type, photoFile = null) {
-        // ... (생략된 기존 Redux 처리 로직) ...
-        const cert = {
-            id: Date.now(),
-            type: type.label,
-            points: type.points,
-            photo: photoFile ? URL.createObjectURL(photoFile) : null,
-            memo: ocrResult || null,
-            date: new Date().toISOString(),
-        };
-
-        if (isOnline) {
-            dispatch(addCertification(cert));
-            dispatch(
-                addPoints({
-                    points: type.points,
-                    type: `${type.label} 인증`,
-                    category: '인증',
-                })
+    // ==========================================================
+    // ⭐ API 전송 대신 JSON 데이터를 보여주는 로직 (수정된 부분)
+    // ==========================================================
+    const handleCertification = async () => {
+        const isValid =
+            selectedType.id === 'bike'
+                ? extractedDistance > 0
+                : extractedAmount > 0;
+        if (!isValid) {
+            alert(
+                '❌ 인증에 필요한 거리/금액 값을 인식하지 못했습니다. 더 선명한 이미지로 다시 시도해주세요.'
             );
-        } else {
-            dispatch(addPendingCert(cert));
+            return;
         }
-    }
+
+        setIsSubmitting(true);
+
+        let body = {};
+        const categoryId = selectedType.id;
+
+        // 1. 카테고리별 Body 데이터 매핑
+        try {
+            if (categoryId === 'bike') {
+                body = {
+                    category: 'bike',
+                    bike_number: parseInt(extraData.bike_number) || 0,
+                    distance: Math.round(extractedDistance * 100) / 100,
+                    start_time: extraData.startTime,
+                    end_time: extraData.endTime,
+                };
+            } else if (categoryId === 'ev') {
+                body = {
+                    category: 'car',
+                    chargeAmount: parseInt(extractedAmount),
+                    approveNum: parseInt(extraData.approveNum) || 0,
+                };
+            } else if (categoryId === 'r' || categoryId === 'z') {
+                body = {
+                    category: categoryId === 'r' ? 'recycle' : 'zero',
+                    name: extraData.name,
+                    price: parseInt(extractedAmount),
+                    approveNum: parseInt(extraData.approveNum) || 0,
+                };
+            } else {
+                throw new Error('유효하지 않은 인증 카테고리입니다.');
+            }
+
+            // -----------------------------------------------------
+            // ⭐ 실제 API 호출 부분을 제거하고 JSON을 보여주는 코드로 대체
+            // -----------------------------------------------------
+            const jsonBody = JSON.stringify(body, null, 2);
+
+            const header = {
+                memberId: 'USER_A001 (임시)',
+                authorization: 'Bearer [YOUR_AUTH_TOKEN] (임시)',
+            };
+
+            console.log('--- API Request Header ---', header);
+            console.log('--- API Request Body ---', jsonBody);
+
+            alert(`✅ API 전송 내용 준비 완료!\n\n[Body - JSON]\n${jsonBody}`);
+
+            // 전송 완료 후 상태 초기화 (실제 전송 성공으로 가정)
+            closeModal();
+        } catch (error) {
+            console.error('데이터 매핑 중 오류 발생:', error);
+            alert(`❌ 데이터 매핑 오류: ${error.message}`);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     function openCertModal(type) {
         setSelectedType(type);
@@ -533,7 +588,14 @@ export default function CertificationScreen({ onNavigate }) {
         setPreviewImage(null);
         setOcrResult('');
         setExtractedAmount(0);
-        setExtractedDistance(0); // resetDistance 추가
+        setExtractedDistance(0);
+        setExtraData({
+            approveNum: '',
+            bike_number: '',
+            startTime: '',
+            endTime: '',
+            name: '',
+        });
     }
 
     function closeModal() {
@@ -569,7 +631,7 @@ export default function CertificationScreen({ onNavigate }) {
     return (
         <>
             <div className='min-h-screen bg-gray-50 pb-24'>
-                {/* Header */}
+                {/* Header, 인증 옵션, 팁 섹션, 최근 인증 내역 (생략) */}
                 <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
                     <h1 className='text-3xl font-bold text-white mb-2'>
                         인증하기
@@ -580,7 +642,6 @@ export default function CertificationScreen({ onNavigate }) {
                 </div>
 
                 <div className='px-6 py-6 space-y-6'>
-                    {/* 인증 옵션 */}
                     <div>
                         <h2 className='text-lg font-bold text-gray-900 mb-4'>
                             인증할 활동 선택
@@ -628,7 +689,6 @@ export default function CertificationScreen({ onNavigate }) {
                         </div>
                     </div>
 
-                    {/* 팁 섹션 */}
                     <div className='bg-[#8BC34A] bg-opacity-10 rounded-2xl p-5 border border-[#8BC34A] border-opacity-30'>
                         <h3 className='font-bold text-gray-900 mb-3'>
                             📌 인증 팁
@@ -656,7 +716,6 @@ export default function CertificationScreen({ onNavigate }) {
                         </ul>
                     </div>
 
-                    {/* 최근 인증 내역 */}
                     <div>
                         <h2 className='text-lg font-bold text-gray-900 mb-4'>
                             최근 인증 내역
@@ -701,7 +760,6 @@ export default function CertificationScreen({ onNavigate }) {
                         </div>
                     </div>
 
-                    {/* 통계 카드 */}
                     <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-2xl p-6 text-white shadow-lg'>
                         <h3 className='text-white text-opacity-90 mb-4 font-semibold'>
                             이번 달 진행상황
@@ -792,10 +850,10 @@ export default function CertificationScreen({ onNavigate }) {
                                 </div>
                             )}
 
-                            {/* OCR 결과 */}
+                            {/* OCR 결과 및 추출 값 표시 */}
                             {ocrResult && (
                                 <div className='space-y-3'>
-                                    {/* 금액/거리 표시 */}
+                                    {/* 추출 값 표시 */}
                                     {(extractedAmount > 0 ||
                                         extractedDistance > 0) && (
                                         <div className='bg-green-50 rounded-2xl p-4 border-2 border-green-200'>
@@ -838,6 +896,27 @@ export default function CertificationScreen({ onNavigate }) {
                                     </div>
                                 </div>
                             )}
+
+                            {/* 인증 요청 버튼 */}
+                            <button
+                                onClick={handleCertification}
+                                disabled={
+                                    isSubmitting ||
+                                    isProcessing ||
+                                    (extractedAmount <= 0 &&
+                                        extractedDistance <= 0)
+                                }
+                                className={`w-full py-4 rounded-xl text-white font-bold transition-all 
+                                    ${
+                                        isSubmitting || isProcessing
+                                            ? 'bg-gray-400 cursor-not-allowed'
+                                            : 'bg-green-500 hover:bg-green-600'
+                                    }`}
+                            >
+                                {isSubmitting
+                                    ? '데이터 준비 중...'
+                                    : '전송 내용 확인하기'}
+                            </button>
 
                             {/* 정보 박스 */}
                             <div className='bg-blue-50 rounded-2xl p-4 border border-blue-200'>
