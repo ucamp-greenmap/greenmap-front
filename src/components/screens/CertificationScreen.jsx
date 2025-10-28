@@ -377,7 +377,7 @@ export default function CertificationScreen() {
         let body = {};
         const categoryId = selectedType.id;
 
-        // 1. 카테고리별 Body 데이터 매핑 (수정됨)
+        // 1. 카테고리별 Body 데이터 매핑 (수정된 부분)
         try {
             if (categoryId === 'bike') {
                 body = {
@@ -388,15 +388,20 @@ export default function CertificationScreen() {
                     end_time: extraData.endTime,
                 };
             } else if (categoryId === 'ev') {
-                // 💡 EV 로직 수정: 충전량과 금액 필드를 동시에 전송하는 API 스펙 반영
+                let finalChargeAmount = 0.0;
+                let finalChargeFee = 0;
 
-                // 전송할 충전량 및 금액 값을 준비합니다.
-                const finalChargeAmount =
-                    extractedCharge > 0 ? extractedCharge : 0.0;
-                const finalChargeFee = extractedPrice > 0 ? extractedPrice : 0;
-
-                if (finalChargeAmount === 0.0 && finalChargeFee === 0) {
-                    // 이 경로는 isValid에서 이미 걸러지지만 안전을 위해 throw 처리
+                // 💡 로직 적용: 충전량 우선
+                if (extractedCharge > 0) {
+                    // 1. 충전량 인식 성공 (금액 인식 여부와 무관하게 충전량만 사용)
+                    finalChargeAmount = extractedCharge;
+                    finalChargeFee = 0; // 금액은 무시하고 0으로 설정
+                } else if (extractedPrice > 0) {
+                    // 2. 충전량 인식 실패, 금액만 인식 성공
+                    finalChargeAmount = 0.0; // 충전량은 0으로 설정
+                    finalChargeFee = extractedPrice;
+                } else {
+                    // 이 경로는 isValid에서 이미 걸러지지만 안전을 위해 추가
                     throw new Error(
                         'EV 인증에 유효한 값(충전량/금액)이 없습니다.'
                     );
@@ -411,7 +416,7 @@ export default function CertificationScreen() {
                 };
             } else if (categoryId === 'z') {
                 // Z 카테고리는 금액만 price 필드로 전송
-                const finalCategory = detectedCategory || 'zero'; // 기본값은 zero
+                const finalCategory = detectedCategory || 'zero';
                 body = {
                     category: finalCategory,
                     name: extraData.name,
@@ -421,9 +426,8 @@ export default function CertificationScreen() {
             } else {
                 throw new Error('유효하지 않은 인증 카테고리입니다.');
             }
-
             // -----------------------------------------------------
-            // ⭐ 실제 API 호출 부분을 제거하고 JSON을 보여주는 코드로 대체
+            // ⭐ 실제 API 호출 보류하고 JSON을 보여주는 코드로 대체
             // -----------------------------------------------------
             const jsonBody = JSON.stringify(body, null, 2);
 
