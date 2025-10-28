@@ -291,66 +291,55 @@ export default function MapScreen() {
                         ref={mapRef}
                         role='application'
                         aria-label='카카오 지도'
-                        style={{
-                            position: 'fixed',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 'var(--bottom-nav-inset)',
-                            width: '100%',
-                            height: '100%',
-                            zIndex: 0,
-                        }}
+                        className='absolute inset-0 z-0'
                     />
 
                     {/* top overlay filters (centered pill) */}
-                    <div className='absolute top-4 left-1/2 transform -translate-x-1/2 pointer-events-none'>
-                        <div className='inline-flex gap-2 overflow-x-auto pointer-events-auto bg-white/90 backdrop-blur-sm shadow-md rounded-full px-2 py-1'>
-                            {[
-                                { key: 'all', label: '전체' },
-                                { key: 'recycle', label: '재활용 센터' },
-                                { key: 'ev', label: '충전소' },
-                                { key: 'store', label: '제로웨이스트' },
-                                { key: 'bike', label: '따릉이' },
-                                { key: 'bookmark', label: '북마크' },
-                            ].map((c) => (
-                                <button
-                                    key={c.key}
-                                    onClick={() => setSelectedFilter(c.key)}
-                                    onKeyDown={(e) => {
-                                        if (
-                                            e.key === 'Enter' ||
-                                            e.key === ' '
-                                        ) {
-                                            e.preventDefault();
-                                            setSelectedFilter(c.key);
-                                        }
-                                    }}
-                                    aria-pressed={selectedFilter === c.key}
-                                    aria-label={`필터 ${c.label}`}
-                                    className={`px-3 py-2 rounded-full bg-transparent text-sm ${
-                                        selectedFilter === c.key
-                                            ? 'ring-2 ring-green-400 bg-white'
-                                            : 'text-gray-700'
-                                    }`}
-                                >
-                                    {c.label}
-                                </button>
-                            ))}
+                    <div className='absolute top-4 left-0 right-0 z-10 w-full px-4 pointer-events-none'>
+                        <div className='max-w-full mx-auto flex justify-center'>
+                            <div className='inline-flex gap-2 overflow-x-auto pb-2 pointer-events-auto bg-white/90 backdrop-blur-sm shadow-lg rounded-full px-3 py-2'>
+                                {[
+                                    { key: 'all', label: '전체' },
+                                    { key: 'recycle', label: '재활용 센터' },
+                                    { key: 'ev', label: '충전소' },
+                                    { key: 'store', label: '제로웨이스트' },
+                                    { key: 'bike', label: '따릉이' },
+                                    { key: 'bookmark', label: '북마크' },
+                                ].map((c) => (
+                                    <button
+                                        key={c.key}
+                                        onClick={() => setSelectedFilter(c.key)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                setSelectedFilter(c.key);
+                                            }
+                                        }}
+                                        aria-pressed={selectedFilter === c.key}
+                                        aria-label={`필터 ${c.label}`}
+                                        className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                            selectedFilter === c.key
+                                                ? 'bg-green-500 text-white shadow'
+                                                : 'bg-white/80 text-gray-800 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {c.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
                     {/* bottom sheet */}
                     <div
                         ref={sheetRef}
-                        className='absolute left-0 right-0 bg-white rounded-t-2xl shadow-lg overflow-hidden'
+                        className='absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl overflow-hidden z-20'
                         style={{
-                            bottom: 'var(--bottom-nav-inset)',
                             height: `${sheetHeight}px`,
                             transition: isDraggingRef.current
                                 ? 'none'
-                                : 'height 200ms ease',
-                            zIndex: 60,
+                                : 'height 200ms ease-out',
+                            // bottom safe area is handled by parent padding
                         }}
                         role='region'
                         aria-label='시설 목록 패널'
@@ -362,29 +351,24 @@ export default function MapScreen() {
                     >
                         <div className='h-10 flex items-center justify-center'>
                             <button
-                                className='cursor-grab w-full flex items-center justify-center bg-transparent focus:outline-none'
+                                className='cursor-grab w-full h-full flex items-center justify-center bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500'
                                 onPointerDown={startDrag}
                                 onKeyDown={(e) => {
                                     const expanded =
                                         typeof window !== 'undefined'
-                                            ? sheetHeight >
-                                              window.innerHeight * 0.25
+                                            ? sheetHeight > window.innerHeight * 0.25
                                             : sheetHeight > 200;
                                     if (e.key === 'Enter' || e.key === ' ') {
                                         e.preventDefault();
                                         if (expanded) {
                                             setSheetHeight(80);
                                         } else {
-                                            setSheetHeight(
-                                                window.innerHeight * 0.6
-                                            );
+                                            setSheetHeight(window.innerHeight * 0.6);
                                         }
                                     }
                                     if (e.key === 'ArrowUp') {
                                         e.preventDefault();
-                                        setSheetHeight(
-                                            window.innerHeight * 0.6
-                                        );
+                                        setSheetHeight(window.innerHeight * 0.6);
                                     }
                                     if (e.key === 'ArrowDown') {
                                         e.preventDefault();
@@ -394,78 +378,59 @@ export default function MapScreen() {
                                 aria-label='시설 목록 열기/닫기'
                                 aria-expanded={
                                     typeof window !== 'undefined'
-                                        ? sheetHeight >
-                                          window.innerHeight * 0.25
+                                        ? sheetHeight > window.innerHeight * 0.25
                                         : sheetHeight > 200
                                 }
                             >
-                                <div className='w-12 h-1.5 bg-gray-300 rounded' />
+                                <div className='w-12 h-1.5 bg-gray-300 rounded-full' />
                             </button>
                         </div>
                         <div
                             className='px-4 overflow-auto'
                             style={{ height: `calc(${sheetHeight}px - 40px)` }}
                         >
-                            <h3 className='text-sm font-semibold mb-2'>
+                            <h3 className='text-base font-bold mb-3 px-1'>
                                 시설 목록
                             </h3>
-                            <ul
-                                className='space-y-2'
-                                role='list'
-                                aria-label='시설 목록'
-                            >
+                            <ul className='space-y-2' role='list' aria-label='시설 목록'>
                                 {filtered.map((f) => (
                                     <li
                                         key={f.id}
                                         role='listitem'
-                                        className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'
+                                        className='flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors'
                                     >
                                         <div>
-                                            <div className='font-medium'>
+                                            <div className='font-semibold text-gray-800'>
                                                 {f.name}
                                             </div>
-                                            <div className='text-xs text-gray-500'>
+                                            <div className='text-sm text-gray-500'>
                                                 {f.category}
                                             </div>
                                         </div>
                                         <div className='flex items-center gap-2'>
                                             <button
-                                                className='text-sm px-2 py-1 bg-white rounded'
-                                                onClick={() =>
-                                                    toggleBookmarkLocal(f.id)
-                                                }
+                                                className='text-2xl text-gray-400 hover:text-yellow-500 transition-colors'
+                                                onClick={() => toggleBookmarkLocal(f.id)}
                                                 onKeyDown={(e) => {
-                                                    if (
-                                                        e.key === 'Enter' ||
-                                                        e.key === ' '
-                                                    ) {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
                                                         e.preventDefault();
-                                                        toggleBookmarkLocal(
-                                                            f.id
-                                                        );
+                                                        toggleBookmarkLocal(f.id);
                                                     }
                                                 }}
-                                                aria-pressed={bookmarkedIds.includes(
-                                                    f.id
-                                                )}
+                                                aria-pressed={bookmarkedIds.includes(f.id)}
                                                 aria-label={
                                                     bookmarkedIds.includes(f.id)
                                                         ? `${f.name} 즐겨찾기 해제`
                                                         : `${f.name} 즐겨찾기 추가`
                                                 }
                                             >
-                                                {bookmarkedIds.includes(f.id)
-                                                    ? '★'
-                                                    : '☆'}
+                                                {bookmarkedIds.includes(f.id) ? '★' : '☆'}
                                             </button>
                                             <button
-                                                className='text-sm px-2 py-1 bg-green-50 text-green-700 rounded'
+                                                className='text-sm px-4 py-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors'
                                                 onClick={() => focusOn(f.id)}
                                                 onKeyDown={(e) => {
-                                                    if (
-                                                        e.key === 'Enter' ||
-                                                        e.key === ' '
-                                                    ) {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
                                                         e.preventDefault();
                                                         focusOn(f.id);
                                                     }
