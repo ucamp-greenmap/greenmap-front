@@ -9,7 +9,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toggleBookmark as toggleBookmarkAction } from '../../store/slices/facilitySlice';
 import { useKakaoMap } from '../../hooks/useKakaoMap';
 import { useMarkers } from '../../hooks/useMarkers';
+import { useCurrentLocation } from '../../hooks/useCurrentLocation';
+import { createCurrentLocationOverlay } from '../../util/location';
 import FilterBar from '../map/FilterBar';
+import CurrentLocationButton from '../map/CurrentLocationButton';
 import BottomSheet from '../map/BottomSheet';
 import FacilityList from '../map/FacilityList';
 import FacilityDetail from '../map/FacilityDetail';
@@ -80,7 +83,15 @@ export default function MapScreen() {
     // Map refs
     const mapRef = useRef(null);
     const currentInfoWindowRef = useRef(null);
+    const currentLocationOverlayRef = useRef(null);
     const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_KEY || '';
+
+    // Current location hook
+    const {
+        currentLocation,
+        isLoading: isLocationLoading,
+        fetchCurrentLocation,
+    } = useCurrentLocation();
 
     // Close detail view
     const closeDetail = useCallback(() => {
@@ -157,8 +168,46 @@ export default function MapScreen() {
     useEffect(() => {
         return () => {
             currentInfoWindowRef.current = null;
+            if (currentLocationOverlayRef.current) {
+                currentLocationOverlayRef.current.setMap(null);
+                currentLocationOverlayRef.current = null;
+            }
         };
     }, []);
+
+    // Update current location overlay
+    useEffect(() => {
+        if (!mapInstance || !currentLocation || !window.kakao) return;
+
+        // Remove old overlay
+        if (currentLocationOverlayRef.current) {
+            currentLocationOverlayRef.current.setMap(null);
+        }
+
+        // Create and add new overlay
+        const overlay = createCurrentLocationOverlay(
+            window.kakao,
+            currentLocation
+        );
+        overlay.setMap(mapInstance);
+        currentLocationOverlayRef.current = overlay;
+    }, [mapInstance, currentLocation]);
+
+    // Handle current location button click
+    const handleCurrentLocationClick = async () => {
+        try {
+            const location = await fetchCurrentLocation();
+            if (mapInstance && location) {
+                mapInstance.setCenter(
+                    new window.kakao.maps.LatLng(location.lat, location.lng)
+                );
+                mapInstance.setLevel(3); // Zoom in to level 3
+            }
+        } catch (error) {
+            console.error('Failed to get current location:', error);
+            alert('현재 위치를 가져올 수 없습니다. 위치 권한을 확인해주세요.');
+        }
+    };
 
     const toggleBookmarkLocal = (id) => {
         dispatch(toggleBookmarkAction(id));
@@ -211,6 +260,11 @@ export default function MapScreen() {
                     <FilterBar
                         selectedFilter={selectedFilter}
                         onFilterChange={setSelectedFilter}
+                    />
+
+                    <CurrentLocationButton
+                        onClick={handleCurrentLocationClick}
+                        isLoading={isLocationLoading}
                     />
 
                     <BottomSheet>
