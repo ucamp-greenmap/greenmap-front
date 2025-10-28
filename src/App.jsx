@@ -70,14 +70,7 @@ export default function App() {
                     />
                     <Route
                         path='/map'
-                        element={
-                            <div className='p-4'>
-                                <h2 className='text-xl font-bold'>지도</h2>
-                                <p className='mt-2 text-sm'>
-                                    지도 화면 플레이스홀더
-                                </p>
-                            </div>
-                        }
+                        element={<MapScreen onNavigate={navigate} />}
                     />
                     <Route
                         path='/cert'
