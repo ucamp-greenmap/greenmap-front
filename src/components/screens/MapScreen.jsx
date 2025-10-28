@@ -218,41 +218,38 @@ export default function MapScreen() {
     }, []);
 
     // bottom sheet drag handlers
-    useEffect(() => {
-        const onPointerMove = (e) => {
+    const startDrag = (e) => {
+        e.preventDefault();
+        isDraggingRef.current = true;
+        startYRef.current = e.clientY;
+        startHeightRef.current = sheetRef.current.clientHeight;
+
+        const onPointerMove = (moveEvent) => {
             if (!isDraggingRef.current) return;
-            const dy = startYRef.current - e.clientY;
+            const dy = startYRef.current - moveEvent.clientY;
             let newHeight = Math.min(
                 window.innerHeight * 0.9,
                 Math.max(80, startHeightRef.current + dy)
             );
             setSheetHeight(newHeight);
         };
+
         const onPointerUp = () => {
-            if (!isDraggingRef.current) return;
             isDraggingRef.current = false;
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+
+            const currentHeight = sheetRef.current.clientHeight;
             const threshold = window.innerHeight * 0.25;
-            if (sheetHeight > threshold)
+            if (currentHeight > threshold) {
                 setSheetHeight(window.innerHeight * 0.6);
-            else setSheetHeight(80);
-            window.removeEventListener('pointermove', onPointerMove);
-            window.removeEventListener('pointerup', onPointerUp);
+            } else {
+                setSheetHeight(80);
+            }
         };
 
-        if (isDraggingRef.current) {
-            window.addEventListener('pointermove', onPointerMove);
-            window.addEventListener('pointerup', onPointerUp);
-        }
-        return () => {
-            window.removeEventListener('pointermove', onPointerMove);
-            window.removeEventListener('pointerup', onPointerUp);
-        };
-    }, [sheetHeight]);
-
-    const startDrag = (e) => {
-        isDraggingRef.current = true;
-        startYRef.current = e.clientY;
-        startHeightRef.current = sheetHeight;
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
     };
 
     const toggleBookmarkLocal = (id) => {
@@ -272,7 +269,7 @@ export default function MapScreen() {
     };
 
     return (
-        <div className='relative h-screen w-screen'>
+        <div className='relative h-screen w-screen overflow-hidden'>
             {!KAKAO_KEY ? (
                 <div className='p-4'>
                     <div className='bg-yellow-50 border border-yellow-200 text-sm text-yellow-800 rounded-lg p-4'>
@@ -333,13 +330,13 @@ export default function MapScreen() {
                     {/* bottom sheet */}
                     <div
                         ref={sheetRef}
-                        className='absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl overflow-hidden z-20'
+                        className='absolute left-0 right-0 bg-white rounded-t-2xl shadow-2xl overflow-hidden z-20'
                         style={{
                             height: `${sheetHeight}px`,
                             transition: isDraggingRef.current
                                 ? 'none'
                                 : 'height 200ms ease-out',
-                            // bottom safe area is handled by parent padding
+                            bottom: 'var(--bottom-nav-inset, 96px)',
                         }}
                         role='region'
                         aria-label='시설 목록 패널'
@@ -349,7 +346,10 @@ export default function MapScreen() {
                                 : sheetHeight > 200
                         }
                     >
-                        <div className='h-10 flex items-center justify-center'>
+                        <div
+                            className='h-10 flex items-center justify-center'
+                            style={{ touchAction: 'none' }}
+                        >
                             <button
                                 className='cursor-grab w-full h-full flex items-center justify-center bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500'
                                 onPointerDown={startDrag}
