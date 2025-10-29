@@ -121,7 +121,7 @@ export default function HomeScreen({ onNavigate }) {
                     </p>
                 </div>
 
-                <div className='relative w-full max-w-md mx-auto'>
+                <div className='relative w-full'>
                     <input
                         type='text'
                         placeholder='시설, 뉴스, 챌린지 검색...'
@@ -134,11 +134,11 @@ export default function HomeScreen({ onNavigate }) {
                 </div>
             </div>
 
-            {/* Page content - keep padded while header stays full width */}
-            <div className='px-6'>
+            {/* Page content */}
+            <div className='px-4'>
                 {/* Point card */}
                 <div className='mt-4'>
-                    <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-3xl p-6 text-white shadow-xl border-0 max-w-md mx-auto'>
+                    <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-3xl p-6 text-white shadow-xl border-0'>
                         <div className='flex items-center justify-between mb-4'>
                             <div>
                                 <p className='text-white/90 mb-1'>
@@ -181,7 +181,7 @@ export default function HomeScreen({ onNavigate }) {
                 </div>
 
                 {/* Sections */}
-                <div className='max-w-md mx-auto mt-6 space-y-6'>
+                <div className='mt-6 space-y-6'>
                     {/* News header */}
                     <div className='flex items-center justify-between'>
                         <div className='flex items-center gap-2'>
