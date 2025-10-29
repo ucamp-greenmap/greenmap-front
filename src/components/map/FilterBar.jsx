@@ -11,7 +11,7 @@ const FILTER_OPTIONS = [
 
 export default function FilterBar({ selectedFilter, onFilterChange }) {
     return (
-        <div className='absolute top-4 left-0 right-0 z-10 w-full px-4 pointer-events-none'>
+        <div className='absolute top-2 left-0 right-0 z-10 w-full px-4 pointer-events-none'>
             <div className='max-w-full mx-auto flex justify-center'>
                 <div className='inline-flex gap-2 overflow-x-auto pb-2 pointer-events-auto bg-white/90 backdrop-blur-sm shadow-lg rounded-full px-3 py-2'>
                     {FILTER_OPTIONS.map((filter) => (
@@ -26,7 +26,7 @@ export default function FilterBar({ selectedFilter, onFilterChange }) {
                             }}
                             aria-pressed={selectedFilter === filter.key}
                             aria-label={`필터 ${filter.label}`}
-                            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
                                 selectedFilter === filter.key
                                     ? 'bg-green-500 text-white shadow'
                                     : 'bg-white/80 text-gray-800 hover:bg-gray-50'

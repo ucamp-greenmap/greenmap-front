@@ -11,7 +11,7 @@ export default function CurrentLocationButton({ onClick, isLoading }) {
         <button
             onClick={onClick}
             disabled={isLoading}
-            className='absolute top-20 right-4 z-10 bg-white p-3 rounded-full shadow-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+            className='absolute top-16 right-4 z-10 bg-white p-3 rounded-full shadow-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
             aria-label='현재 위치로 이동'
             title='현재 위치로 이동'
         >
@@ -66,17 +66,17 @@ export default function CurrentLocationButton({ onClick, isLoading }) {
  * 위치 조정 가이드:
  * className의 positioning 속성을 수정하여 버튼 위치 변경 가능
  *
- * - top-20: 위에서의 거리 (숫자↓=위로, 숫자↑=아래로)
- *   예: top-4, top-8, top-16, top-24 등
+ * - top-16: 위에서의 거리 (숫자↓=위로, 숫자↑=아래로)
+ *   예: top-4, top-8, top-12, top-16, top-20, top-24 등
  *
  * - right-4: 오른쪽에서의 거리 (숫자↑=왼쪽으로)
  *   예: right-2, right-4, right-6, right-8 등
  *
  * - 왼쪽으로 배치하려면: right-4 → left-4
- * - 아래로 배치하려면: top-20 → bottom-20
+ * - 아래로 배치하려면: top-16 → bottom-20
  *
  * 예시:
  * - 우측 하단: 'absolute bottom-32 right-4 z-10 ...'
- * - 좌측 상단: 'absolute top-20 left-4 z-10 ...'
+ * - 좌측 상단: 'absolute top-16 left-4 z-10 ...'
  * - 좌측 하단: 'absolute bottom-32 left-4 z-10 ...'
  */

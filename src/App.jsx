@@ -7,6 +7,7 @@ import {
     Route,
     useNavigate,
     useLocation,
+    Navigate,
 } from 'react-router-dom';
 import SplashScreen from './components/screens/SplashScreen';
 import BottomNavigation from './components/common/BottomNavigation';
@@ -17,9 +18,12 @@ import CertificationScreen from './components/screens/CertificationScreen';
 import ChallengeScreen from './components/screens/ChallengeScreen';
 import MyPageScreen from './components/screens/MyPageScreen';
 import PointHistoryScreen from './components/screens/PointHistoryScreen';
+import PointExchangeScreen from './components/screens/PointExchangeScreen';
 import RankingScreen from './components/screens/RankingScreen';
 import LoginScreen from './components/screens/LoginScreen';
+import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
+import FaqScreen from './components/screens/FaqScreen';
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -30,8 +34,10 @@ const TAB_TO_PATH = {
     challenge: '/challenge',
     mypage: '/mypage',
     points: '/points',
+    'point-exchange': '/point-exchange',
     ranking: '/ranking',
     login: '/login',
+    FAQ: '/FAQ',
 };
 
 export default function App() {
@@ -64,7 +70,7 @@ export default function App() {
         };
 
         return (
-            <div className='min-h-screen pb-24'>
+            <div className='min-h-screen'>
                 <Routes>
                     <Route
                         path='/'
@@ -92,6 +98,10 @@ export default function App() {
                         element={<PointHistoryScreen onNavigate={navigate} />}
                     />
                     <Route
+                        path='/point-exchange'
+                        element={<PointExchangeScreen onNavigate={navigate} />}
+                    />
+                    <Route
                         path='/ranking'
                         element={<RankingScreen onNavigate={navigate} />}
                     />
@@ -99,6 +109,16 @@ export default function App() {
                         path='/login'
                         element={<LoginScreen onNavigate={navigate} />}
                     />
+                    <Route
+                        path='/badge'
+                        element={<BadgeScreen onNavigate={navigate} />}
+                    />
+                    <Route
+                        path='/FAQ'
+                        element={<FaqScreen onNavigate={navigate} />}
+                    />
+                    {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
+                    <Route path='*' element={<Navigate to='/' replace />} />
                 </Routes>
 
                 <BottomNavigation

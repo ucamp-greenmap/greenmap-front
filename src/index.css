@@ -9,7 +9,36 @@
     --color-gold: #ffd700;
     --text-strong: #2d384c;
     --bg-default: #f5f5f5;
-    --bottom-nav-height: 84px; /* space to leave above fixed bottom navigation */
+
+    /**
+     * 📐 BottomNavigation 관련 spacing 설정
+     * 
+     * --bottom-nav-height: 84px
+     * - BottomNavigation 컴포넌트 자체의 높이
+     * - BottomNavigation.jsx의 height 속성과 일치해야 함
+     * 
+     * --bottom-nav-inset: calc(var(--bottom-nav-height) + 12px)
+     * - BottomNavigation + 하단 여백 = 96px (84px + 12px)
+     * - 다른 컴포넌트들이 BottomNavigation을 피하기 위한 spacing
+     * - MapScreen, HomeScreen 등에서 사용
+     * 
+     * 🔧 조정 방법:
+     * 
+     * 1. BottomNavigation 높이 변경:
+     *    --bottom-nav-height: 84px → 원하는 값 (예: 70px, 90px)
+     *    ⚠️ BottomNavigation.jsx의 height도 같이 수정 필요
+     * 
+     * 2. 하단 여백 조정:
+     *    12px → 다른 값으로 변경
+     *    - 값을 늘리면: 콘텐츠와 BottomNavigation 사이 공간 증가
+     *    - 값을 줄이면: 더 타이트한 레이아웃
+     *    예: calc(var(--bottom-nav-height) + 20px) = 104px
+     * 
+     * 3. 전체 inset 직접 설정:
+     *    calc(...) 제거하고 고정값 사용
+     *    예: --bottom-nav-inset: 100px;
+     */
+    --bottom-nav-height: 84px;
     --bottom-nav-inset: calc(var(--bottom-nav-height) + 12px);
 }
 
