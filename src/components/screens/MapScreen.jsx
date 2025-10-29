@@ -288,6 +288,23 @@ export default function MapScreen() {
                         className='w-full h-full z-0'
                     />
 
+                    {/* 지도 로딩 인디케이터 */}
+                    {!mapLoaded && (
+                        <div className='absolute inset-0 bg-white z-10 flex flex-col items-center justify-center'>
+                            <div className='relative'>
+                                {/* 회전하는 원형 로더 */}
+                                <div className='w-16 h-16 border-4 border-gray-200 rounded-full'></div>
+                                <div className='w-16 h-16 border-4 border-[#4CAF50] border-t-transparent rounded-full animate-spin absolute top-0 left-0'></div>
+                            </div>
+                            <p className='mt-6 text-gray-600 font-medium'>
+                                지도를 불러오는 중...
+                            </p>
+                            <p className='mt-2 text-sm text-gray-400'>
+                                🗺️ 카카오 맵 초기화 중
+                            </p>
+                        </div>
+                    )}
+
                     <FilterBar
                         selectedFilter={selectedFilter}
                         onFilterChange={setSelectedFilter}
