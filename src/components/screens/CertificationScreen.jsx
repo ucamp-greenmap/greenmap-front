@@ -121,7 +121,9 @@ function extractAmounts(text) {
 function extractApiData(text) {
     const flatText = text.replace(/\s/g, '');
 
+    // 주문,승인,거래 번호 추출 개선
     const approveMatch =
+        text.match(/주\s*문\s*번\s*호[:\s#]*(\d+)/i) ||
         text.match(/승인\s*번\s*호?[:\s]*(\d{8,16})/i) ||
         text.match(/거래\s*번\s*호?[:\s]*(\d{8,16})/i);
 
@@ -377,7 +379,7 @@ export default function CertificationScreen() {
         let body = {};
         const categoryId = selectedType.id;
 
-        // 1. 카테고리별 Body 데이터 매핑 (수정된 부분)
+        // 1. 카테고리별 Body 데이터 매핑
         try {
             if (categoryId === 'bike') {
                 body = {
@@ -584,9 +586,7 @@ export default function CertificationScreen() {
                             </li>
                             <li className='flex items-start gap-2'>
                                 <span className='text-[#4CAF50] mt-0.5'>✓</span>
-                                <span>
-                                    인증은 보통 24시간 이내에 승인됩니다
-                                </span>
+                                <span>인증은 바로 승인됩니다</span>
                             </li>
                         </ul>
                     </div>
