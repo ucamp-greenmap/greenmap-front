@@ -118,46 +118,82 @@ function extractAmounts(text) {
 // =================================================================
 // ⚙️ 3. API 요청에 필요한 추가 데이터 (번호, 시간, 이름) 추출 함수
 // =================================================================
+
 function extractApiData(text) {
     const flatText = text.replace(/\s/g, '');
 
-    // 주문,승인,거래 번호 추출 개선
     const approveMatch =
         text.match(/주\s*문\s*번\s*호[:\s#]*(\d+)/i) ||
         text.match(/승인\s*번\s*호?[:\s]*(\d{8,16})/i) ||
         text.match(/거래\s*번\s*호?[:\s]*(\d{8,16})/i);
 
-    // 자전거 번호 추출 개선
-    const bikeNumMatch =
-        // "0 508-00063783 ( 자 전 거 번호)" 형식 - 자전거번호 앞의 숫자-숫자 패턴
-        text.match(/(\d[-\s]?\d{3}[-\s]?\d{8,})\s*\([^)]*자\s*전\s*거/i) ||
-        flatText.match(/(\d[-]?\d{3}[-]?\d{8,})\([^)]*자전거/i) ||
-        // "SPA-00063783" 형식 (알파벳 3자리 + 하이픈 + 숫자)
-        text.match(/([A-Z]{3}[-\s]?\d{8,})/i) ||
-        // 공백 제거한 텍스트에서 검색
-        flatText.match(/([A-Z]{3}[-]?\d{8,})/i) ||
-        // "자전거번호" 뒤의 숫자
-        text.match(/자\s*전\s*거\s*번\s*호?[:\s]*(\d{5,})/i) ||
-        flatText.match(/자전거번호[:\s]*(\d{5,})/i) ||
-        // "D-" 형식 (기존)
-        flatText.match(/D-\s*?(\d{5,})/i);
+    // 🆕 자전거 번호 추출
+    let bikeNumber = '';
 
-    // 💡 시간 추출 로직: HH:MM 형태를 찾습니다.
-    const timeMatches = text.match(/(\d{1,2}:\d{2})/g) || [];
+    // 패턴 1: "자전거 번호 35719 3798" 형식 (두 숫자가 분리됨)
+    const bikePattern1 = text.match(
+        /자\s*전\s*거\s*번\s*호[:\s]*(\d+)\s+(\d+)/i
+    );
+
+    if (bikePattern1 && bikePattern1[2]) {
+        // 두 번째 그룹이 있으면 첫 번째 숫자만 사용
+        bikeNumber = bikePattern1[1]; // "35719"
+    } else {
+        // 패턴 2: 나머지 형식들
+        const bikePattern2 =
+            text.match(/(\d[-\s]?\d{3}[-\s]?\d{8,})\s*\([^)]*자\s*전\s*거/i) ||
+            flatText.match(/(\d[-]?\d{3}[-]?\d{8,})\([^)]*자전거/i) ||
+            text.match(/([A-Z]{3}[-\s]?\d{8,})/i) ||
+            flatText.match(/([A-Z]{3}[-]?\d{8,})/i) ||
+            text.match(/자\s*전\s*거\s*번\s*호?[:\s]*(\d{5,})/i) ||
+            flatText.match(/자전거번호[:\s]*(\d{5,})/i) ||
+            flatText.match(/D-\s*?(\d{5,})/i);
+
+        if (bikePattern2) {
+            bikeNumber = bikePattern2[1].replace(/[A-Z\s-]/gi, '').slice(-5);
+        }
+    }
+
+    // 시간 추출
+    let startTime = '';
+    let endTime = '';
+
+    const startTimeMatch1 = text.match(
+        /대\s*여\s*시\s*간[:\s]*\d{4}[.\-/]\d{2}[.\-/]\d{2}\s*(\d{2}:\d{2})/i
+    );
+    const endTimeMatch1 = text.match(
+        /반\s*납\s*시\s*간[:\s]*\d{4}[.\-/]\d{2}[.\-/]\d{2}\s*(\d{2}:\d{2})/i
+    );
+
+    if (startTimeMatch1 && endTimeMatch1) {
+        startTime = startTimeMatch1[1];
+        endTime = endTimeMatch1[1];
+    } else {
+        const dateTimePattern =
+            /(\d{4}[-.\s]\d{2}[-.\s]\d{2})[^\d:]*(\d{2}:\d{2})/gi;
+        const dateTimeMatches = [...text.matchAll(dateTimePattern)];
+
+        if (dateTimeMatches.length >= 2) {
+            startTime = dateTimeMatches[0][2];
+            endTime = dateTimeMatches[1][2];
+        } else {
+            const allTimes = text.match(/(\d{1,2}:\d{2})/g) || [];
+            const validTimes = allTimes.slice(1);
+            startTime = validTimes[0] || '';
+            endTime = validTimes[1] || '';
+        }
+    }
 
     const nameMatch = text.match(/[가-힣a-zA-Z]{2,}\s*(주|센터|점|소)/);
 
     return {
         approveNum: approveMatch ? approveMatch[1] : '',
-        bike_number: bikeNumMatch
-            ? bikeNumMatch[1].replace(/[A-Z\s-]/gi, '').slice(-5)
-            : '', // 알파벳/공백/하이픈 제거 후 뒤 5자리
-        startTime: timeMatches[0] || '', // 첫 번째 시간
-        endTime: timeMatches[1] || '', // 두 번째 시간
+        bike_number: bikeNumber, // 🆕 여기가 핵심!
+        startTime: startTime,
+        endTime: endTime,
         name: nameMatch ? nameMatch[0].trim() : '미확인 상호',
     };
 }
-
 // =================================================================
 // 🌟 4. 메인 컴포넌트
 // =================================================================
@@ -231,7 +267,7 @@ export default function CertificationScreen() {
             id: 'ev',
             label: '전기차/수소차 충전 영수증',
             icon: '⚡',
-            description: '충전량 기반 포인트 적립',
+            description: '충전소 결제 영수증 인증',
             points: 50,
             color: 'from-[#2196F3] to-[#1976D2]',
             iconComponent: Battery,
@@ -583,8 +619,7 @@ export default function CertificationScreen() {
                             <li className='flex items-start gap-2'>
                                 <span className='text-[#4CAF50] mt-0.5'>✓</span>
                                 <span>
-                                    자동 인증을 위해 위치 서비스를
-                                    활성화해주세요
+                                    GPS 인증을 위해 위치 서비스를 활성화해주세요
                                 </span>
                             </li>
                             <li className='flex items-start gap-2'>
@@ -621,17 +656,6 @@ export default function CertificationScreen() {
                                         <p className='text-[#4CAF50] font-semibold'>
                                             +{cert.points}P
                                         </p>
-                                        <span
-                                            className={`inline-block px-3 py-1 rounded-full text-xs mt-1 font-medium ${
-                                                cert.status === 'approved'
-                                                    ? 'bg-[#4CAF50] bg-opacity-10 text-[#4CAF50]'
-                                                    : 'bg-yellow-100 text-yellow-700'
-                                            }`}
-                                        >
-                                            {cert.status === 'approved'
-                                                ? '승인됨'
-                                                : '대기중'}
-                                        </span>
                                     </div>
                                 </div>
                             ))}
