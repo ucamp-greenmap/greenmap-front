@@ -1,0 +1,75 @@
+import { Receipt, Battery, Bike, Recycle } from 'lucide-react';
+
+// 인증 타입 설정
+export const certTypes = [
+    {
+        id: 'z',
+        label: '제로웨이스트 스토어 / 재활용센터 영수증',
+        icon: '🛍️',
+        description: '영수증 + GPS 위치 인증',
+        points: 25,
+        color: 'from-[#8BC34A] to-[#7cb342]',
+        iconComponent: Receipt,
+        Recycle,
+        // 제로웨이스트 키워드
+        zeroKeywords: [
+            '다회용',
+            '리필',
+            '제로',
+            '제 로 웨 이 스 트',
+            '제로웨이스트',
+        ],
+        // 재활용 키워드
+        recycleKeywords: [
+            '재활용',
+            '고물상',
+            '분리수거',
+            '폐기물',
+            '폐 기 물',
+            '재 활 용',
+            '고철',
+            '폐지',
+        ],
+        keywords: [
+            '다회용',
+            '리필',
+            '제로',
+            '제 로 웨 이 스 트',
+            '재활용',
+            '고물상',
+            '분리수거',
+            '폐기물',
+            '폐 기 물',
+            '재 활 용',
+        ],
+    },
+    {
+        id: 'ev',
+        label: '전기차/수소차 충전 영수증',
+        icon: '⚡',
+        description: '충전소 결제 영수증 인증',
+        points: 50,
+        color: 'from-[#2196F3] to-[#1976D2]',
+        iconComponent: Battery,
+        keywords: [
+            '전기',
+            '충전',
+            'kWh',
+            'EV',
+            '수소',
+            '환경',
+            '환 경',
+            '충 전 량',
+        ],
+    },
+    {
+        id: 'bike',
+        label: '따릉이 이용 인증',
+        icon: '🚴',
+        description: '이용내역 스크린샷 인증',
+        points: 20,
+        color: 'from-[#4CAF50] to-[#8BC34A]',
+        iconComponent: Bike,
+        keywords: ['따릉이', '자전거', '대여', '반납', '따 릉 이'],
+    },
+];
