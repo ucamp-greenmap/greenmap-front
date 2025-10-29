@@ -172,7 +172,7 @@ export default function HomeScreen({ onNavigate }) {
                         </div>
 
                         <button
-                            onClick={() => onNavigate?.('certification')}
+                            onClick={() => navigate('cert')}
                             className='w-full bg-white text-[#4CAF50] py-3 rounded-[20px] text-center transition-transform hover:scale-105'
                         >
                             활동 인증하고 포인트 받기
@@ -275,7 +275,7 @@ export default function HomeScreen({ onNavigate }) {
                             </button>
 
                             <button
-                                onClick={() => navigate('certification')}
+                                onClick={() => navigate('cert')}
                                 className='bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-shadow border border-gray-100'
                             >
                                 <div className='text-4xl mb-3'>📸</div>
