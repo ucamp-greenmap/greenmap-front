@@ -28,7 +28,23 @@ const sampleChallenges = [
 export default function ChallengeScreen() {
     return (
         <div className='p-4'>
-            <h2 className='text-lg font-bold'>이번 주 챌린지</h2>
+            {/* Header */}
+            <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
+                <h1 className='text-3xl font-bold text-white mb-2'>
+                    챌린지
+                </h1>
+                <p className='text-white text-opacity-90 text-sm'>
+                    친환경 활동을 인증하고 포인트를 받으세요
+                </p>
+            </div> 
+
+            <div className='bg-white rounded-2xl p-3 m-2 shadow text-center focus:outline-none'>
+                <span className=' text-gray-500 p-5'>참여가능</span>
+                <span className='text-gray-500 p-5'>진행중</span>
+                <span className='text-gray-500 p-5'>완료</span>
+            
+            </div>
+
             <div className='mt-3 space-y-3'>
                 {sampleChallenges.map((c) => (
                     <div
