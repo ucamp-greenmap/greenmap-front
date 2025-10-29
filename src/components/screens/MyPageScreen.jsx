@@ -15,21 +15,22 @@ export default function MyPageScreen({ onNavigate }) {
     return (
         <div className='p-4 space-y-4'>
             <button
-               className='bg-white rounded-2xl p-3 shadow text-center focus:outline-none'
-                aria-label='설정 가기'>
+                className='bg-white rounded-2xl p-3 shadow text-center focus:outline-none'
+                aria-label='설정 가기'
+            >
                 <div className='text-xs text-gray-500'>설정</div>
             </button>
-            <div> {/** 열고 닫을 것 */}
+            <div>
+                {' '}
+                {/** 열고 닫을 것 */}
                 <div>
                     <button onClick={() => navigate('login')}>회원 계정</button>
                 </div>
                 <div></div>
                 <div>
-                    <button onClick={console.log("클릭")}>알림설정</button>
+                    <button onClick={console.log('클릭')}>알림설정</button>
                 </div>
             </div>
-
-
 
             <div className='bg-white rounded-2xl p-4 shadow flex items-center gap-4'>
                 <div className='w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl'>
@@ -69,7 +70,7 @@ export default function MyPageScreen({ onNavigate }) {
                     <li>🎁 포인트 교환소</li>
                     <li>📜 인증 기록 ({stats.totalCerts})</li>
                     <li>🔔 알림 (3)</li>
-                    <li>❓ FAQ & 고객지원</li>
+                    <li className='cursor-pointer'>❓ FAQ & 고객지원</li>
                 </ul>
             </div>
 
