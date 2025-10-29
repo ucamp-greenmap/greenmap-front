@@ -18,6 +18,7 @@ import CertificationScreen from './components/screens/CertificationScreen';
 import ChallengeScreen from './components/screens/ChallengeScreen';
 import MyPageScreen from './components/screens/MyPageScreen';
 import PointHistoryScreen from './components/screens/PointHistoryScreen';
+import PointExchangeScreen from './components/screens/PointExchangeScreen';
 import RankingScreen from './components/screens/RankingScreen';
 import LoginScreen from './components/screens/LoginScreen';
 import './App.css';
@@ -31,6 +32,7 @@ const TAB_TO_PATH = {
     challenge: '/challenge',
     mypage: '/mypage',
     points: '/points',
+    'point-exchange': '/point-exchange',
     ranking: '/ranking',
     login: '/login',
 };
@@ -91,6 +93,10 @@ export default function App() {
                     <Route
                         path='/points'
                         element={<PointHistoryScreen onNavigate={navigate} />}
+                    />
+                    <Route
+                        path='/point-exchange'
+                        element={<PointExchangeScreen onNavigate={navigate} />}
                     />
                     <Route
                         path='/ranking'
