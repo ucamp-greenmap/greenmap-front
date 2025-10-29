@@ -37,7 +37,7 @@ export default function LoginScreen({ onNavigate }) {
         console.log('토큰: ', accessToken );
    }
    
-
+   // 이메일이 확인
     return (
         <>
         <div className='bg-gradient-to-r from-[#4CAF50] to-[#8BC34A] rounded-2xl p-4 text-white'>
@@ -47,100 +47,99 @@ export default function LoginScreen({ onNavigate }) {
 
 
             <div className='bg-white rounded-2xl p-4 gap-4'>
-                <div id='login' >
-                    <label>로그인</label>
-                    <div class="">
-                        <div>
-                            <label>아이디 </label>
-                            <input type="email" maxLength="50"></input>
+                <div class="emailTure" > 
+                    <div id='login' >
+                        <label>로그인</label>
+                        <div class="">
+                            <div>
+                                <label>아이디 </label>
+                                <input type="email" maxLength="50"></input>
+                            </div>
+                            <div>
+                                <label>비밀번호 </label>
+                                <input type="password" maxLength="25"></input>
+                            </div>
+                            <button class="send">로그인 하기</button>
                         </div>
+                    </div> <br />
+                    <div id='easyLogin'>
+                        <label>간편 로그인</label><br /><br />
                         <div>
-                            <label>비밀번호 </label>
-                            <input type="password" maxLength="25"></input>
+                            <button class='easyLogin' onClick={handleGoogleLogin}>구글 로그인</button><br />
+                            <button class='easyLogin' onClick={handleCallback}>구글로그인성공 dialog 띄우고 토큰이메일 전달</button>    
                         </div>
-                        <button class="send">로그인 하기</button>
-                       
-                    </div>
-                </div> <br />
-
-                <div id='nicknameChange'>
-                    <label>닉네임 변경</label>
-                    <div>
-                        <div>
-                            <label>닉네임</label>
-                            <input type="text" maxLength="10" placeholder='user001'></input>
-                            <button class="send">닉네임 중복 확인</button>
-                        </div>
-                        <button class="send">닉네임 변경</button>
-                    </div>
-                </div><br />
-
-
-                <div id='easyLogin'>
-                    <label>간편 로그인</label><br /><br />
-                    <div>
-                        <button class='easyLogin' onClick={handleGoogleLogin}>구글 로그인</button><br />
-                        <button class='easyLogin' onClick={handleCallback}>구글로그인성공 dialog 띄우고 토큰이메일 전달</button>    
-                    </div>
-                </div> <br /><br />
-
-                <div id='logout'>
-                    <label>로그아웃</label><br />
-                    <button class='easyLogin'>로그아웃하기</button>
-                </div> <br />
-
-
-                <form id='register' method='post' action='/register'>
-                    <label>회원가입</label>
-                    <div >
-                        <div>
-                            <label>이메일</label>
-                            <input type="email" maxLength="50"></input>
-                            <button type='button' id='emailCheck' class="send">이메일확인</button>
-                        </div>
-                        <div>
-                            <label>비밀번호</label>
-                            <input type="password" maxLength="25"></input>
-                            <br />
-                            <label>비밀번호 재확인</label>
-                            <input type="password" maxLength="25"></input>
-                        </div>
-                        <div>
-                            <label>닉네임</label>
-                            <input type="text" maxLength="10"></input>
-                            <button type='button' id='nicknameCheck' class="send">닉네임 중복 확인</button>
-                        </div>
-                        <div>
-                            <label>전화번호</label>
-                            <input type="number" maxLength="3"></input>-
-                            <input type="number" maxLength="4"></input>-
-                            <input type="number" maxLength="4"></input>
-                            <button type='button' id='phoneNumberCheck' class="send">전화번호 확인</button>
-                        </div>
-                        <button class="send">계정 생성</button>
-                    </div>    
-                </form> <br /> <br />
+                    </div> <br /><br />
+                    <form id='register' method='post' action='/register'>
+                        <label>회원가입</label>
+                        <div >
+                            <div>
+                                <label>이메일</label>
+                                <input type="email" maxLength="50"></input>
+                                <button type='button' id='emailCheck' class="send">이메일확인</button>
+                            </div>
+                            <div>
+                                <label>비밀번호</label>
+                                <input type="password" maxLength="25"></input>
+                                <br />
+                                <label>비밀번호 재확인</label>
+                                <input type="password" maxLength="25"></input>
+                            </div>
+                            <div>
+                                <label>닉네임</label>
+                                <input type="text" maxLength="10"></input>
+                                <button type='button' id='nicknameCheck' class="send">닉네임 중복 확인</button>
+                            </div>
+                            <div>
+                                <label>전화번호</label>
+                                <input type="number" maxLength="3"></input>-
+                                <input type="number" maxLength="4"></input>-
+                                <input type="number" maxLength="4"></input>
+                                <button type='button' id='phoneNumberCheck' class="send">전화번호 확인</button>
+                            </div>
+                            <button class="send">계정 생성</button>
+                        </div>    
+                    </form> <br /> <br />
+                </div>
 
 
-                <div id='deletUser'>
-                    <label>회원 탈퇴</label>
-                    <div>
+                <div class="emailFalse" >
+                    <div id='nicknameChange'>
+                        <label>닉네임 변경</label>
                         <div>
-                            <label>이메일</label>
-                            <input type="email" maxLength="50"></input> 
+                            <div>
+                                <label>닉네임</label>
+                                <input type="text" maxLength="10" placeholder='user001'></input>
+                                <button class="send">닉네임 중복 확인</button>
+                            </div>
+                            <button class="send">닉네임 변경</button>
                         </div>
+                    </div><br />
+                    <div id='logout'>
+                        <label>로그아웃</label><br />
+                        <button class='easyLogin'>로그아웃하기</button>
+                    </div> <br />
+                    <div id='deletUser'>
+                        <label>회원 탈퇴</label>
                         <div>
-                            <label>비밀번호</label>
-                            <input type="password" maxLength="25"></input>
-                        </div> 
-                        <button class="send">탈퇴하기</button>
+                            <div>
+                                <label>이메일</label>
+                                <input type="email" maxLength="50"></input> 
+                            </div>
+                            <div>
+                                <label>비밀번호</label>
+                                <input type="password" maxLength="25"></input>
+                            </div> 
+                            <button class="send">탈퇴하기</button>
+                        </div>
                     </div>
                 </div>
+
+
             </div>
             
             <br /><br />
             <div className='text-sm text-gray-500 text-center'>그린맵 v1.0.0</div>
-            <div className='flex items-center gap-3 mb-4'>
+            <div>
                 <button
                     onClick={() => navigate('mypage')}
                     aria-label='뒤로가기'

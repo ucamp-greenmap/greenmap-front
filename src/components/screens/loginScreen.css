@@ -1,3 +1,5 @@
+/* tailwind */
+
 button[class="send"] {
     border: 0.125rem solid #4CAF50;
     background-color: #4CAF50;
@@ -5,6 +7,10 @@ button[class="send"] {
     padding: 0.25rem;
     margin-left: 0.5rem;
     border-radius: 5rem;
+}
+
+button[title='뒤로'] {
+    margin-bottom: 6rem;
 }
 
 div > input {
@@ -28,12 +34,12 @@ button[class="easyLogin"]{
 }
 
 
-#loginBox > * {
+#loginBox > * > * {
     text-align: left;
 }
 
 
-#loginBox > * > * > label {
+#loginBox > * > * > * > label {
     margin-left: 0.5rem;
     font-size: 1.25rem;
     font-weight: 600;
@@ -41,12 +47,12 @@ button[class="easyLogin"]{
     cursor: pointer;
 }
 
-#loginBox > * > * > * > div {
+#loginBox > * > * > * > * > div {
     margin: 0.5rem 0;
     width: 100%;
 }
 
-#loginBox > * > * > * > * > label {
+#loginBox > * > * > * > * > * > label {
     display: inline-block;
     width: 120px;
     font-weight: 500;
