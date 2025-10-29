@@ -44,10 +44,14 @@ export default function MyPageScreen({ onNavigate }) {
             </div>
 
             <div className='grid grid-cols-3 gap-3'>
-                <div className='bg-white rounded-2xl p-3 shadow text-center'>
+                <button
+                    onClick={() => navigate('points')}
+                    className='bg-white rounded-2xl p-3 shadow text-center focus:outline-none hover:bg-gray-50 transition-colors'
+                    aria-label='포인트 내역 보기'
+                >
                     <div className='text-xs text-gray-500'>포인트</div>
                     <div className='font-bold text-lg'>1,500</div>
-                </div>
+                </button>
                 <div className='bg-white rounded-2xl p-3 shadow text-center'>
                     <div className='text-xs text-gray-500'>탄소 감축</div>
                     <div className='font-bold text-lg'>
@@ -56,7 +60,7 @@ export default function MyPageScreen({ onNavigate }) {
                 </div>
                 <button
                     onClick={() => navigate('ranking')}
-                    className='bg-white rounded-2xl p-3 shadow text-center focus:outline-none'
+                    className='bg-white rounded-2xl p-3 shadow text-center focus:outline-none hover:bg-gray-50 transition-colors'
                     aria-label='랭킹 보기'
                 >
                     <div className='text-xs text-gray-500'>랭킹</div>
@@ -67,7 +71,15 @@ export default function MyPageScreen({ onNavigate }) {
             <div className='bg-white rounded-2xl p-3 shadow'>
                 <h3 className='font-semibold'>메뉴</h3>
                 <ul className='mt-2 space-y-2 text-sm text-gray-700'>
-                    <li>🎁 포인트 교환소</li>
+                    <li>
+                        <button
+                            onClick={() => navigate('point-exchange')}
+                            className='hover:text-[#4CAF50] transition-colors focus:outline-none focus:text-[#4CAF50]'
+                            aria-label='포인트 교환소 가기'
+                        >
+                            🎁 포인트 교환소
+                        </button>
+                    </li>
                     <li>📜 인증 기록 ({stats.totalCerts})</li>
                     <li>🔔 알림 (3)</li>
                     <li className='cursor-pointer'>❓ FAQ & 고객지원</li>
