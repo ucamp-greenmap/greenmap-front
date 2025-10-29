@@ -18,7 +18,9 @@ export default function MyPageScreen({ onNavigate }) {
                 className='bg-white rounded-2xl p-3 shadow text-center focus:outline-none'
                 aria-label='설정 가기'
             >
-                <div className='text-xs text-gray-500'>설정</div>
+                <div className='text-xs text-gray-500'>
+                    <img src='https://img.icons8.com/?size=1200&id=80555&format=jpg' alt='설정' className='w-7 h-7 mx-auto'></img>
+                </div>
             </button>
             <div>
                 {' '}
@@ -31,7 +33,7 @@ export default function MyPageScreen({ onNavigate }) {
                     <button onClick={console.log('클릭')}>알림설정</button>
                 </div>
             </div>
-
+            
             <div className='bg-white rounded-2xl p-4 shadow flex items-center gap-4'>
                 <div className='w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl'>
                     {profile.avatar || '👤'}
