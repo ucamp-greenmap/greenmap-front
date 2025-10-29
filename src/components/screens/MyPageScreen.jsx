@@ -82,7 +82,7 @@ export default function MyPageScreen({ onNavigate }) {
                     </li>
                     <li>📜 인증 기록 ({stats.totalCerts})</li>
                     <li>🔔 알림 (3)</li>
-                    <li>❓ FAQ & 고객지원</li>
+                    <li className='cursor-pointer'>❓ FAQ & 고객지원</li>
                 </ul>
             </div>
 

@@ -21,7 +21,9 @@ import PointHistoryScreen from './components/screens/PointHistoryScreen';
 import PointExchangeScreen from './components/screens/PointExchangeScreen';
 import RankingScreen from './components/screens/RankingScreen';
 import LoginScreen from './components/screens/LoginScreen';
+import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
+import FaqScreen from './components/screens/FaqScreen';
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -35,6 +37,7 @@ const TAB_TO_PATH = {
     'point-exchange': '/point-exchange',
     ranking: '/ranking',
     login: '/login',
+    FAQ: '/FAQ',
 };
 
 export default function App() {
@@ -105,6 +108,14 @@ export default function App() {
                     <Route
                         path='/login'
                         element={<LoginScreen onNavigate={navigate} />}
+                    />
+                    <Route
+                        path='/badge'
+                        element={<BadgeScreen onNavigate={navigate} />}
+                    />
+                    <Route
+                        path='/FAQ'
+                        element={<FaqScreen onNavigate={navigate} />}
                     />
                     {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
                     <Route path='*' element={<Navigate to='/' replace />} />
