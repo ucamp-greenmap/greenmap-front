@@ -96,7 +96,9 @@ export default function OnboardingScreen() {
                             </button>
                             <button
                                 onClick={() => goTo(index + 1)}
-                                className='px-4 py-2 bg-white rounded-full'
+                                className='px-4 py-2 bg-white rounded-full
+                                text-[#4CAF50] font-semibold
+                                '
                             >
                                 다음
                             </button>
