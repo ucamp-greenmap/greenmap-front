@@ -7,6 +7,7 @@ import {
     Route,
     useNavigate,
     useLocation,
+    Navigate,
 } from 'react-router-dom';
 import SplashScreen from './components/screens/SplashScreen';
 import BottomNavigation from './components/common/BottomNavigation';
@@ -64,7 +65,7 @@ export default function App() {
         };
 
         return (
-            <div className='min-h-screen pb-24'>
+            <div className='min-h-screen'>
                 <Routes>
                     <Route
                         path='/'
@@ -99,6 +100,8 @@ export default function App() {
                         path='/login'
                         element={<LoginScreen onNavigate={navigate} />}
                     />
+                    {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
+                    <Route path='*' element={<Navigate to='/' replace />} />
                 </Routes>
 
                 <BottomNavigation

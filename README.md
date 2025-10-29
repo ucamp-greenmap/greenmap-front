@@ -1,15 +1,48 @@
 # Green Map - 친환경 시설 지도 서비스
 
-PWA(Progressive Web App) 기반의 친환경 시설 찾기 서비스입니다.
+PWA(Progressive Web App) 기반의 친환경 시설 찾기 서비스입니다.  
+사용자의 현재 위치를 기반으로 주변 재활용 센터, 전기차 충전소, 제로웨이스트 매장, 따릉이 스테이션 등을 찾을 수 있습니다.
 
 ## 🚀 기술 스택
 
--   **Frontend**: React 19, Vite
+-   **Frontend**: React 19, Vite 7.1.9
 -   **State Management**: Redux Toolkit, Redux Persist
--   **Styling**: Tailwind CSS
+-   **Styling**: Tailwind CSS 3.4.7
 -   **Map**: Kakao Map API
 -   **PWA**: Vite PWA Plugin, Workbox
--   **Routing**: React Router DOM
+-   **Routing**: React Router DOM 7.0.2
+-   **Geolocation**: Browser Geolocation API
+
+## ✨ 주요 기능
+
+### 🗺️ 지도 기능
+
+-   **카카오 맵 통합**: 실시간 지도 표시 및 마커 관리
+-   **카테고리 필터**: 재활용 센터, 전기차 충전소, 제로웨이스트 매장, 따릉이 등
+-   **북마크 기능**: 즐겨찾는 시설 저장 및 관리
+-   **시설 상세정보**: 시설 클릭 시 상세 정보 표시
+-   **드래그 가능한 BottomSheet**: 시설 목록 및 상세정보 UI
+
+### 📍 위치 기능
+
+-   **현재 위치 추적**: Geolocation API 기반
+-   **위치 오버레이**: 실시간 위치를 지도에 표시 (펄스 애니메이션)
+-   **위치 이동**: 버튼 클릭으로 현재 위치로 즉시 이동
+-   **로딩 상태**: 위치 가져오는 중 로딩 인디케이터 표시
+
+### 📱 PWA 기능
+
+-   **오프라인 지원**: Service Worker 기반
+-   **설치 가능**: 홈 화면에 앱 추가
+-   **반응형 디자인**: 모바일/태블릿/데스크톱 최적화
+-   **빠른 로딩**: 캐싱 전략으로 성능 최적화
+
+### 🎨 UI/UX
+
+-   **그린 테마**: 친환경 컨셉의 디자인
+-   **부드러운 애니메이션**: Tailwind 기반 전환 효과
+-   **접근성**: ARIA 레이블 및 키보드 네비게이션 지원
+-   **로딩 상태**: 맵 로딩 중 스피너 표시
 
 ## 📦 설치 및 실행
 
@@ -90,26 +123,52 @@ GitHub 저장소 Settings → Secrets and variables → Actions → New reposito
 ```
 green-map/
 ├── .github/
-│   └── workflows/
-│       └── deploy.yml          # GitHub Actions 워크플로우
+│   ├── workflows/
+│   │   └── deploy.yml              # GitHub Actions 배포 워크플로우
+│   └── pull_request_template.md    # PR 템플릿
+├── docs/
+│   ├── CSS_ADJUSTMENT_GUIDE.md     # CSS 조정 가이드
+│   └── CURRENT_LOCATION.md         # 현재 위치 기능 문서
 ├── public/
-│   ├── manifest.json
-│   └── service-worker.js
+│   ├── manifest.json               # PWA 매니페스트
+│   └── service-worker.js           # Service Worker
 ├── src/
 │   ├── components/
-│   │   ├── common/             # 공통 컴포넌트
-│   │   ├── map/                # 지도 관련 컴포넌트
-│   │   └── screens/            # 화면 컴포넌트
-│   ├── hooks/                  # 커스텀 훅
-│   │   ├── useKakaoMap.js
-│   │   └── useMarkers.js
-│   ├── store/                  # Redux store
+│   │   ├── common/                 # 공통 컴포넌트
+│   │   │   ├── BottomNavigation.jsx
+│   │   │   ├── OfflineBanner.jsx
+│   │   │   └── UpdatePrompt.jsx
+│   │   ├── map/                    # 지도 관련 컴포넌트
+│   │   │   ├── BottomSheet.jsx     # 드래그 가능한 하단 시트
+│   │   │   ├── CurrentLocationButton.jsx
+│   │   │   ├── FacilityDetail.jsx  # 시설 상세정보
+│   │   │   ├── FacilityList.jsx    # 시설 목록
+│   │   │   └── FilterBar.jsx       # 카테고리 필터
+│   │   └── screens/                # 화면 컴포넌트
+│   │       ├── HomeScreen.jsx
+│   │       ├── MapScreen.jsx
+│   │       ├── CertificationScreen.jsx
+│   │       └── ...
+│   ├── hooks/                      # 커스텀 훅
+│   │   ├── useKakaoMap.js          # 카카오 맵 초기화
+│   │   ├── useMarkers.js           # 마커 관리
+│   │   ├── useCurrentLocation.js   # 현재 위치 추적
+│   │   └── useOnlineStatus.js      # 온라인 상태 감지
+│   ├── store/                      # Redux store
+│   │   ├── index.js
 │   │   └── slices/
-│   ├── util/                   # 유틸리티 함수
-│   │   ├── location.js
-│   │   └── mapHelpers.js
-│   └── main.jsx
-├── netlify.toml                # Netlify 설정
+│   │       ├── appSlice.js
+│   │       ├── facilitySlice.js
+│   │       └── ...
+│   ├── util/                       # 유틸리티 함수
+│   │   ├── location.js             # 위치 관련 유틸
+│   │   └── mapHelpers.js           # 맵 헬퍼 함수
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+├── .env.example                    # 환경 변수 예제
+├── netlify.toml                    # Netlify 배포 설정
+├── vite.config.js                  # Vite 설정
 └── package.json
 ```
 
@@ -126,19 +185,43 @@ green-map/
 
 MIT License
 
-## React + Vite
+---
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 📚 추가 리소스
 
-Currently, two official plugins are available:
+-   [Kakao Map API 문서](https://apis.map.kakao.com/web/)
+-   [Vite 문서](https://vitejs.dev/)
+-   [React 문서](https://react.dev/)
+-   [Tailwind CSS 문서](https://tailwindcss.com/)
+-   [PWA 가이드](https://web.dev/progressive-web-apps/)
 
--   [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
--   [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🏗️ 아키텍처
 
-## React Compiler
+### 상태 관리 구조
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+Redux Store
+├── app: 앱 상태 (splash, onboarding, main)
+├── facility: 시설 데이터 및 북마크
+├── point: 포인트 시스템
+├── user: 사용자 정보
+└── ... (기타 슬라이스)
+```
 
-## Expanding the ESLint configuration
+### 라우팅 구조
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```
+/                   → HomeScreen (기본 홈)
+/map                → MapScreen (지도)
+/verification       → CertificationScreen (인증)
+/challenge          → ChallengeScreen (챌린지)
+/mypage             → MyPageScreen (마이페이지)
+/points             → PointHistoryScreen (포인트 내역)
+/ranking            → RankingScreen (랭킹)
+/login              → LoginScreen (로그인)
+*                   → Redirect to / (404 처리)
+```
+
+---
+
+**Made with 💚 by Green Map Team**
