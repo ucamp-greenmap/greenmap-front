@@ -505,7 +505,10 @@ export default function CertificationScreen() {
 
     return (
         <>
-            <div className='min-h-screen bg-gray-50 pb-24'>
+            <div
+                className='min-h-screen bg-gray-50'
+                style={{ paddingBottom: 'var(--bottom-nav-inset)' }}
+            >
                 {/* Header */}
                 <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
                     <h1 className='text-3xl font-bold text-white mb-2'>

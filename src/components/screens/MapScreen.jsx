@@ -235,7 +235,25 @@ export default function MapScreen() {
     };
 
     return (
-        <div className='relative h-screen w-screen overflow-hidden'>
+        /**
+         * 🎨 MapScreen 최상위 컨테이너 레이아웃 설정
+         * 
+         * height: calc(100vh - var(--bottom-nav-inset))
+         * - 화면 전체 높이(100vh)에서 BottomNavigation 영역(--bottom-nav-inset)을 뺀 높이
+         * - 이렇게 하면 지도가 BottomNavigation과 겹치지 않음
+         * - --bottom-nav-inset는 index.css에서 정의 (기본값: 96px)
+         * 
+         * 조정 방법:
+         * - 지도 영역을 더 크게: index.css에서 --bottom-nav-inset 값을 줄임
+         * - 지도 영역을 더 작게: index.css에서 --bottom-nav-inset 값을 늘림
+         * 
+         * relative: 내부의 absolute 요소들(FilterBar, CurrentLocationButton, BottomSheet)의 기준점
+         * overflow-hidden: 지도가 컨테이너 밖으로 넘치지 않도록 제한
+         */
+        <div
+            className='relative w-full overflow-hidden'
+            style={{ height: 'calc(100vh - var(--bottom-nav-inset))' }}
+        >
             {!KAKAO_KEY ? (
                 <div className='p-4'>
                     <div className='bg-yellow-50 border border-yellow-200 text-sm text-yellow-800 rounded-lg p-4'>
@@ -250,11 +268,24 @@ export default function MapScreen() {
                 </div>
             ) : (
                 <>
+                    {/**
+                     * 🗺️ 카카오 지도 컨테이너
+                     * 
+                     * w-full h-full: 부모 컨테이너의 너비와 높이를 100% 채움
+                     * - w-full (width: 100%): 좌우 여백 없이 전체 너비 사용
+                     * - h-full (height: 100%): 상하 여백 없이 전체 높이 사용
+                     * 
+                     * z-0: 다른 UI 요소들(FilterBar, BottomSheet) 아래에 배치
+                     * 
+                     * ⚠️ 주의: absolute inset-0 대신 w-full h-full 사용
+                     * - absolute inset-0을 사용하면 좌측에 여백이 생김
+                     * - w-full h-full은 부모의 크기를 그대로 따라감
+                     */}
                     <div
                         ref={mapRef}
                         role='application'
                         aria-label='카카오 지도'
-                        className='absolute inset-0 z-0'
+                        className='w-full h-full z-0'
                     />
 
                     <FilterBar

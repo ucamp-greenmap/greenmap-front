@@ -88,7 +88,23 @@ export default function HomeScreen({ onNavigate }) {
     };
 
     return (
-        <div className='pb-24'>
+        /**
+         * 📱 HomeScreen 스크롤 영역 설정
+         * 
+         * paddingBottom: var(--bottom-nav-inset)
+         * - 하단에 BottomNavigation 높이만큼 padding 추가
+         * - 스크롤 시 BottomNavigation이 콘텐츠를 가리지 않도록 함
+         * - --bottom-nav-inset는 index.css에서 정의 (기본값: 96px)
+         * 
+         * 조정 방법:
+         * - padding을 더 크게: index.css에서 --bottom-nav-inset 값 증가
+         * - padding을 더 작게: index.css에서 --bottom-nav-inset 값 감소
+         * 
+         * ⚠️ 주의: className='pb-24' 대신 inline style 사용
+         * - pb-24는 고정 padding (96px)
+         * - CSS 변수 사용으로 일관된 spacing 유지
+         */
+        <div style={{ paddingBottom: 'var(--bottom-nav-inset)' }}>
             {/* Header - gradient */}
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 pt-12 pb-6 rounded-b-3xl text-white'>
                 <div className='flex flex-col items-center mb-6'>
@@ -298,8 +314,26 @@ export default function HomeScreen({ onNavigate }) {
                 </div>
             </div>
 
+            {/**
+             * 🎉 Toast 알림 위치 설정
+             * 
+             * bottom: var(--bottom-nav-inset)
+             * - BottomNavigation 바로 위에 표시
+             * - BottomNavigation에 가려지지 않도록 함
+             * 
+             * 조정 방법:
+             * - 더 위로 이동: calc(var(--bottom-nav-inset) + 10px)
+             * - BottomNavigation과 간격: calc(var(--bottom-nav-inset) + 20px)
+             * 
+             * fixed: 스크롤과 관계없이 화면에 고정
+             * left-1/2 transform -translate-x-1/2: 화면 중앙 정렬
+             * z-50: 다른 요소들 위에 표시
+             */}
             {toast && (
-                <div className='fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg shadow'>
+                <div
+                    className='fixed left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg shadow z-50'
+                    style={{ bottom: 'var(--bottom-nav-inset)' }}
+                >
                     {toast}
                 </div>
             )}
