@@ -2,12 +2,12 @@ import React, { useRef, useState } from 'react';
 
 export default function BottomSheet({ children }) {
     const sheetRef = useRef(null);
-    
+
     /**
      * 📏 BottomSheet 높이 상태
-     * 
+     *
      * 초기값: 80px (접힌 상태)
-     * 
+     *
      * 🔧 조정 방법:
      * - 접힌 상태 높이 변경: useState(80) → 다른 값
      *   예: useState(100), useState(120)
@@ -27,13 +27,13 @@ export default function BottomSheet({ children }) {
         const onPointerMove = (moveEvent) => {
             if (!isDraggingRef.current) return;
             const dy = startYRef.current - moveEvent.clientY;
-            
+
             /**
              * 🎚️ 드래그 중 높이 제한
-             * 
+             *
              * Math.min(window.innerHeight * 0.9, ...): 최대 높이 (화면의 90%)
              * Math.max(80, ...): 최소 높이 (80px)
-             * 
+             *
              * 🔧 조정 방법:
              * - 최대 높이 변경: 0.9 → 다른 비율 (예: 0.8, 0.95)
              * - 최소 높이 변경: 80 → 다른 값 (예: 100, 60)
@@ -52,28 +52,28 @@ export default function BottomSheet({ children }) {
             window.removeEventListener('pointerup', onPointerUp);
 
             const currentHeight = sheetRef.current.clientHeight;
-            
+
             /**
              * 📊 스냅 포인트 (Snap Points) 설정
-             * 
+             *
              * threshold: window.innerHeight * 0.25 (화면의 25%)
              * - 이 높이보다 높으면 펼쳐진 상태(60%)로 스냅
              * - 이 높이보다 낮으면 접힌 상태(80px)로 스냅
-             * 
+             *
              * 🔧 조정 방법:
-             * 
+             *
              * 1. threshold 변경:
              *    0.25 → 다른 비율 (예: 0.3, 0.2)
              *    - 값을 높이면: 더 많이 올려야 펼쳐짐
              *    - 값을 낮추면: 조금만 올려도 펼쳐짐
-             * 
+             *
              * 2. 펼친 상태 높이 변경:
              *    window.innerHeight * 0.6 → 다른 비율
              *    예: 0.5 (화면의 50%), 0.7 (화면의 70%)
-             * 
+             *
              * 3. 접힌 상태 높이 변경:
              *    80 → 다른 값 (useState 초기값과 일치)
-             * 
+             *
              * 4. 3단계 스냅 포인트 추가:
              *    if (currentHeight > window.innerHeight * 0.5) {
              *        setSheetHeight(window.innerHeight * 0.8);  // 최대
@@ -98,22 +98,22 @@ export default function BottomSheet({ children }) {
     return (
         /**
          * 🎭 BottomSheet 위치 및 크기 설정
-         * 
+         *
          * bottom: 0
          * - MapScreen의 하단(0px)에 배치
          * - MapScreen이 이미 BottomNavigation 공간을 확보했으므로 bottom: 0 사용
          * - 이전에는 bottom: var(--bottom-nav-inset)를 사용했지만,
          *   MapScreen 높이가 조정되면서 더 이상 필요 없음
-         * 
+         *
          * height: ${sheetHeight}px
          * - 드래그에 따라 동적으로 변경되는 높이
          * - 접힌 상태: 80px (시설 목록 보기)
          * - 펼친 상태: window.innerHeight * 0.6 (화면의 60%)
-         * 
+         *
          * 조정 방법:
          * - 접힌 높이 변경: setSheetHeight(80) → 다른 값으로 변경 (예: 100, 120)
          * - 펼친 높이 변경: window.innerHeight * 0.6 → 다른 비율로 변경 (예: 0.5, 0.7)
-         * 
+         *
          * absolute left-0 right-0: 화면 좌우 끝까지 확장
          * rounded-t-2xl: 상단 모서리만 둥글게
          * z-20: FilterBar(z-10)와 지도(z-0) 위에 표시
