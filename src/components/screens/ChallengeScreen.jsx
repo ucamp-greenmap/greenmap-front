@@ -1,4 +1,39 @@
 import React from 'react';
+const sampleChallengAlles = [
+    {
+        id: 1,
+        title: '일주일 동안 따릉이 5회 이용하기',
+        description: '대중교통 대신 따릉이를 이용해보세요',
+        icon: '🚴',
+        reward: 100,
+        progress: 3,
+        total: 5,
+        daysLeft: 3,
+        completed: false,
+    },
+    {
+        id: 3,
+        title: '재활용 5회 달성',
+        description: '재활용 센터 자주 방문하기',
+        icon: '♻️',
+        reward: 80,
+        progress: 0,
+        total: 5,
+        daysLeft: 30,
+        completed: false,
+    },
+    {
+        id: 4,
+        title: '전기차 12,000원 충전',
+        description: '전기차 충전하는 김에 포인트도 받자',
+        icon: '♻️',
+        reward: 1000,
+        progress: 4,
+        total: 10,
+        daysLeft: 10,
+        completed: false,
+    },
+]
 
 const sampleChallenges = [
     {
@@ -23,9 +58,22 @@ const sampleChallenges = [
         daysLeft: 0,
         completed: true,
     },
+    {
+        id: 4,
+        title: '전기차 12,000원 충전',
+        description: '전기차 충전하는 김에 포인트도 받자',
+        icon: '♻️',
+        reward: 1000,
+        progress: 4,
+        total: 10,
+        daysLeft: 10,
+        completed: false,
+    },
 ];
 
+
 export default function ChallengeScreen() {
+    const [filter, setFilter] = React.useState('available');
     return (
         <div className='p-4'>
             {/* Header */}
@@ -36,54 +84,64 @@ export default function ChallengeScreen() {
                 <p className='text-white text-opacity-90 text-sm'>
                     친환경 활동을 인증하고 포인트를 받으세요
                 </p>
-            </div> 
-
-            <div className='bg-white rounded-2xl p-3 m-2 shadow text-center focus:outline-none'>
-                <span className=' text-gray-500 p-5'>참여가능</span>
-                <span className='text-gray-500 p-5'>진행중</span>
-                <span className='text-gray-500 p-5'>완료</span>
-            
             </div>
 
+
+            <div className='bg-white rounded-2xl p-3 m-2 shadow text-center focus:outline-none'>
+                <button onClick={() => setFilter('available')} className='text-gray-500 p-5'>참여가능</button>
+                <button onClick={() => setFilter('ongoing')} className='text-gray-500 p-5'>진행중</button>
+                <button onClick={() => setFilter('completed')} className='text-gray-500 p-5'>완료</button>
+           
+            </div>
+
+
             <div className='mt-3 space-y-3'>
-                {sampleChallenges.map((c) => (
-                    <div
-                        key={c.id}
-                        className={`bg-white rounded-2xl p-4 shadow ${
-                            c.completed ? 'opacity-70' : ''
-                        }`}
-                    >
-                        <div className='flex items-start justify-between gap-3'>
-                            <div className='text-3xl'>{c.icon}</div>
-                            <div className='flex-1'>
-                                <div className='font-medium'>{c.title}</div>
-                                <div className='text-xs text-gray-500'>
-                                    {c.description}
-                                </div>
-                                <div className='mt-2'>
-                                    <div className='w-full bg-gray-200 rounded-full h-2'>
-                                        <div
-                                            className='bg-[#4CAF50] h-2 rounded-full'
-                                            style={{
-                                                width: `${
-                                                    (c.progress / c.total) * 100
-                                                }%`,
-                                            }}
-                                        />
-                                    </div>
-                                    <div className='text-xs text-gray-600 mt-1'>
-                                        {c.progress}/{c.total} · 보상 {c.reward}
-                                        P · D-{c.daysLeft}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='text-sm font-semibold text-[#4CAF50]'>
-                                {c.completed ? '완료' : ''}
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                {sampleChallenges
+                    .filter(c => {
+                    if (filter === 'available') return c.completed === '';
+                    //^^ 얘는 챌린지리스트에서 내가 신청한 리스트 제외하고 보이기
+                    if (filter === 'ongoing') return !c.completed && c.progress >= 0;
+                    if (filter === 'completed') return c.completed;
+                    })
+                    .map(c => (
+                    <ChallengeCard key={c.id} {...c} />
+                    ))
+                }
+
+
             </div>
         </div>
     );
 }
+
+
+
+
+function ChallengeCard({ icon, title, description, progress, total, reward, daysLeft, completed }) {
+    return (
+        <div className={`bg-white rounded-2xl p-4 shadow ${completed ? 'opacity-70' : ''}`}>
+            <div className='flex items-start justify-between gap-3'>
+                <div className='text-3xl'>{icon}</div>
+                <div className='flex-1'>
+                    <div className='font-medium'>{title}</div>
+                    <div className='text-xs text-gray-500'>{description}</div>
+                    <div className='mt-2'>
+                        <div className='w-full bg-gray-200 rounded-full h-2'>
+                            <div
+                                className='bg-[#4CAF50] h-2 rounded-full'
+                                style={{ width: `${(progress / total) * 100}%` }}
+                            />
+                        </div>
+                        <div className='text-xs text-gray-600 mt-1'>
+                            {progress}/{total} · 보상 {reward} P · D-{daysLeft}
+                        </div>
+                    </div>
+                </div>
+                <div className='text-sm font-semibold text-[#4CAF50]'>
+                    {completed ? '완료' : ''}
+                </div>
+            </div>
+        </div>
+    );
+}
+
