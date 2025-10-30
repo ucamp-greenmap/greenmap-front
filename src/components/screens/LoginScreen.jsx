@@ -8,7 +8,7 @@ export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
 
 
-    const [isLoggedIn, setIsLoggedIn] = useState(false); 
+    const [isLoggedIn, setIsLoggedIn] = useState(null);
     // null 바꾸고 setIsLoggedIn() 이메일 받아오기
 
 
@@ -22,21 +22,13 @@ export default function LoginScreen({ onNavigate }) {
     const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_URI_KEY || '';
     //간편 로그인(구글) // 변경필요
    function handleGoogleLogin() {
-
-
        const scope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile";
        const responseType = "token";
-
-
        const URL = `https://accounts.google.com/o/oauth2/v2/auth?`+
                 `client_id=${GOOGLE_CLIENT_ID}` +
                 `&redirect_uri=${GOOGLE_REDIRECT_URI}` +
                 `&response_type=${responseType}` +
                 `&scope=${scope}`;
-
-
-
-
        window.location.href = URL
    };
 
@@ -82,7 +74,7 @@ export default function LoginScreen({ onNavigate }) {
             <div className='bg-white rounded-2xl p-4 gap-4'>
                
                 {!isLoggedIn ? (
-                    <div class="emailTrue" >
+                    <div class="emailFalse" >
                     <div id='login' >
                         <label>로그인</label>
                         <div class="">
@@ -100,10 +92,13 @@ export default function LoginScreen({ onNavigate }) {
                     <div id='easyLogin'>
                         <label>간편 로그인</label><br /><br />
                         <div>
-                            <button className='easyLogin bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' onClick={handleGoogleLogin}>구글 로그인</button>
-                            <button className='easyLogin ml-2 bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' onClick={handleCallback}>구글로그인성공 dialog 띄우고 토큰이메일 전달</button>
+                            <button className='easyLogin bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
+                                onClick={handleGoogleLogin}>구글 로그인</button>
+                            <button className='easyLogin ml-2 bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
+                                onClick={handleCallback}>토큰 받기</button>
                             <br /><br />
-                            <button className='easyLogin bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' onClick={() => console.log('카카오 로그인')}>카카오 로그인</button>
+                            <button className='easyLogin bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
+                                onClick={() => kakaoLogin({isLoggedIn, setIsLoggedIn})}>카카오 로그인</button>
                         </div>
                     </div> <br /><br />
                     <form id='register' method='post' action='/register'>
@@ -138,7 +133,11 @@ export default function LoginScreen({ onNavigate }) {
                     </form> <br /> <br />
                 </div>
                 ) : (
-                    <div class="emailFalse" >
+                    <div class="emailTrue" >
+                        <button className='easyLogin ml-2 bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
+                                onClick={() => console.log(isLoggedIn)}>계정 받기</button>
+                        {/* ^카카오 이메일 확인용*/}
+
                     <div id='nicknameChange'>
                         <label>닉네임 변경</label>
                         <div>
@@ -182,29 +181,29 @@ export default function LoginScreen({ onNavigate }) {
 }
 
 
-const loginForm = document.getElementById('login');
 function loginUser() {
     //이메일 확인
     //비밀번호 확인
     //로그인 처리
 }
 
+function kakaoLogin({isLoggedIn, setIsLoggedIn}) {
+    // 여기서 
+    console.log('카카오 로그인');
+}
 
-const nicknameChangeForm = document.getElementById('nicknameChange');
+
 function changeNickname() {
     //닉네임 중복 확인
     //닉네임 변경 처리
 }
 
 
-const logoutForm = document.getElementById('logout');
 function logoutUser() {
     //로그아웃 처리
 }
 
 
-const register = document.getElementById('register');
-console.log('회원가입 폼', register);
 function registerUser() {
     //이메일 확인
     //비밀번호 재확인
@@ -213,8 +212,6 @@ function registerUser() {
     //계정 생성 처리
 }
 
-
-const deletUserForm = document.getElementById('deletUser');
 function deleteUser() {
     //이메일 확인
     //비밀번호 확인

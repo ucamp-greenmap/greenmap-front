@@ -50,21 +50,18 @@ const sampleChallenges = [
 
 const followedChallenges = [
     {
-        member_challenge_id: 1,
         member_id: 1001,
         challenge_id: 1,
         process: 3,
         updated_at: '2023-10-10',
     },
     {
-        member_challenge_id: 1,
         member_id: 1001,
         challenge_id: 2,
         process: 10,
         updated_at: '2023-10-11',
     },
     {
-        member_challenge_id: 1,
         member_id: 1001,
         challenge_id: 4,
         process: 4,
@@ -177,13 +174,15 @@ function ChallengeCard({filter, member_count, challenge_name, description, progr
                              {filter === 'ongoing' ? `${progress}/${success} · ` : ''}
                             보상 {point_amount} P · D-{deadline}
                             {filter === 'available' ? ` · 참여인원 ${member_count}명` : ''}
-                            {filter === 'completed' ? ` · 달성날자 ${updated_at}` : ''}
+                            {filter === 'completed' ? ` · 달성날짜 ${updated_at}` : ''}
                         </div>
                     </div>
                 </div>
                 <div className='text-sm font-semibold text-[#4CAF50]'>
                     {progress === success ? '완료' : ''}
                 </div>
+                {filter === 'available' ? <button className='mt-4 w-4 font-semibold text-[#4CAF50]'>참여</button> : ''}
+                {filter === 'ongoing' ? <button className='mt-4 p-2 w-16 font-semibold text-[#4CAF50]'>인증</button> : ''}
             </div>
         </div>
     );
