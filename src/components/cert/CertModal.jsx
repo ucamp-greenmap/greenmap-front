@@ -140,10 +140,12 @@ export default function CertModal({ type, onClose }) {
         setIsSubmitting(true);
 
         let body = {};
+        let apiUrl = '';
         const categoryId = type.id;
 
         try {
             if (categoryId === 'bike') {
+                apiUrl = '/verification/bike';
                 body = {
                     category: 'bike',
                     bike_number: parseInt(extraData.bike_number) || 0,
@@ -152,6 +154,7 @@ export default function CertModal({ type, onClose }) {
                     end_time: extraData.endTime,
                 };
             } else if (categoryId === 'ev') {
+                apiUrl = '/verification/car';
                 let finalChargeAmount = 0.0;
                 let finalChargeFee = 0;
 
@@ -171,6 +174,7 @@ export default function CertModal({ type, onClose }) {
                     end_time: extraData.endTime,
                 };
             } else if (categoryId === 'z') {
+                apiUrl = '/verification/shop';
                 const finalCategory = detectedCategory || 'zero';
                 body = {
                     category: finalCategory,
@@ -181,6 +185,7 @@ export default function CertModal({ type, onClose }) {
             }
 
             const jsonBody = JSON.stringify(body, null, 2);
+            console.log('URL:', apiUrl);
             console.log('--- API Request Body ---', jsonBody);
             alert(`✅ API 전송 내용 준비 완료!\n\n[Body - JSON]\n${jsonBody}`);
 
