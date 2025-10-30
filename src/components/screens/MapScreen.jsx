@@ -11,6 +11,10 @@ import { useKakaoMap } from '../../hooks/useKakaoMap';
 import { useMarkers } from '../../hooks/useMarkers';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { createCurrentLocationOverlay } from '../../util/location';
+import {
+    getBikeStations,
+    convertBikeStationToFacility,
+} from '../../util/bikeStationApi';
 import FilterBar from '../map/FilterBar';
 import CurrentLocationButton from '../map/CurrentLocationButton';
 import BottomSheet from '../map/BottomSheet';
@@ -20,7 +24,15 @@ import FacilityDetail from '../map/FacilityDetail';
 export default function MapScreen() {
     const facilities = useSelector((s) => s.facility.facilities || []);
     const dispatch = useDispatch();
-    const bookmarkedIds = useSelector((s) => s.facility.bookmarkedIds || []);
+    const bookmarkedIds = useSelector((s) => s.facility.bookmarkedIds || []); // 따릉이 데이터 상태
+    const [bikeStations, setBikeStations] = useState([]);
+    const [bikeStationsLoading, setBikeStationsLoading] = useState(false);
+
+    // 따릉이 시설 데이터 메모이제이션 (변환 비용 절감)
+    const bikeFacilities = useMemo(() => {
+        if (bikeStations.length === 0) return [];
+        return bikeStations.map(convertBikeStationToFacility);
+    }, [bikeStations]);
 
     // Dummy facility data with coordinates (used if store has none)
     const dummyFacilities = useMemo(
@@ -67,17 +79,22 @@ export default function MapScreen() {
         [facilities]
     );
 
+    // 따릉이 데이터와 더미 데이터 병합
+    const allFacilities = useMemo(() => {
+        return [...dummyFacilities, ...bikeFacilities];
+    }, [dummyFacilities, bikeFacilities]);
+
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [selectedFacility, setSelectedFacility] = useState(null);
 
     const filtered = useMemo(
         () =>
             selectedFilter === 'all'
-                ? dummyFacilities
+                ? allFacilities
                 : selectedFilter === 'bookmark'
-                ? dummyFacilities.filter((d) => bookmarkedIds.includes(d.id))
-                : dummyFacilities.filter((d) => d.category === selectedFilter),
-        [selectedFilter, dummyFacilities, bookmarkedIds]
+                ? allFacilities.filter((d) => bookmarkedIds.includes(d.id))
+                : allFacilities.filter((d) => d.category === selectedFilter),
+        [selectedFilter, allFacilities, bookmarkedIds]
     );
 
     // Map refs
@@ -117,36 +134,44 @@ export default function MapScreen() {
         handleMapClick
     );
 
+    // 따릉이 대여소 데이터 로드
+    useEffect(() => {
+        const loadBikeStations = async () => {
+            try {
+                setBikeStationsLoading(true);
+                const stations = await getBikeStations();
+                setBikeStations(stations);
+            } catch (error) {
+                console.error('따릉이 대여소 로드 실패:', error);
+                // 실패해도 계속 진행 (다른 시설은 표시)
+            } finally {
+                setBikeStationsLoading(false);
+            }
+        };
+
+        loadBikeStations();
+    }, []);
+
     // Manage markers
-    const markersRef = useMarkers(
+    const { markersRef, updateVisibleMarkers } = useMarkers(
         mapInstance,
         mapLoaded,
-        dummyFacilities,
-        currentInfoWindowRef
+        allFacilities,
+        currentInfoWindowRef,
+        selectedFilter,
+        bookmarkedIds
     );
 
-    // Update markers visibility based on filter/bookmarks
+    // 필터나 북마크 변경 시 마커 업데이트
     useEffect(() => {
         if (!mapInstance || !markersRef.current) return;
-
-        markersRef.current.forEach(({ id, marker }) => {
-            const data = dummyFacilities.find((d) => d.id === id);
-            if (!data) return;
-            const shouldShow =
-                selectedFilter === 'all'
-                    ? true
-                    : selectedFilter === 'bookmark'
-                    ? bookmarkedIds.includes(id)
-                    : data.category === selectedFilter;
-            marker.setMap(shouldShow ? mapInstance : null);
-        });
+        updateVisibleMarkers();
     }, [
         selectedFilter,
         bookmarkedIds,
-        mapLoaded,
-        dummyFacilities,
         mapInstance,
         markersRef,
+        updateVisibleMarkers,
     ]);
 
     // Relayout map on resize
@@ -164,14 +189,24 @@ export default function MapScreen() {
         return () => window.removeEventListener('resize', onResize);
     }, [mapInstance]);
 
-    // Cleanup on unmount
+    // Cleanup on unmount - 즉시 반환하여 페이지 전환 속도 향상
     useEffect(() => {
         return () => {
-            currentInfoWindowRef.current = null;
-            if (currentLocationOverlayRef.current) {
-                currentLocationOverlayRef.current.setMap(null);
-                currentLocationOverlayRef.current = null;
+            // 백그라운드에서 정리 (페이지 전환을 블로킹하지 않음)
+            if (window.requestIdleCallback) {
+                window.requestIdleCallback(() => {
+                    if (currentInfoWindowRef.current) {
+                        currentInfoWindowRef.current.close();
+                    }
+                    if (currentLocationOverlayRef.current) {
+                        currentLocationOverlayRef.current.setMap(null);
+                    }
+                });
             }
+
+            // 참조는 즉시 초기화
+            currentInfoWindowRef.current = null;
+            currentLocationOverlayRef.current = null;
         };
     }, []);
 
