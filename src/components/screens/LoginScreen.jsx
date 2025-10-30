@@ -100,8 +100,10 @@ export default function LoginScreen({ onNavigate }) {
                     <div id='easyLogin'>
                         <label>간편 로그인</label><br /><br />
                         <div>
-                            <button class='easyLogin' onClick={handleGoogleLogin}>구글 로그인</button><br />
-                            <button class='easyLogin' onClick={handleCallback}>구글로그인성공 dialog 띄우고 토큰이메일 전달</button>    
+                            <button className='easyLogin bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' onClick={handleGoogleLogin}>구글 로그인</button>
+                            <button className='easyLogin ml-2 bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' onClick={handleCallback}>구글로그인성공 dialog 띄우고 토큰이메일 전달</button>
+                            <br /><br />
+                            <button className='easyLogin bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' onClick={() => console.log('카카오 로그인')}>카카오 로그인</button>
                         </div>
                     </div> <br /><br />
                     <form id='register' method='post' action='/register'>
