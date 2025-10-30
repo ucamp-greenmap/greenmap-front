@@ -17,27 +17,23 @@ export const useKakaoMap = (mapRef, KAKAO_KEY, onMapClick) => {
         const initMap = () => {
             // mapRef가 아직 준비되지 않았으면 나중에 다시 시도
             if (!mapRef.current) {
-                console.log('[Kakao Map] mapRef not ready, will retry...');
                 return;
             }
 
             if (!window.kakao || !window.kakao.maps) {
-                console.log('[Kakao Map] Kakao SDK not ready');
                 return;
             }
 
             if (mapInstanceRef.current) {
-                console.log('[Kakao Map] Map already initialized');
                 return; // Prevent re-initialization
             }
 
-            console.log('[Kakao Map] Initializing map...');
             initAttemptedRef.current = true;
 
             const container = mapRef.current;
             const options = {
                 center: new window.kakao.maps.LatLng(37.5665, 126.978),
-                level: 6,
+                level: 3, // 줌 레벨: 3 (50m 반경, 많이 확대)
             };
             const map = new window.kakao.maps.Map(container, options);
             mapInstanceRef.current = map;
@@ -52,13 +48,11 @@ export const useKakaoMap = (mapRef, KAKAO_KEY, onMapClick) => {
                     );
             }
 
-            console.log('[Kakao Map] Map initialized successfully');
             setMapLoaded(true);
         };
 
         // Case 1: Kakao SDK already loaded
         if (window.kakao && window.kakao.maps) {
-            console.log('[Kakao Map] SDK already loaded, initializing...');
             // SDK가 로드되어 있으면 바로 초기화 시도
             if (window.kakao.maps.load) {
                 window.kakao.maps.load(initMap);
@@ -72,13 +66,11 @@ export const useKakaoMap = (mapRef, KAKAO_KEY, onMapClick) => {
         // Case 2: Script tag already exists but SDK not ready
         const existingScript = document.getElementById(scriptId);
         if (existingScript) {
-            console.log('[Kakao Map] Script exists, waiting for SDK...');
             // 스크립트가 있지만 SDK가 아직 로드되지 않은 경우
             // 100ms마다 체크
             const checkInterval = setInterval(() => {
                 if (window.kakao && window.kakao.maps) {
                     clearInterval(checkInterval);
-                    console.log('[Kakao Map] SDK ready, initializing...');
                     window.kakao.maps.load(initMap);
                 }
             }, 100);
@@ -88,17 +80,23 @@ export const useKakaoMap = (mapRef, KAKAO_KEY, onMapClick) => {
                 clearInterval(checkInterval);
             }, 5000);
 
-            return () => clearInterval(checkInterval);
+            return () => {
+                clearInterval(checkInterval);
+                // Cleanup on unmount
+                if (mapClickListenerRef.current && window.kakao?.maps) {
+                    window.kakao.maps.event.removeListener(
+                        mapClickListenerRef.current
+                    );
+                }
+            };
         }
 
         // Case 3: Script tag doesn't exist, need to load
-        console.log('[Kakao Map] Loading SDK script...');
         const script = document.createElement('script');
         script.id = scriptId;
         script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_KEY}&autoload=false`;
         script.async = true;
         script.onload = () => {
-            console.log('[Kakao Map] Script loaded, initializing SDK...');
             if (window.kakao && window.kakao.maps) {
                 window.kakao.maps.load(initMap);
             }
@@ -110,11 +108,7 @@ export const useKakaoMap = (mapRef, KAKAO_KEY, onMapClick) => {
 
         return () => {
             // Cleanup map click listener
-            if (
-                mapClickListenerRef.current &&
-                window.kakao &&
-                window.kakao.maps
-            ) {
+            if (mapClickListenerRef.current && window.kakao?.maps) {
                 window.kakao.maps.event.removeListener(
                     mapClickListenerRef.current
                 );
@@ -132,7 +126,6 @@ export const useKakaoMap = (mapRef, KAKAO_KEY, onMapClick) => {
             window.kakao &&
             window.kakao.maps
         ) {
-            console.log('[Kakao Map] mapRef ready, initializing...');
             const initMap = () => {
                 if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -185,6 +178,28 @@ export const useKakaoMap = (mapRef, KAKAO_KEY, onMapClick) => {
             }
         };
     }, [onMapClick]);
+
+    // Cleanup on unmount - 최소한의 작업만 수행
+    useEffect(() => {
+        return () => {
+            // 이벤트 리스너만 제거 (페이지 전환 속도 우선)
+            if (mapClickListenerRef.current && window.kakao?.maps?.event) {
+                try {
+                    window.kakao.maps.event.removeListener(
+                        mapClickListenerRef.current
+                    );
+                } catch {
+                    // 무시
+                }
+            }
+
+            // 참조 초기화는 동기적으로 처리
+            mapClickListenerRef.current = null;
+            mapInstanceRef.current = null;
+            setMapLoaded(false);
+            initAttemptedRef.current = false;
+        };
+    }, []);
 
     return { mapInstance: mapInstanceRef.current, mapLoaded };
 };

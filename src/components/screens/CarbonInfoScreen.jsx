@@ -14,7 +14,6 @@ export default function CarbonInfoScreen() {
                     />
                 </div>
             </div>
-
             <div className='grid grid-cols-3 gap-3'>
                 <div className='bg-white rounded-2xl p-3 shadow text-center'>
                     나무 심기 효과

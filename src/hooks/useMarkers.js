@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { getCategoryColor, createMarkerImage } from '../util/mapHelpers';
 
 /**
@@ -8,59 +8,238 @@ export const useMarkers = (
     mapInstance,
     mapLoaded,
     facilities,
-    currentInfoWindowRef
+    currentInfoWindowRef,
+    selectedFilter,
+    bookmarkedIds
 ) => {
     const markersRef = useRef([]);
+    const markerImageCacheRef = useRef({}); // MarkerImage 캐시
+    const _isMountedRef = useRef(true); // 마운트 상태 추적 (언더스코어로 unused 허용)
+    const _abortControllerRef = useRef(null); // 마커 생성 중단용 (언더스코어로 unused 허용)
+
+    // 현재 지도 영역에 마커가 포함되는지 확인
+    const isMarkerInBounds = useCallback((marker, bounds) => {
+        if (!bounds || !marker) return false;
+        const position = marker.getPosition();
+        return bounds.contain(position);
+    }, []);
+
+    // MarkerImage 캐싱 - 카테고리별로 한 번만 생성
+    const getMarkerImage = useCallback((category) => {
+        if (!window.kakao) return null;
+
+        if (!markerImageCacheRef.current[category]) {
+            const color = getCategoryColor(category);
+            markerImageCacheRef.current[category] = createMarkerImage(
+                window.kakao,
+                color
+            );
+        }
+
+        return markerImageCacheRef.current[category];
+    }, []);
+
+    // 지도 이동/줌 이벤트 시 마커 표시 업데이트 - 필터 적용
+    const updateVisibleMarkers = useCallback(() => {
+        if (!mapInstance || !window.kakao) return;
+
+        const bounds = mapInstance.getBounds();
+        const bookmarkSet = new Set(bookmarkedIds || []);
+
+        markersRef.current.forEach(({ id, category, marker }) => {
+            const isVisible = isMarkerInBounds(marker, bounds);
+
+            // 필터 조건 확인
+            const shouldShow =
+                selectedFilter === 'all'
+                    ? true
+                    : selectedFilter === 'bookmark'
+                    ? bookmarkSet.has(id)
+                    : category === selectedFilter;
+
+            // 필터 조건과 영역 모두 만족해야 표시
+            if (isVisible && shouldShow) {
+                marker.setMap(mapInstance);
+            } else {
+                marker.setMap(null);
+            }
+        });
+    }, [mapInstance, isMarkerInBounds, selectedFilter, bookmarkedIds]);
 
     // Create/update markers based on facilities
     useEffect(() => {
         if (!mapInstance || !window.kakao || !window.kakao.maps) return;
 
-        // Clear existing markers
-        markersRef.current.forEach((m) => {
-            if (m.marker) m.marker.setMap(null);
-            if (m.infowindow) m.infowindow.close();
-        });
+        // 이전 마커 생성 중단
+        if (_abortControllerRef.current) {
+            _abortControllerRef.current.abort();
+        }
 
-        // Create new markers
-        markersRef.current = facilities.map((f) => {
-            const position = new window.kakao.maps.LatLng(f.lat, f.lng);
-            const color = getCategoryColor(f.category);
-            const markerImage = createMarkerImage(window.kakao, color);
-            const marker = new window.kakao.maps.Marker({
-                position,
-                image: markerImage,
-            });
-            marker.setMap(mapInstance);
+        // 새로운 AbortController 생성
+        const abortController = new AbortController();
+        _abortControllerRef.current = abortController;
 
-            const infoContent = `<div style="padding:8px"><strong>${f.name}</strong><div style="font-size:12px;color:#666">${f.category}</div></div>`;
-            const infowindow = new window.kakao.maps.InfoWindow({
-                content: infoContent,
-            });
+        // 대용량 데이터는 비동기로 처리하여 UI 블로킹 방지
+        const createMarkers = async () => {
+            try {
+                // Clear existing markers
+                markersRef.current.forEach((m) => {
+                    if (m.marker) m.marker.setMap(null);
+                    if (m.infowindow) m.infowindow.close();
+                });
 
-            window.kakao.maps.event.addListener(marker, 'click', () => {
-                // Close previously open infowindow
-                if (currentInfoWindowRef.current) {
-                    currentInfoWindowRef.current.close();
+                const newMarkers = [];
+                const chunkSize = 200; // 100개 → 200개로 증가 (초기 로딩 시간 단축, 여전히 빠른 중단 가능)
+
+                for (let i = 0; i < facilities.length; i += chunkSize) {
+                    // 중단 신호 확인
+                    if (abortController.signal.aborted) {
+                        return;
+                    }
+
+                    const chunk = facilities.slice(i, i + chunkSize);
+
+                    const chunkMarkers = chunk.map((f) => {
+                        const position = new window.kakao.maps.LatLng(
+                            f.lat,
+                            f.lng
+                        );
+                        const markerImage = getMarkerImage(f.category); // 캐시된 이미지 사용
+                        const marker = new window.kakao.maps.Marker({
+                            position,
+                            image: markerImage,
+                        });
+
+                        const infoContent = `<div style="padding:8px"><strong>${f.name}</strong><div style="font-size:12px;color:#666">${f.category}</div></div>`;
+                        const infowindow = new window.kakao.maps.InfoWindow({
+                            content: infoContent,
+                        });
+
+                        window.kakao.maps.event.addListener(
+                            marker,
+                            'click',
+                            () => {
+                                if (currentInfoWindowRef.current) {
+                                    currentInfoWindowRef.current.close();
+                                }
+                                infowindow.open(mapInstance, marker);
+                                currentInfoWindowRef.current = infowindow;
+                            }
+                        );
+
+                        return {
+                            id: f.id,
+                            category: f.category, // 카테고리 직접 저장
+                            marker,
+                            infowindow,
+                            data: f,
+                        };
+                    });
+
+                    newMarkers.push(...chunkMarkers);
+
+                    // UI 블로킹 방지를 위한 짧은 대기
+                    if (i + chunkSize < facilities.length) {
+                        await new Promise((resolve) => setTimeout(resolve, 0));
+                    }
                 }
-                infowindow.open(mapInstance, marker);
-                currentInfoWindowRef.current = infowindow;
-            });
 
-            return { id: f.id, marker, infowindow, data: f };
-        });
-    }, [mapLoaded, facilities, mapInstance, currentInfoWindowRef]);
+                // 중단되지 않았을 때만 마커 업데이트
+                if (!abortController.signal.aborted) {
+                    markersRef.current = newMarkers;
+                    updateVisibleMarkers();
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('❌ [useMarkers] 마커 생성 오류:', error);
+                }
+            }
+        };
 
-    // Cleanup markers on unmount
-    useEffect(() => {
+        createMarkers();
+
+        // cleanup: 의존성 변경 시 진행 중인 작업 중단
         return () => {
-            markersRef.current.forEach((m) => {
-                if (m.marker) m.marker.setMap(null);
-                if (m.infowindow) m.infowindow.close();
-            });
+            if (_abortControllerRef.current) {
+                _abortControllerRef.current.abort();
+            }
+        };
+    }, [
+        mapLoaded,
+        facilities,
+        mapInstance,
+        currentInfoWindowRef,
+        updateVisibleMarkers,
+        getMarkerImage,
+    ]);
+
+    // 지도 이동/줌 이벤트 리스너 등록
+    useEffect(() => {
+        if (!mapInstance || !window.kakao || !window.kakao.maps) return;
+
+        // 지도가 움직일 때마다 마커 업데이트
+        const idleListener = window.kakao.maps.event.addListener(
+            mapInstance,
+            'idle',
+            updateVisibleMarkers
+        );
+
+        return () => {
+            if (
+                idleListener &&
+                window.kakao &&
+                window.kakao.maps &&
+                window.kakao.maps.event
+            ) {
+                try {
+                    window.kakao.maps.event.removeListener(idleListener);
+                } catch (error) {
+                    console.warn(
+                        '[Markers] Failed to remove idle listener:',
+                        error
+                    );
+                }
+            }
+        };
+    }, [mapInstance, updateVisibleMarkers]);
+
+    // Cleanup markers on unmount - 최소한의 작업만 수행
+    useEffect(() => {
+        _isMountedRef.current = true;
+
+        return () => {
+            // 마운트 상태 업데이트
+            _isMountedRef.current = false;
+
+            // 진행 중인 마커 생성 즉시 중단
+            if (_abortControllerRef.current) {
+                _abortControllerRef.current.abort();
+                _abortControllerRef.current = null;
+            }
+
+            // 마커 제거를 requestIdleCallback으로 지연시켜 페이지 전환 속도 향상
+            const markers = markersRef.current;
             markersRef.current = [];
+
+            // 백그라운드에서 정리 (페이지 전환을 블로킹하지 않음)
+            if (markers.length > 0 && window.requestIdleCallback) {
+                window.requestIdleCallback(() => {
+                    markers.forEach((m) => {
+                        if (m.marker) m.marker.setMap(null);
+                        if (m.infowindow) m.infowindow.close();
+                    });
+                });
+            } else if (markers.length > 0) {
+                // requestIdleCallback이 없으면 setTimeout으로 지연
+                setTimeout(() => {
+                    markers.forEach((m) => {
+                        if (m.marker) m.marker.setMap(null);
+                        if (m.infowindow) m.infowindow.close();
+                    });
+                }, 0);
+            }
         };
     }, []);
 
-    return markersRef;
+    return { markersRef, updateVisibleMarkers };
 };

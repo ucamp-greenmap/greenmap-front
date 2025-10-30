@@ -1,11 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import { useNavigate } from 'react-router-dom';
 import './loginScreen.css';
+
 
 export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
+
+
+    const [isLoggedIn, setIsLoggedIn] = useState(null);
+    // null 바꾸고 setIsLoggedIn() 이메일 받아오기
 
 
     const navigate = (tab) => {
@@ -13,23 +17,21 @@ export default function LoginScreen({ onNavigate }) {
         dispatch(setActiveTab(tab));
     };
 
+
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_ID_KEY || '';
     const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_URI_KEY || '';
     //간편 로그인(구글) // 변경필요
    function handleGoogleLogin() {
-
        const scope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile";
        const responseType = "token";
-
        const URL = `https://accounts.google.com/o/oauth2/v2/auth?`+
                 `client_id=${GOOGLE_CLIENT_ID}` +
                 `&redirect_uri=${GOOGLE_REDIRECT_URI}` +
                 `&response_type=${responseType}` +
                 `&scope=${scope}`;
+       window.location.href = URL
+   };
 
-
-       window.location.href = URL 
-   }; 
 
    function handleCallback() {
         const hashedParams = new URLSearchParams(window.location.hash.substring(1));
@@ -43,11 +45,36 @@ export default function LoginScreen({ onNavigate }) {
         <div className='bg-gradient-to-r from-[#4CAF50] to-[#8BC34A] rounded-2xl p-4 text-white'>
                 계정 관리
         </div>
+        <div className='m-5'>
+            <button
+                onClick={() => navigate('mypage')}
+                aria-label='뒤로가기'
+                title='뒤로'
+                className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow-sm text-sm text-gray-700 hover:bg-gray-50'
+            >
+                <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='h-4 w-4'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                    strokeWidth='2'
+                    aria-hidden
+                >
+                    <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        d='M15 19l-7-7 7-7'
+                    />
+                </svg>
+                <span className='p-4 text-center focus:outline-none'>마이페이지 돌아가기</span>
+            </button>
+        </div>
         <div id='loginBox' className='p-4 space-y-4'>
-
-
             <div className='bg-white rounded-2xl p-4 gap-4'>
-                <div class="emailTure" > 
+               
+                {!isLoggedIn ? (
+                    <div class="emailFalse" >
                     <div id='login' >
                         <label>로그인</label>
                         <div class="">
@@ -65,8 +92,13 @@ export default function LoginScreen({ onNavigate }) {
                     <div id='easyLogin'>
                         <label>간편 로그인</label><br /><br />
                         <div>
-                            <button class='easyLogin' onClick={handleGoogleLogin}>구글 로그인</button><br />
-                            <button class='easyLogin' onClick={handleCallback}>구글로그인성공 dialog 띄우고 토큰이메일 전달</button>    
+                            <button className='easyLogin bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
+                                onClick={handleGoogleLogin}>구글 로그인</button>
+                            <button className='easyLogin ml-2 bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
+                                onClick={handleCallback}>토큰 받기</button>
+                            <br /><br />
+                            <button className='easyLogin bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
+                                onClick={() => kakaoLogin({isLoggedIn, setIsLoggedIn})}>카카오 로그인</button>
                         </div>
                     </div> <br /><br />
                     <form id='register' method='post' action='/register'>
@@ -100,9 +132,12 @@ export default function LoginScreen({ onNavigate }) {
                         </div>    
                     </form> <br /> <br />
                 </div>
+                ) : (
+                    <div class="emailTrue" >
+                        <button className='easyLogin ml-2 bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
+                                onClick={() => console.log(isLoggedIn)}>계정 받기</button>
+                        {/* ^카카오 이메일 확인용*/}
 
-
-                <div class="emailFalse" >
                     <div id='nicknameChange'>
                         <label>닉네임 변경</label>
                         <div>
@@ -123,73 +158,52 @@ export default function LoginScreen({ onNavigate }) {
                         <div>
                             <div>
                                 <label>이메일</label>
-                                <input type="email" maxLength="50"></input> 
+                                <input type="email" maxLength="50"></input>
                             </div>
                             <div>
                                 <label>비밀번호</label>
                                 <input type="password" maxLength="25"></input>
-                            </div> 
+                            </div>
                             <button class="send">탈퇴하기</button>
                         </div>
                     </div>
                 </div>
+                )}
 
 
             </div>
-            
+           
             <br /><br />
-            <div className='text-sm text-gray-500 text-center'>그린맵 v1.0.0</div>
-            <div>
-                <button
-                    onClick={() => navigate('mypage')}
-                    aria-label='뒤로가기'
-                    title='뒤로'
-                    className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow-sm text-sm text-gray-700 hover:bg-gray-50'
-                >
-                    <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        className='h-4 w-4'
-                        fill='none'
-                        viewBox='0 0 24 24'
-                        stroke='currentColor'
-                        strokeWidth='2'
-                        aria-hidden
-                    >
-                        <path
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            d='M15 19l-7-7 7-7'
-                        />
-                    </svg>
-                    <span className='p-4 text-center focus:outline-none'>마이페이지 돌아가기</span>
-                </button>
-            </div>
-
+            <div className=' text-sm text-gray-500 text-center'>그린맵 v1.0.0</div>
         </div>
         </>
     );
 }
 
-const loginForm = document.getElementById('login');
+
 function loginUser() {
     //이메일 확인
     //비밀번호 확인
     //로그인 처리
 }
 
-const nicknameChangeForm = document.getElementById('nicknameChange');
+function kakaoLogin({isLoggedIn, setIsLoggedIn}) {
+    // 여기서 
+    console.log('카카오 로그인');
+}
+
+
 function changeNickname() {
     //닉네임 중복 확인
     //닉네임 변경 처리
 }
 
-const logoutForm = document.getElementById('logout');
+
 function logoutUser() {
     //로그아웃 처리
 }
 
-const register = document.getElementById('register');
-console.log('회원가입 폼', register);
+
 function registerUser() {
     //이메일 확인
     //비밀번호 재확인
@@ -198,10 +212,10 @@ function registerUser() {
     //계정 생성 처리
 }
 
-const deletUserForm = document.getElementById('deletUser');
 function deleteUser() {
     //이메일 확인
     //비밀번호 확인
     //탈퇴 의지 재확인
     //회원 탈퇴 처리
 }
+
