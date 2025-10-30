@@ -3,7 +3,7 @@
  */
 
 const BIKE_API_KEY = import.meta.env.VITE_SEOUL_API_KEY || '';
-const BIKE_API_BASE_URL = 'http://openapi.seoul.go.kr:8088';
+const BIKE_API_BASE_URL = 'https://openapi.seoul.go.kr:8088';
 const CACHE_KEY = 'bike_stations';
 const CACHE_EXPIRY_KEY = 'bike_stations_expiry';
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24시간 (밀리초)
