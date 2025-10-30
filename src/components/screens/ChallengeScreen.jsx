@@ -1,39 +1,4 @@
 import React from 'react';
-const sampleChallengAlles = [
-    {
-        id: 1,
-        title: '일주일 동안 따릉이 5회 이용하기',
-        description: '대중교통 대신 따릉이를 이용해보세요',
-        icon: '🚴',
-        reward: 100,
-        progress: 3,
-        total: 5,
-        daysLeft: 3,
-        completed: false,
-    },
-    {
-        id: 3,
-        title: '재활용 5회 달성',
-        description: '재활용 센터 자주 방문하기',
-        icon: '♻️',
-        reward: 80,
-        progress: 0,
-        total: 5,
-        daysLeft: 30,
-        completed: false,
-    },
-    {
-        id: 4,
-        title: '전기차 12,000원 충전',
-        description: '전기차 충전하는 김에 포인트도 받자',
-        icon: '♻️',
-        reward: 1000,
-        progress: 4,
-        total: 10,
-        daysLeft: 10,
-        completed: false,
-    },
-]
 
 const sampleChallenges = [
     {
@@ -46,6 +11,7 @@ const sampleChallenges = [
         total: 5,
         daysLeft: 3,
         completed: false,
+        is_active: true,
     },
     {
         id: 2,
@@ -57,23 +23,63 @@ const sampleChallenges = [
         total: 10,
         daysLeft: 0,
         completed: true,
+        is_active: false, 
+    },
+    {
+        id: 3,
+        title: '재활용 5회 달성',
+        descriptio: '전기차 12,000원 충전',
+        description: '전기차 충전하는 김에 포인트도 받자',
+        icon: '♻️',
+        reward: 1000,
+        progress: 0,
+        total: 5,
+        daysLeft: 10,
+        completed: false,
+        is_active: true,
     },
     {
         id: 4,
         title: '전기차 12,000원 충전',
         description: '전기차 충전하는 김에 포인트도 받자',
-        icon: '♻️',
+        icon: '⚡',
         reward: 1000,
         progress: 4,
         total: 10,
         daysLeft: 10,
         completed: false,
+        is_active: true,
     },
 ];
 
+const followedChallenges = [
+    {
+        member_challenge_id: 1,
+        member_id: 1001,
+        challenge_id: 1,
+        process: 3,
+    },
+    {
+        member_challenge_id: 1,
+        member_id: 1001,
+        challenge_id: 2,
+        process: 10,
+    },
+    {
+        member_challenge_id: 1,
+        member_id: 1001,
+        challenge_id: 4,
+        process: 4,
+    },
+]; // 참여하는 챌린지 목록
+
 
 export default function ChallengeScreen() {
-    const [filter, setFilter] = React.useState('available');
+    const [filter, setFilter] = React.useState('ongoing');
+
+    // 모든 챌린지 목록 (sampleChallenges) 로 리애트 만들기
+    // 참여중인 챌린지 목록 (followedChallenges)
+
     return (
         <div className='p-4'>
             {/* Header */}
@@ -98,9 +104,10 @@ export default function ChallengeScreen() {
             <div className='mt-3 space-y-3'>
                 {sampleChallenges
                     .filter(c => {
-                    if (filter === 'available') return c.completed === '';
+                    if (filter === 'available') return c.is_active && !followedChallenges.map(fc => fc.challenge_id).includes(c.id);
+ 
                     //^^ 얘는 챌린지리스트에서 내가 신청한 리스트 제외하고 보이기
-                    if (filter === 'ongoing') return !c.completed && c.progress >= 0;
+                    if (filter === 'ongoing') return !c.completed && followedChallenges.map(fc => fc.challenge_id).includes(c.id);
                     if (filter === 'completed') return c.completed;
                     })
                     .map(c => (
