@@ -79,7 +79,7 @@ export default function OnboardingScreen() {
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
         >
-            <div className='flex-1 flex flex-col w-full max-w-xl lg:max-w-2xl mx-auto **items-center**'>
+            <div className='flex-1 flex flex-col w-full max-w-xl lg:max-w-2xl mx-auto items-center'>
                 <div className='h-[50vh] relative overflow-hidden flex items-center justify-center w-full'>
                     <div className />
                     <img

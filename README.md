@@ -60,11 +60,22 @@ npm install
 cp .env.example .env
 ```
 
-`.env` 파일에 카카오 맵 API 키를 추가합니다:
+`.env` 파일에 필요한 API 키들을 추가합니다:
 
-```
+```env
+# 카카오 맵 API 키 (필수)
 VITE_KAKAO_MAP_KEY=your_kakao_map_api_key_here
+
+# 서울 열린데이터광장 API 키 (따릉이 데이터용, 선택)
+VITE_SEOUL_API_KEY=your_seoul_open_api_key_here
 ```
+
+**API 키 발급 방법**:
+
+-   **카카오 맵 API**: [Kakao Developers](https://developers.kakao.com/)에서 발급
+-   **서울 열린데이터광장 API**: [서울 열린데이터광장](https://data.seoul.go.kr/)에서 발급 (따릉이 대여소 정보 조회용)
+
+> 💡 **참고**: 서울 API 키가 없어도 앱은 작동합니다. 다만 실시간 따릉이 대여소 정보는 표시되지 않습니다.
 
 ### 3. 개발 서버 실행
 

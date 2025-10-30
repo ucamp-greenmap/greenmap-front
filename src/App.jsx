@@ -60,6 +60,9 @@ export default function App() {
             );
             const tab = pathToTab[location.pathname] || 'home';
             dispatch(setActiveTab(tab));
+
+            // 라우트 변경 시 스크롤을 최상단으로 이동
+            window.scrollTo(0, 0);
         }, [location.pathname]);
 
         const navigate = (tab) => {
@@ -70,7 +73,7 @@ export default function App() {
         };
 
         return (
-            <div className='min-h-screen'>
+            <div className='min-h-screen w-full'>
                 <Routes>
                     <Route
                         path='/'
