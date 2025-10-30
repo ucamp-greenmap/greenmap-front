@@ -37,6 +37,7 @@ const TAB_TO_PATH = {
     'point-exchange': '/point-exchange',
     ranking: '/ranking',
     login: '/login',
+    badge: '/badge',
     FAQ: '/FAQ',
 };
 
