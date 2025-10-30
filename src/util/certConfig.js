@@ -6,7 +6,7 @@ export const certTypes = [
         id: 'z',
         label: '제로웨이스트 스토어 / 재활용센터 영수증',
         icon: '🛍️',
-        description: '영수증 + GPS 위치 인증',
+        description: '구매 영수증 인증',
         points: 25,
         color: 'from-[#8BC34A] to-[#7cb342]',
         iconComponent: Receipt,
