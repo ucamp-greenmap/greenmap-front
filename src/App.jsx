@@ -115,6 +115,10 @@ export default function App() {
                         path='/login'
                         element={<LoginScreen onNavigate={navigate} />}
                     />
+                    <Route 
+                        path="/login/success" 
+                        element={<LoginScreen />} 
+                    /> 
                     <Route
                         path='/badge'
                         element={<BadgeScreen onNavigate={navigate} />}
