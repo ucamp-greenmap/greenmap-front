@@ -2,44 +2,61 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import './loginScreen.css';
+import { useLocation } from 'react-router-dom';
 
 
 export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
+    const location = useLocation();
 
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    const [isLoggedIn, setIsLoggedIn] = useState(null);
-    // null 바꾸고 setIsLoggedIn() 이메일 받아오기
-
-
+    
+    
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
     };
 
+    function logoutUser() {
+        setIsLoggedIn(false);
+        localStorage.removeItem('token');
+    }
 
-    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_ID_KEY || '';
-    const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_URI_KEY || '';
-    //간편 로그인(구글) // 변경필요
-   function handleGoogleLogin() {
-       const scope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile";
-       const responseType = "token";
-       const URL = `https://accounts.google.com/o/oauth2/v2/auth?`+
-                `client_id=${GOOGLE_CLIENT_ID}` +
-                `&redirect_uri=${GOOGLE_REDIRECT_URI}` +
-                `&response_type=${responseType}` +
-                `&scope=${scope}`;
-       window.location.href = URL
-   };
-
-
-   function handleCallback() {
-        const hashedParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashedParams.get('access_token');
-        console.log('토큰: ', accessToken );
-   }
+    // 카카오 로그인 버튼 클릭
+    const kakaoLogin = () => {
+        window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
+    };
    
-   // 이메일이 확인
+    
+    useEffect(() => {
+        console.log("useEffect 실행됨");
+
+        // location.search에서 token 가져오기
+        const query = new URLSearchParams(location.search);
+        const token = query.get('token');
+        console.log(token);
+
+        if (token) {
+            // 토큰 저장
+            localStorage.setItem('token', token);
+            console.log("토큰 저장됨:", token);
+
+            // 로그인 상태 업데이트
+            setIsLoggedIn(true);
+
+            // URL 정리
+            window.history.replaceState({}, '', '/login');
+        } else {
+            // 로컬스토리지에 토큰이 있는지 확인
+            const storedToken = localStorage.getItem('token');
+            if (storedToken) {
+                setIsLoggedIn(true);
+                console.log("저장된 토큰으로 로그인 상태 유지:", storedToken);
+            }
+        }
+    }, [location]);
+   
     return (
         <>
         <div className='bg-gradient-to-r from-[#4CAF50] to-[#8BC34A] rounded-2xl p-4 text-white'>
@@ -93,12 +110,12 @@ export default function LoginScreen({ onNavigate }) {
                         <label>간편 로그인</label><br /><br />
                         <div>
                             <button className='easyLogin bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
-                                onClick={handleGoogleLogin}>구글 로그인</button>
+                                onClick={() => console.log("구글로그인")}>구글 로그인</button>
                             <button className='easyLogin ml-2 bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
-                                onClick={handleCallback}>토큰 받기</button>
+                                onClick={() => console.log("구글 토큰")}>토큰 받기</button>
                             <br /><br />
                             <button className='easyLogin bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
-                                onClick={() => kakaoLogin({isLoggedIn, setIsLoggedIn})}>카카오 로그인</button>
+                                onClick={kakaoLogin}>카카오 로그인</button>
                         </div>
                     </div> <br /><br />
                     <form id='register' method='post' action='/register'>
@@ -123,7 +140,9 @@ export default function LoginScreen({ onNavigate }) {
                             </div>
                             <div>
                                 <label>전화번호</label>
-                                <input type="number" maxLength="3"></input>-
+                                <select>
+                                    <option value="010" selected>010</option>
+                                </select>-
                                 <input type="number" maxLength="4"></input>-
                                 <input type="number" maxLength="4"></input>
                                 <button type='button' id='phoneNumberCheck' class="send">전화번호 확인</button>
@@ -134,10 +153,6 @@ export default function LoginScreen({ onNavigate }) {
                 </div>
                 ) : (
                     <div class="emailTrue" >
-                        <button className='easyLogin ml-2 bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
-                                onClick={() => console.log(isLoggedIn)}>계정 받기</button>
-                        {/* ^카카오 이메일 확인용*/}
-
                     <div id='nicknameChange'>
                         <label>닉네임 변경</label>
                         <div>
@@ -151,7 +166,7 @@ export default function LoginScreen({ onNavigate }) {
                     </div><br />
                     <div id='logout'>
                         <label>로그아웃</label><br />
-                        <button class='easyLogin'>로그아웃하기</button>
+                        <button class='easyLogin' onClick={logoutUser}>로그아웃하기</button>
                     </div> <br />
                     <div id='deletUser'>
                         <label>회원 탈퇴</label>
@@ -167,6 +182,9 @@ export default function LoginScreen({ onNavigate }) {
                             <button class="send">탈퇴하기</button>
                         </div>
                     </div>
+                    <button className='easyLogin ml-2 bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
+                                onClick={() => console.log(isLoggedIn)}>이메일 확인</button>
+                        {/* ^카카오 이메일 확인용*/}
                 </div>
                 )}
 
@@ -178,44 +196,5 @@ export default function LoginScreen({ onNavigate }) {
         </div>
         </>
     );
-}
-
-
-function loginUser() {
-    //이메일 확인
-    //비밀번호 확인
-    //로그인 처리
-}
-
-function kakaoLogin({isLoggedIn, setIsLoggedIn}) {
-    // 여기서 
-    console.log('카카오 로그인');
-}
-
-
-function changeNickname() {
-    //닉네임 중복 확인
-    //닉네임 변경 처리
-}
-
-
-function logoutUser() {
-    //로그아웃 처리
-}
-
-
-function registerUser() {
-    //이메일 확인
-    //비밀번호 재확인
-    //닉네임 확인
-    //전화번호 확인
-    //계정 생성 처리
-}
-
-function deleteUser() {
-    //이메일 확인
-    //비밀번호 확인
-    //탈퇴 의지 재확인
-    //회원 탈퇴 처리
 }
 

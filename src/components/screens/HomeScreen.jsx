@@ -118,7 +118,7 @@ export default function HomeScreen({ onNavigate }) {
 
                 {/* Sections */}
                 <div className='mt-6 space-y-6'>
-                    {/* 🚀 분리된 EcoNewsList 컴포넌트 삽입 */}
+                    {/*  EcoNewsList 컴포넌트 삽입 */}
                     <EcoNewsList placeholder={placeholder} />
 
                     {/* Quick actions */}

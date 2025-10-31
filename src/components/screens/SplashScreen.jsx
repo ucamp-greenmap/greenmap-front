@@ -21,7 +21,7 @@ export function SplashScreen() {
                     alt='Logo'
                     className='mx-auto'
                 /> */}
-                {/* <h1 className='text-3xl font-bold mt-4'>GREEN MAP</h1> */}
+                <h1 className='text-3xl font-bold mt-4'>GREEN MAP</h1>
                 <p className='mt-2 text-xl'>
                     녹색 발자국과 함께하는 지속가능한 생활 지도
                 </p>
@@ -31,3 +31,4 @@ export function SplashScreen() {
 }
 
 export default SplashScreen;
+

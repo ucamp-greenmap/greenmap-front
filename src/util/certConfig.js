@@ -11,7 +11,7 @@ export const certTypes = [
         color: 'from-[#8BC34A] to-[#7cb342]',
         iconComponent: Receipt,
         Recycle,
-        // 제로웨이스트 키워드
+        // 제로웨이스트
         zeroKeywords: [
             '다회용',
             '리필',

@@ -24,6 +24,7 @@ import LoginScreen from './components/screens/LoginScreen';
 import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
+import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -39,6 +40,7 @@ const TAB_TO_PATH = {
     login: '/login',
     badge: '/badge',
     FAQ: '/FAQ',
+    'cert-history': '/cert-history',
 };
 
 export default function App() {
@@ -116,6 +118,12 @@ export default function App() {
                     <Route
                         path='/badge'
                         element={<BadgeScreen onNavigate={navigate} />}
+                    />
+                    <Route
+                        path='/cert-history'
+                        element={
+                            <CertificationHistoryScreen onNavigate={navigate} />
+                        }
                     />
                     <Route
                         path='/FAQ'
