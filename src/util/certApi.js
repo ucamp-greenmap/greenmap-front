@@ -41,19 +41,55 @@ async function sendVerification(url, memberId, body) {
     }
 }
 
-// 따릉이 인증 (수정됨!)
+// 따릉이 인증
 export async function verifyBike(memberId, data) {
     return sendVerification('/verification/bike', memberId, data);
 }
 
-// 전기차 인증 (수정됨!)
+// 전기차 인증
 export async function verifyCar(memberId, data) {
     return sendVerification('/verification/car', memberId, data);
 }
 
-// 상점 인증 (수정됨!)
+// 상점 인증
 export async function verifyShop(memberId, data) {
     return sendVerification('/verification/shop', memberId, data);
+}
+
+// 이번 달 인증 통계 조회
+export async function fetchMonthlyStats(memberId) {
+    try {
+        const response = await fetch(`${BASE_URL}/verification/monthly`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                memberId: memberId.toString(),
+            },
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'SUCCESS') {
+            return {
+                success: true,
+                data: result.data,
+                message: result.message,
+            };
+        } else {
+            return {
+                success: false,
+                data: { verifyTimes: 0, pointSum: 0 },
+                message: result.message || '조회에 실패했습니다.',
+            };
+        }
+    } catch (error) {
+        console.error('API 요청 오류:', error);
+        return {
+            success: false,
+            data: { verifyTimes: 0, pointSum: 0 },
+            message: '네트워크 오류가 발생했습니다.',
+        };
+    }
 }
 
 // 최근 인증 내역 조회
@@ -89,5 +125,5 @@ export async function fetchCertificationHistory(memberId) {
             data: [],
             message: '네트워크 오류가 발생했습니다.',
         };
-    } 
+    }
 }

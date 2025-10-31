@@ -96,7 +96,15 @@ export default function MyPageScreen({ onNavigate }) {
                             🎁 포인트 교환소
                         </button>
                     </li>
-                    <li>📜 인증 기록 ({stats.totalCerts})</li>
+                    <li>
+                        <button
+                            onClick={() => navigate('cert-history')}
+                            className='hover:text-[#4CAF50] transition-colors focus:outline-none focus:text-[#4CAF50]'
+                            aria-label='인증 기록 보기'
+                        >
+                            📜 인증 기록 ({stats.totalCerts})
+                        </button>
+                    </li>
                     <li>🔔 알림 (3)</li>
                     <li>
                         <button
@@ -108,12 +116,6 @@ export default function MyPageScreen({ onNavigate }) {
                         </button>
                     </li>
                 </ul>
-            </div>
-
-            <div className='bg-gradient-to-r from-[#4CAF50] to-[#8BC34A] rounded-2xl p-4 text-white'>
-                <h4 className='font-bold'>2024년 10월 요약</h4>
-                <div className='text-sm mt-2'>인증 횟수: 24 (지난달 +8)</div>
-                <div className='text-sm'>획득 포인트: 850P (지난달 +210)</div>
             </div>
 
             <div className='text-sm text-gray-500'>그린맵 v1.0.0</div>

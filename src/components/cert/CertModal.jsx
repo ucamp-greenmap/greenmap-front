@@ -233,19 +233,19 @@ export default function CertModal({ type, onClose }) {
                     {/* 업로드 버튼 */}
                     <label
                         className={`
-                            block w-full rounded-2xl p-6 text-center cursor-pointer transition-all
-                            ${
-                                isProcessing
-                                    ? 'bg-gray-300 cursor-not-allowed'
-                                    : 'bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] hover:shadow-lg'
-                            }
-                        `}
+        block w-full rounded-2xl p-6 text-center cursor-pointer transition-all
+        ${
+            isProcessing
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-white border-2 border-green-500 hover:bg-green-50'
+        }
+    `}
                     >
-                        <Upload className='w-12 h-12 mx-auto mb-3 text-white' />
-                        <div className='text-white font-semibold'>
+                        <Upload className='w-12 h-12 mx-auto mb-3 text-green-500' />
+                        <div className='text-green-600 font-semibold'>
                             {isProcessing ? '분석 중...' : '📷 사진 선택하기'}
                         </div>
-                        <div className='text-white text-opacity-80 text-sm mt-1'>
+                        <div className='text-gray-500 text-sm mt-1'>
                             영수증이나 이용내역을 촬영해주세요
                         </div>
                         <input
@@ -383,12 +383,12 @@ export default function CertModal({ type, onClose }) {
                                 extractedCharge <= 0 &&
                                 extractedPrice <= 0)
                         }
-                        className={`w-full py-4 rounded-xl text-white font-bold transition-all 
-                            ${
-                                isSubmitting || isProcessing
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-green-500 hover:bg-green-600'
-                            }`}
+                        className={`w-full py-4 rounded-xl font-bold transition-all 
+        ${
+            isSubmitting || isProcessing
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
+        }`}
                     >
                         {isSubmitting ? '인증 처리 중...' : '인증 요청하기'}
                     </button>
