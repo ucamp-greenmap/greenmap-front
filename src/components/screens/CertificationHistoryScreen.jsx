@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronLeft, Calendar, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Calendar, TrendingUp, Leaf } from 'lucide-react';
 import { fetchCertificationHistory } from '../../util/certApi';
 
 export default function CertificationHistoryScreen({ onBack }) {
@@ -19,7 +19,6 @@ export default function CertificationHistoryScreen({ onBack }) {
         return labels[category] || category;
     };
 
-    // 카테고리별 아이콘
     const getCategoryIcon = (category) => {
         const icons = {
             BIKE: '🚴',
@@ -40,7 +39,6 @@ export default function CertificationHistoryScreen({ onBack }) {
         return colors[category] || 'from-gray-400 to-gray-600';
     };
 
-    // 날짜 포맷 변환
     const formatDate = (dateTime) => {
         if (!dateTime) return '';
         const date = new Date(dateTime);
@@ -95,6 +93,10 @@ export default function CertificationHistoryScreen({ onBack }) {
         0
     );
     const totalCount = certifications.length;
+    const totalCarbon = certifications.reduce(
+        (sum, cert) => sum + cert.carbonSave,
+        0
+    );
 
     return (
         <div className='min-h-screen bg-gray-50'>
@@ -111,7 +113,7 @@ export default function CertificationHistoryScreen({ onBack }) {
                 </div>
 
                 {/* 통계 카드 */}
-                <div className='grid grid-cols-2 gap-3'>
+                <div className='grid grid-cols-3 gap-3'>
                     <div className='bg-white bg-opacity-20 rounded-xl p-3 backdrop-blur-sm'>
                         <div className='flex items-center gap-2 mb-1'>
                             <Calendar className='w-4 h-4 text-white' />
@@ -132,6 +134,17 @@ export default function CertificationHistoryScreen({ onBack }) {
                         </div>
                         <p className='text-2xl font-bold text-white'>
                             {totalPoints}P
+                        </p>
+                    </div>
+                    <div className='bg-white bg-opacity-20 rounded-xl p-3 backdrop-blur-sm'>
+                        <div className='flex items-center gap-2 mb-1'>
+                            <Leaf className='w-4 h-4 text-white' />
+                            <p className='text-white text-opacity-80 text-xs'>
+                                탄소 감축량
+                            </p>
+                        </div>
+                        <p className='text-2xl font-bold text-white'>
+                            {totalCarbon}kg
                         </p>
                     </div>
                 </div>
@@ -158,7 +171,7 @@ export default function CertificationHistoryScreen({ onBack }) {
                                 : 'bg-white text-gray-700 border border-gray-200'
                         }`}
                     >
-                        따릉이
+                        🚴 따릉이
                     </button>
                     <button
                         onClick={() => setFilterCategory('CAR')}
@@ -168,7 +181,7 @@ export default function CertificationHistoryScreen({ onBack }) {
                                 : 'bg-white text-gray-700 border border-gray-200'
                         }`}
                     >
-                        전기차
+                        ⚡ 전기차
                     </button>
                     <button
                         onClick={() => setFilterCategory('ZERO_WASTE')}
@@ -178,7 +191,7 @@ export default function CertificationHistoryScreen({ onBack }) {
                                 : 'bg-white text-gray-700 border border-gray-200'
                         }`}
                     >
-                        제로웨이스트
+                        ♻️ 제로웨이스트
                     </button>
                     <button
                         onClick={() => setFilterCategory('RECYCLING_CENTER')}
@@ -188,7 +201,7 @@ export default function CertificationHistoryScreen({ onBack }) {
                                 : 'bg-white text-gray-700 border border-gray-200'
                         }`}
                     >
-                        재활용
+                        🔄 재활용
                     </button>
                 </div>
 
@@ -223,6 +236,12 @@ export default function CertificationHistoryScreen({ onBack }) {
                                         <p className='text-gray-500 text-sm mt-1'>
                                             {formatDate(cert.date)}
                                         </p>
+                                        <div className='flex items-center gap-1 mt-1'>
+                                            <Leaf className='w-3 h-3 text-green-600' />
+                                            <p className='text-green-600 text-xs font-medium'>
+                                                {cert.carbonSave}kg CO₂ 감축
+                                            </p>
+                                        </div>
                                     </div>
 
                                     {/* 포인트 */}
