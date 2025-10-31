@@ -22,13 +22,6 @@ export default function CertTypeCard({ type, onClick }) {
                     <p className='text-gray-600 text-sm mb-1'>
                         {type.description}
                     </p>
-                    <div className='flex items-center gap-2'>
-                        <span className='text-[#4CAF50] font-semibold'>
-                            {type.points}P
-                        </span>
-                        <span className='text-gray-400'>•</span>
-                        <span className='text-gray-500 text-sm'>인증당</span>
-                    </div>
                 </div>
 
                 <ChevronRight className='w-6 h-6 text-gray-400' />
