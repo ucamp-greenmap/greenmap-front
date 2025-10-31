@@ -161,7 +161,8 @@ export default function CertificationScreen() {
                             <li className='flex items-start gap-2'>
                                 <span className='text-[#4CAF50] mt-0.5'>✓</span>
                                 <span>
-                                    GPS 인증을 위해 위치 서비스를 활성화해주세요
+                                    전자 영수증 글씨가 잘 보이도록 스크린샷을
+                                    첨부해주세요
                                 </span>
                             </li>
                             <li className='flex items-start gap-2'>
@@ -217,7 +218,7 @@ export default function CertificationScreen() {
                                     아직 인증 내역이 없어요
                                 </p>
                                 <p className='text-gray-400 text-sm mt-2'>
-                                    첫 인증을 시작해보세요! 🌱
+                                    첫 인증을 시작해보세요
                                 </p>
                             </div>
                         )}

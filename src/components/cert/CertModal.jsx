@@ -71,7 +71,7 @@ export default function CertModal({ type, onClose }) {
             const extractedExtraData = extractApiData(text);
             setExtraData(extractedExtraData);
 
-            // 제로웨이스트 vs 재활용 자동 구분
+            // 제로웨이스트 재활용 자동 구분
             if (type.id === 'z') {
                 const hasRecycleKeyword = type.recycleKeywords.some((keyword) =>
                     text.toLowerCase().includes(keyword.toLowerCase())
@@ -189,8 +189,8 @@ export default function CertModal({ type, onClose }) {
             if (result.success) {
                 alert(
                     `✅ ${result.message}\n\n` +
-                        `💰 획득 포인트: ${result.data.point}P\n` +
-                        `🌱 탄소 감소량: ${result.data.carbonSave}kg`
+                        ` 획득 포인트: ${result.data.point}P\n` +
+                        ` 탄소 감소량: ${result.data.carbonSave}kg`
                 );
                 onClose();
             } else {
@@ -276,7 +276,7 @@ export default function CertModal({ type, onClose }) {
                                 <div className='bg-purple-50 rounded-2xl p-4 border-2 border-purple-200'>
                                     <div className='flex items-center justify-between'>
                                         <span className='text-purple-800 font-semibold'>
-                                            🏷️ 감지된 카테고리
+                                            감지된 카테고리
                                         </span>
                                         <span className='text-xl font-bold text-purple-600'>
                                             {detectedCategory === 'recycle'
