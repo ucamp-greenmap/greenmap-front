@@ -6,8 +6,11 @@ import {
     extractAmounts,
     extractApiData,
 } from '../../util/ocrUtils';
+import { verifyBike, verifyCar, verifyShop } from '../../util/certApi';
+import { useSelector } from 'react-redux';
 
 export default function CertModal({ type, onClose }) {
+    const memberId = useSelector((s) => s.user?.memberId) || 1; // Redux에서 memberId 가져오기
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
@@ -118,7 +121,7 @@ export default function CertModal({ type, onClose }) {
         }
     }
 
-    // API 전송 (JSON 보여주기)
+    // API 전송 (실제 호출)
     const handleCertification = async () => {
         let isValid = false;
 
@@ -139,60 +142,64 @@ export default function CertModal({ type, onClose }) {
 
         setIsSubmitting(true);
 
-        let body = {};
-        let apiUrl = '';
-        const categoryId = type.id;
-
         try {
-            if (categoryId === 'bike') {
-                apiUrl = '/verification/bike';
-                body = {
+            let result;
+
+            if (type.id === 'bike') {
+                const body = {
                     category: 'bike',
                     bike_number: parseInt(extraData.bike_number) || 0,
                     distance: Math.round(extractedDistance * 100) / 100,
                     start_time: extraData.startTime,
                     end_time: extraData.endTime,
                 };
-            } else if (categoryId === 'ev') {
-                apiUrl = '/verification/car';
-                let finalChargeAmount = 0.0;
+                result = await verifyBike(memberId, body);
+            } else if (type.id === 'ev') {
+                let finalChargeAmount = 0;
                 let finalChargeFee = 0;
 
                 if (extractedCharge > 0) {
-                    finalChargeAmount = extractedCharge;
+                    finalChargeAmount = Math.round(extractedCharge * 100) / 100;
                     finalChargeFee = 0;
                 } else if (extractedPrice > 0) {
-                    finalChargeAmount = 0.0;
+                    finalChargeAmount = 0;
                     finalChargeFee = extractedPrice;
                 }
 
-                body = {
+                const body = {
                     category: 'car',
                     chargeAmount: finalChargeAmount,
                     chargeFee: finalChargeFee,
                     start_time: extraData.startTime,
                     end_time: extraData.endTime,
                 };
-            } else if (categoryId === 'z') {
-                apiUrl = '/verification/shop';
+                result = await verifyCar(memberId, body);
+            } else if (type.id === 'z') {
                 const finalCategory = detectedCategory || 'zero';
-                body = {
+                const body = {
                     category: finalCategory,
                     name: extraData.name,
                     price: extractedPrice,
                     approveNum: parseInt(extraData.approveNum) || 0,
                 };
+                result = await verifyShop(memberId, body);
             }
 
-            const jsonBody = JSON.stringify(body, null, 2);
-            console.log('URL:', apiUrl);
-            console.log('--- API Request Body ---', jsonBody);
-            alert(`✅ API 전송 내용 준비 완료!\n\n[Body - JSON]\n${jsonBody}`);
-
-            onClose();
+            // 결과 처리
+            if (result.success) {
+                alert(
+                    `✅ ${result.message}\n\n` +
+                        `💰 획득 포인트: ${result.data.point}P\n` +
+                        `🌱 탄소 감소량: ${result.data.carbonSave}kg`
+                );
+                onClose();
+            } else {
+                console.error('❌ 인증 실패:', result);
+                alert(`❌ ${result.message}`);
+            }
         } catch (error) {
-            console.error('데이터 매핑 중 오류 발생:', error);
-            alert(`❌ 데이터 매핑 오류: ${error.message}`);
+            console.error('인증 처리 중 오류:', error);
+            alert(`❌ 인증 처리 중 오류가 발생했습니다: ${error.message}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -383,17 +390,8 @@ export default function CertModal({ type, onClose }) {
                                     : 'bg-green-500 hover:bg-green-600'
                             }`}
                     >
-                        {isSubmitting
-                            ? '데이터 준비 중...'
-                            : '전송 내용 확인하기'}
+                        {isSubmitting ? '인증 처리 중...' : '인증 요청하기'}
                     </button>
-
-                    {/* 정보 박스 */}
-                    <div className='bg-blue-50 rounded-2xl p-4 border border-blue-200'>
-                        <p className='text-blue-800 text-sm'>
-                            💡 <strong>예상 포인트:</strong> {type.points}P
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
