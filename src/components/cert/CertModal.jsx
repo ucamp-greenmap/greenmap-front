@@ -10,7 +10,7 @@ import { verifyBike, verifyCar, verifyShop } from '../../util/certApi';
 import { useSelector } from 'react-redux';
 
 export default function CertModal({ type, onClose }) {
-    const memberId = useSelector((s) => s.user?.memberId) || 1; // Redux에서 memberId 가져오기
+    const memberId = useSelector((s) => s.user?.memberId) || 1; 
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
