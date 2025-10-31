@@ -1,71 +1,134 @@
 import React from 'react';
 
-const badges = [
+const badgesList = [
     {
-        badge_id: 1,
-        image_id: '🌱',
-        badge_name: '첫걸음',
-        requirement: '첫 로그인시 지급',
-        description: '첫 걸음을 내딛은 환경전사에게 주어지는 뱃지',
-        is_active: true,
+        "badge_count" : 3,
+		"total_badge" : 24,
+		"success_rate" : "",
+		"badge_list" : [
+			{
+				"name" : "따릉이 인증 lv2",
+				"description" : "따릉이를 타고 인증 5번 하기",
+				"image_url" : String,
+				"created_at" : '2025-10-22', // 얻은날
+				"isFinish" : true, // 획득여부
+				"progress" : 5, // 달성률
+				"total_progress" : 5, // 달성조건
+			}
+		]
     },
     {
-        badge_id: 5,
-        image_id: '🛍️',
-        badge_name: '제로웨이스트 영웅',
-        requirement: '제로웨이스트 상점 영수증 인증 15회 달성',
-        description: '당신은 제로웨이스트 상점을 이용하여 환경오염을 조금 늦췄습니다. 15번이나요!',
-    },
-];
-
-const getBadges = [
-    {
-        member_badge_id: 1001,
-        member_id: 'user001',
-        badge_id: 1,
-        created_at: '2024-12-25',
-    },
-    {
-        member_badge_id: 1001,
-        member_id: 'user001',
-        badge_id: 11,
-        created_at: '2025-2-3',
+        "badge_count" : 10,
+		"total_badge" : 24,
+		"success_rate" : "",
+		"badge_list" : [
+			{
+				"name" : "재활용 인증 lv3",
+				"description" : "제로웨이스트 이용 후 영수증 10회 인증",
+				"image_url" : String,
+				"created_at" : '',
+				"isFinish" : false,
+				"progress" : 7,
+				"total_progress" : 10,
+			}
+		]
     },
     {
-        member_badge_id: 1001,
-        member_id: 'user001',
-        badge_id: 12,
-        created_at: '2025-5-16',
+        "badge_count" : 18,
+		"total_badge" : 24,
+		"success_rate" : "",
+		"badge_list" : [
+			{
+				"name" : "전기차 인증 lv6",
+				"description" : "전기차 충전 후 영수증 인증 30회",
+				"image_url" : String,
+				"created_at" : '2025',
+				"isFinish" : false,
+				"progress" : 16,
+				"total_progress" : 30, 
+			}
+		]
     },
-]; // 회원이 얻은 뱃지
+]
 
 export default function BadgeScreen() {
+    const [filter, setFilter] = React.useState('all');
+
+
     return (
         <div className='p-4'>
-            <h2 className='text-lg font-bold'>뱃지 컬렉션</h2>
-            <div>대표 뱃지 설정 / 대표뱃지 이름+습득조건 /  (획득한뱃지/전체뱃지) / 달성률 / 마이페이지로</div>
-            <div>전체 / 획득 / 미획득 리스트(옅은색)</div>
-            <p>리스트 돌리기</p>
-            <div>뱃지 아이콘 / 이름 / 설명 / 조건 </div>
-
-            <div className='mt-3 grid grid-cols-2 gap-3'>
-                {badges.map((b) => (
-                    <div
-                        key={b.badge_id}
-                        className={`bg-white rounded-2xl p-4 shadow text-center ${
-                            b.badge_id === 1 ? '' : 'opacity-60'
-                        }`}
-                    >
-                        <div className='text-3xl mb-2'>{b.image_id} {b.badge_name}</div>
-                        <div>
-                             {b.description}
-                        </div>
-                        <div className='text-xs text-gray-500 mt-1'>
-                            조건: {b.requirement}
-                        </div>
-                    </div>
-                ))}
+            <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
+                <h1 className='text-3xl font-bold text-white mb-2'>
+                    뱃지 컬렉션
+                </h1>
+                <p className='text-white text-opacity-90 text-sm'>
+                    GreenMap을 이용하고 뱃지를 수집해 보세요
+                </p>
             </div>
+
+            <div>
+                <div>
+                    <img src='' alt='대표  뱃지'></img>
+                    <span>뱃지 이름</span>
+                </div>
+                <div>
+                    획득한 뱃지 / 전체 뱃지 [달성률]
+                </div>
+                <button>마이페이지로</button>
+            </div>
+
+            <div className='bg-white rounded-2xl p-3 m-2 shadow text-center focus:outline-none'>
+                <button onClick={() => setFilter('all')} className='text-gray-500 p-5'>전체</button>
+                <button onClick={() => setFilter('acquired')} className='text-gray-500 p-5'>획득</button>
+                <button onClick={() => setFilter('notAcquired')} className='text-gray-500 p-5'>미획득</button>
+           
+            </div>
+
+            <div>
+                {/** 그리드 4줄로 */}
+                {badgesList.flatMap(b => 
+                    b.badge_list.map(badge => ({
+                        ...badge,
+                        badge_count: b.badge_count,
+                        total_badge: b.total_badge
+                    }))
+                ).filter(badge => {
+                    if (filter === 'all') return true;
+                    if (filter === 'acquired') return badge.isFinish === true;
+                    if (filter === 'notAcquired') return badge.isFinish === false;
+                })
+                .map(badge => (
+                    <BadgeCard key={badge.name} filter={filter} {...badge} />
+                ))
+                }
+            </div>
+
         </div>
     );
+}
+
+
+function BadgeCard({badge_count, total_badge, name, description, image_url, created_at, isFinish, progress, total_progress}) {
+
+    return (
+        <div className={`m-1 bg-white ${isFinish === false ? 'opacity-70' : ''}`}>
+            <div>
+                <div>
+                    <span>{badge_count} / {total_badge}</span>
+                </div>
+                <div>
+                    <img src={image_url} alt='뱃지 이미지'></img>
+                    <span>
+                        {isFinish === true ? created_at : ''}
+                        {isFinish === false ? progress + ' / ' + total_progress : ''}   
+                    </span>
+                </div>
+            </div>
+            <div>
+                <span>{name}</span>
+                <span>{description}</span>
+            </div>
+        </div>
+    )
+
 }

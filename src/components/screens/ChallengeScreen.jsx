@@ -72,9 +72,7 @@ const followedChallenges = [
 
 export default function ChallengeScreen() {
     const [filter, setFilter] = React.useState('ongoing');
-    const [type, setType] = React.useState('ongoing');
     
-    console.log('setFilter', setFilter);
 
 
     // sampleChallenges, followedChallenges 에 챌린지 대체.
@@ -149,8 +147,9 @@ export default function ChallengeScreen() {
 
 
 function ChallengeCard({filter, member_count, challenge_name, description, progress, success, point_amount, deadline, updated_at }) {
-    
+    // 처음부터 필터걸고 html 작성
     return (
+        
         <div className={`bg-white rounded-2xl p-4 shadow ${progress === success ? 'opacity-70' : ''}`}>
             <div className='flex items-start justify-between gap-3'>
                 <div className='text-3xl'>
