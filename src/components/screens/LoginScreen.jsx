@@ -2,18 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import './loginScreen.css';
-import { useLocation } from 'react-router-dom';
 
 
 export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
-    const location = useLocation();
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [token, setToken] = useState(null);
 
-    
-    
-    const navigate = (tab) => {
+    const navigation = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
     };
@@ -28,34 +25,22 @@ export default function LoginScreen({ onNavigate }) {
         window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
     };
    
-    
-    useEffect(() => {
-        console.log("useEffect 실행됨");
+useEffect(() => {
+  const url = window.location.href;
+  if (url.includes("token=")) {
+    const token = url.split("token=")[1].split(/[&#]/)[0];
+    localStorage.setItem("token", token);
+    console.log("✅ 토큰 저장됨:", token);
+    setIsLoggedIn(true);
+    window.history.replaceState({}, "", "/main");
+  } else {
+    console.log("❌ 토큰 없음:", url);
+  }
+}, []);
 
-        // location.search에서 token 가져오기
-        const query = new URLSearchParams(location.search);
-        const token = query.get('token');
-        console.log(token);
+  //http://localhost:5173/login/success?token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhcmlzdWUwMkBuYXZlci5jb20iLCJleHAiOjE3NjE5MDg4Mzl9.Ffd1-n1u52ErZMp_SHSOlqywG32cSlxkNwjFC_39mY8ZuaLFtjeWrzofShrk-8Upq0j64Wx0Z5iM5Bz4ySAJFQ
 
-        if (token) {
-            // 토큰 저장
-            localStorage.setItem('token', token);
-            console.log("토큰 저장됨:", token);
 
-            // 로그인 상태 업데이트
-            setIsLoggedIn(true);
-
-            // URL 정리
-            window.history.replaceState({}, '', '/login');
-        } else {
-            // 로컬스토리지에 토큰이 있는지 확인
-            const storedToken = localStorage.getItem('token');
-            if (storedToken) {
-                setIsLoggedIn(true);
-                console.log("저장된 토큰으로 로그인 상태 유지:", storedToken);
-            }
-        }
-    }, [location]);
    
     return (
         <>
@@ -64,7 +49,7 @@ export default function LoginScreen({ onNavigate }) {
         </div>
         <div className='m-5'>
             <button
-                onClick={() => navigate('mypage')}
+                onClick={() => navigation('mypage')}
                 aria-label='뒤로가기'
                 title='뒤로'
                 className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow-sm text-sm text-gray-700 hover:bg-gray-50'
