@@ -89,5 +89,5 @@ export async function fetchCertificationHistory(memberId) {
             data: [],
             message: '네트워크 오류가 발생했습니다.',
         };
-    }
+    } 
 }

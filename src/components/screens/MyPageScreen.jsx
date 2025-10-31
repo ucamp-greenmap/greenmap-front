@@ -54,6 +54,7 @@ export default function MyPageScreen({ onNavigate }) {
                     <div className='text-xs text-gray-500'>{profile.email}</div>
                 </div>
                 <div className='ml-auto text-sm'>{profile.badge}</div>
+                <button onClick={() => navigate('badge')}>뱃지 리스트</button>
             </div>
 
 
