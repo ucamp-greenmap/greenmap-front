@@ -44,7 +44,11 @@ export const useMarkers = (
         if (!mapInstance || !window.kakao) return;
 
         const bounds = mapInstance.getBounds();
+        const currentLevel = mapInstance.getLevel(); // 현재 줌 레벨 가져오기
         const bookmarkSet = new Set(bookmarkedIds || []);
+
+        // 줌 레벨 6 이하(더 확대)일 때만 마커 표시
+        const shouldShowMarkers = currentLevel <= 5;
 
         markersRef.current.forEach(({ id, category, marker }) => {
             const isVisible = isMarkerInBounds(marker, bounds);
@@ -57,8 +61,8 @@ export const useMarkers = (
                     ? bookmarkSet.has(id)
                     : category === selectedFilter;
 
-            // 필터 조건과 영역 모두 만족해야 표시
-            if (isVisible && shouldShow) {
+            // 줌 레벨, 필터 조건, 영역 모두 만족해야 표시
+            if (shouldShowMarkers && isVisible && shouldShow) {
                 marker.setMap(mapInstance);
             } else {
                 marker.setMap(null);
