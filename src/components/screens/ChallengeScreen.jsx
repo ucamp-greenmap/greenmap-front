@@ -1,5 +1,5 @@
 import React from 'react';
-
+// 챌린지 데이터 받는거 필요한거 얘기 하기.
 const sampleChallenges = [
     {
         challenge_id: 1,
@@ -21,7 +21,7 @@ const sampleChallenges = [
         success: 10,
         deadline: 0,
         created_at: '2023-9-12',
-        is_active: false, 
+        is_active: false,
     },
     {
         challenge_id: 3,
@@ -48,39 +48,41 @@ const sampleChallenges = [
     },
 ];
 
+
+ // 참여하는 챌린지 목록
 const followedChallenges = [
     {
-        member_challenge_id: 1,
         member_id: 1001,
         challenge_id: 1,
         process: 3,
         updated_at: '2023-10-10',
     },
     {
-        member_challenge_id: 1,
         member_id: 1001,
         challenge_id: 2,
         process: 10,
         updated_at: '2023-10-11',
     },
     {
-        member_challenge_id: 1,
         member_id: 1001,
         challenge_id: 4,
         process: 4,
         updated_at: '2023-10-12',
     },
-]; // 참여하는 챌린지 목록
+];
+
+
 
 
 export default function ChallengeScreen() {
     const [filter, setFilter] = React.useState('ongoing');
-    const [type, setType] = React.useState('ongoing');
-    
-    console.log('setFilter', setFilter);
+   
+
+
 
 
     // sampleChallenges, followedChallenges 에 챌린지 대체.
+
 
     const mergedChallenges = React.useMemo(() => {
         return sampleChallenges.map(c => {
@@ -94,98 +96,150 @@ export default function ChallengeScreen() {
     }, []);
 
 
+
+
     return (
-        <div className='p-4'>
-            {/* Header */}
-            <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
-                <h1 className='text-3xl font-bold text-white mb-2'>
-                    챌린지
-                </h1>
-                <p className='text-white text-opacity-90 text-sm'>
-                    친환경 활동을 인증하고 포인트를 받으세요
-                </p>
-            </div>
+    <>
+    <div className="w-full bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] py-10 text-center text-white mb-8 shadow-md">
+      <h1 className="text-3xl font-bold text-white mb-2">챌린지</h1>
+      <p className="text-white text-opacity-90 text-sm">
+        친환경 활동을 인증하고 포인트를 받으세요 🌱
+      </p>
+    </div>
 
 
-            <div className='bg-white rounded-2xl p-3 m-2 shadow text-center focus:outline-none'>
-                <button onClick={() => setFilter('available')} className='text-gray-500 p-5'>참여가능</button>
-                <button onClick={() => setFilter('ongoing')} className='text-gray-500 p-5'>진행중</button>
-                <button onClick={() => setFilter('completed')} className='text-gray-500 p-5'>완료</button>
-           
-            </div>
+    <div className="min-h-screen bg-gray-50 p-4 flex flex-col items-center">
+      <div className="w-full max-w-3xl bg-gray-100 rounded-2xl p-3 mb-6 flex justify-center space-x-4 shadow">
+        {['available','ongoing','completed'].map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-5 py-2 rounded-lg font-medium transition ${
+              filter === f ? 'bg-green-600 text-white shadow' : 'text-gray-600 hover:text-green-600'
+            }`}
+          >
+            {f === 'available' ? '참여가능' : f === 'ongoing' ? '진행중' : '완료'}
+          </button>
+        ))}
+      </div>
 
 
-            <div className='mt-3 space-y-3'>
-                {mergedChallenges
-                    .filter(c => {
-                    if (filter === 'available') return c.is_active && !followedChallenges.map(fc => fc.challenge_id).includes(c.challenge_id);
- 
-                    if (filter === 'ongoing') return !c.completed && followedChallenges.map(fc => fc.challenge_id).includes(c.challenge_id) 
-                        && !followedChallenges.map(fc => {
-                        if (fc.challenge_id === c.challenge_id) {
-                            if (c.progress === c.success) {
-                                return fc.challenge_id;
-                            }
-                        }
-                        return null;
-                    }).includes(c.challenge_id);;
-                    if (filter === 'completed') return followedChallenges.map(fc => {
-                        if (fc.challenge_id === c.challenge_id) {
-                            if (c.progress === c.success) {
-                                return fc.challenge_id;
-                            }
-                        }
-                        return null;
-                    }).includes(c.challenge_id);
-                    })
-                    .map(c => (
-                    <ChallengeCard key={c.challenge_id} filter={filter} {...c} />
-                    ))
-                }
+      <div className="w-full max-w-3xl space-y-4">
+        {mergedChallenges
+          .filter(c => {
+            if (filter === 'available') return c.is_active && !followedChallenges.map(fc => fc.challenge_id).includes(c.challenge_id);
+            if (filter === 'ongoing') return !c.completed && followedChallenges.map(fc => fc.challenge_id).includes(c.challenge_id)
+              && !followedChallenges.map(fc => {if(fc.challenge_id===c.challenge_id){if(c.progress===c.success){return fc.challenge_id}} return null}).includes(c.challenge_id);
+            if (filter === 'completed') return followedChallenges.map(fc => {if(fc.challenge_id===c.challenge_id){if(c.progress===c.success){return fc.challenge_id}} return null}).includes(c.challenge_id);
+          })
+          .map(c => (
+            <ChallengeCard key={c.challenge_id} filter={filter} {...c} />
+          ))
+        }
+      </div>
+    </div>
 
-            </div>
-        </div>
+
+    </>
+
+
     );
 }
 
 
 
 
-function ChallengeCard({filter, member_count, challenge_name, description, progress, success, point_amount, deadline, updated_at }) {
-    
-    return (
-        <div className={`bg-white rounded-2xl p-4 shadow ${progress === success ? 'opacity-70' : ''}`}>
-            <div className='flex items-start justify-between gap-3'>
-                <div className='text-3xl'>
-                    {challenge_name.includes('따릉이') ? '🚴' : ''}
-                    {challenge_name.includes('전기차') ? '⚡' : ''}
-                    {challenge_name.includes('재활용') ? '♻️' : ''}
-                </div>
-                
-                
-                <div className='flex-1'>
-                    <div className='font-medium'>{challenge_name}</div>
-                    <div className='text-xs text-gray-500'>{description}</div>
-                    <div className='mt-2'>
-                        <div className='w-full bg-gray-200 rounded-full h-2'>
-                            <div
-                                className='bg-[#4CAF50] h-2 rounded-full'
-                                style={{ width: `${(progress / success) * 100}%` }}
-                            />
-                        </div>
-                        <div className='text-xs text-gray-600 mt-1'>
-                             {filter === 'ongoing' ? `${progress}/${success} · ` : ''}
-                            보상 {point_amount} P · D-{deadline}
-                            {filter === 'available' ? ` · 참여인원 ${member_count}명` : ''}
-                            {filter === 'completed' ? ` · 달성날자 ${updated_at}` : ''}
-                        </div>
-                    </div>
-                </div>
-                <div className='text-sm font-semibold text-[#4CAF50]'>
-                    {progress === success ? '완료' : ''}
-                </div>
-            </div>
+
+
+function ChallengeCard({ challenge_id, challenge_name, description, point_amount, progress, success, created_at, deadline, image_url, filter }) {
+  const ticketHeight = 160; //
+
+
+  return (
+<div className="flex items-center mb-6">
+      <div
+        className="flex bg-white rounded-2xl shadow overflow-hidden flex-1 relative"
+        style={{ height: `${ticketHeight}px` }}
+      >
+        <div className="w-1/3 relative h-full">
+          <img
+            src={image_url || "https://th.bing.com/th/id/OIP.SG7Qb8nwstq9qogVhNt7KAHaE8?w=230&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3"}
+            alt={challenge_name}
+            className="h-full w-full object-cover rounded-l-2xl"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white rounded-l-2xl"></div>
         </div>
-    );
+
+
+        <div className="flex-1 p-4 flex flex-col justify-between h-full">
+          <h3 className="text-2xl font-bold text-gray-800 text-center">{challenge_name}</h3>
+          <p className="text-sm text-gray-500 mt-1 text-right">{description}</p>
+
+
+          {filter === 'ongoing' && (
+            <div className="w-full mt-2 flex flex-col items-center">
+              <div className="w-full bg-gray-200 h-3 rounded-full">
+                <div
+                  className="bg-green-600 h-3 rounded-full"
+                  style={{ width: `${Math.min((progress / success) * 100, 100)}%` }}
+                ></div>
+              </div>
+              <div className="text-xs text-gray-500 mt-1 text-center w-full">
+                {progress} / {success}
+              </div>
+            </div>
+          )}
+
+
+          <div className="flex justify-center gap-4 mt-3 text-sm text-gray-600">
+            <span>포인트: {point_amount}</span>
+            <span>달성: {success}번</span>
+            <span>기한: {deadline}일</span>
+          </div>
+        </div>
+      </div>
+
+
+      <div className="ml-0 relative flex flex-col items-center justify-center" style={{ height: `${ticketHeight}px`, width: '6rem' }}>
+       
+        {filter === 'completed' && (
+          <div className="relative w-full h-full flex items-center justify-center mb-2">
+            <img
+              src="src/assets/Stamp.png"
+              alt="도장"
+              className="w-full h-full object-contain rotate-90"
+              style={{ filter: 'brightness(0) saturate(100%) invert(14%) sepia(56%) saturate(4000%) hue-rotate(345deg) brightness(95%) contrast(100%)' }}
+            />
+            <span
+              className="absolute text-xs font-bold"
+              style={{ color: '#7B1113' }}
+            >
+              {created_at}
+            </span>
+          </div>
+        )}
+
+
+        {filter !== 'completed' && (
+          <button className="relative flex flex-col items-center justify-center bg-green-600 text-white rounded-l-2xl h-full w-full px-0">
+            <div hidden id={challenge_id}></div>
+            <span className="text-sm font-medium">
+              {filter === 'available' ? '참여' : '인증'}
+            </span>
+          </button>
+        )}
+      </div>
+
+
+
+
+    </div>
+  );
 }
+
+
+
+
+
+
 
