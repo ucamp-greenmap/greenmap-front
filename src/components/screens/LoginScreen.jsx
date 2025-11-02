@@ -1,54 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import './loginScreen.css';
 import { useLocation } from 'react-router-dom';
+
+
 
 
 export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
     const location = useLocation();
 
+
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    
-    
+
+   
+   
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
     };
+
 
     function logoutUser() {
         setIsLoggedIn(false);
         localStorage.removeItem('token');
     }
 
+
     // 카카오 로그인 버튼 클릭
     const kakaoLogin = () => {
         window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
     };
    
-    
+   
     useEffect(() => {
         console.log("useEffect 실행됨");
 
-        // location.search에서 token 가져오기
+
         const query = new URLSearchParams(location.search);
         const token = query.get('token');
         console.log(token);
 
+
         if (token) {
-            // 토큰 저장
             localStorage.setItem('token', token);
             console.log("토큰 저장됨:", token);
 
-            // 로그인 상태 업데이트
+
             setIsLoggedIn(true);
 
-            // URL 정리
+
             window.history.replaceState({}, '', '/login');
         } else {
-            // 로컬스토리지에 토큰이 있는지 확인
             const storedToken = localStorage.getItem('token');
             if (storedToken) {
                 setIsLoggedIn(true);
@@ -88,113 +92,245 @@ export default function LoginScreen({ onNavigate }) {
             </button>
         </div>
         <div id='loginBox' className='p-4 space-y-4'>
-            <div className='bg-white rounded-2xl p-4 gap-4'>
                
+            <div className="flex justify-center items-center min-h-screen">
+            <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-8">
                 {!isLoggedIn ? (
-                    <div class="emailFalse" >
-                    <div id='login' >
-                        <label>로그인</label>
-                        <div class="">
-                            <div>
-                                <label>아이디 </label>
-                                <input type="email" maxLength="50"></input>
-                            </div>
-                            <div>
-                                <label>비밀번호 </label>
-                                <input type="password" maxLength="25"></input>
-                            </div>
-                            <button class="send">로그인 하기</button>
-                        </div>
-                    </div> <br />
-                    <div id='easyLogin'>
-                        <label>간편 로그인</label><br /><br />
-                        <div>
-                            <button className='easyLogin bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
-                                onClick={() => console.log("구글로그인")}>구글 로그인</button>
-                            <button className='easyLogin ml-2 bg-green-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
-                                onClick={() => console.log("구글 토큰")}>토큰 받기</button>
-                            <br /><br />
-                            <button className='easyLogin bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
-                                onClick={kakaoLogin}>카카오 로그인</button>
-                        </div>
-                    </div> <br /><br />
-                    <form id='register' method='post' action='/register'>
-                        <label>회원가입</label>
-                        <div >
-                            <div>
-                                <label>이메일</label>
-                                <input type="email" maxLength="50"></input>
-                                <button type='button' id='emailCheck' class="send">이메일확인</button>
-                            </div>
-                            <div>
-                                <label>비밀번호</label>
-                                <input type="password" maxLength="25"></input>
-                                <br />
-                                <label>비밀번호 재확인</label>
-                                <input type="password" maxLength="25"></input>
-                            </div>
-                            <div>
-                                <label>닉네임</label>
-                                <input type="text" maxLength="10"></input>
-                                <button type='button' id='nicknameCheck' class="send">닉네임 중복 확인</button>
-                            </div>
-                            <div>
-                                <label>전화번호</label>
-                                <select>
-                                    <option value="010" selected>010</option>
-                                </select>-
-                                <input type="number" maxLength="4"></input>-
-                                <input type="number" maxLength="4"></input>
-                                <button type='button' id='phoneNumberCheck' class="send">전화번호 확인</button>
-                            </div>
-                            <button class="send">계정 생성</button>
-                        </div>    
-                    </form> <br /> <br />
-                </div>
-                ) : (
-                    <div class="emailTrue" >
-                    <div id='nicknameChange'>
-                        <label>닉네임 변경</label>
-                        <div>
-                            <div>
-                                <label>닉네임</label>
-                                <input type="text" maxLength="10" placeholder='user001'></input>
-                                <button class="send">닉네임 중복 확인</button>
-                            </div>
-                            <button class="send">닉네임 변경</button>
-                        </div>
-                    </div><br />
-                    <div id='logout'>
-                        <label>로그아웃</label><br />
-                        <button class='easyLogin' onClick={logoutUser}>로그아웃하기</button>
-                    </div> <br />
-                    <div id='deletUser'>
-                        <label>회원 탈퇴</label>
-                        <div>
-                            <div>
-                                <label>이메일</label>
-                                <input type="email" maxLength="50"></input>
-                            </div>
-                            <div>
-                                <label>비밀번호</label>
-                                <input type="password" maxLength="25"></input>
-                            </div>
-                            <button class="send">탈퇴하기</button>
-                        </div>
+                <>
+                    <section className="mb-10 text-center">
+                    <h2 className="text-2xl font-bold text-green-600 text-center">간편 로그인</h2>
+                    <p className="text-gray-500 p-2 text-sm mb-3">비회원일 시 회원가입이 자동으로 진행됩니다.</p>
+                    <div className="flex flex-col space-y-3">
+                        <button
+                        className="bg-white border border-gray-300 text-gray-800 py-2 rounded-md hover:bg-gray-100 transition"
+                        onClick={() => console.log('구글 로그인')}
+                        >
+                        구글 로그인
+                        </button>
+                        <button
+                        className="bg-[#F7D94C] text-black py-2 rounded-md hover:bg-yellow-400 transition"
+                        onClick={kakaoLogin}
+                        >
+                        카카오 로그인
+                        </button>
                     </div>
-                    <button className='easyLogin ml-2 bg-yellow-500 text-white py-2 px-4 my-1 rounded-lg cursor-pointer' 
-                                onClick={() => console.log(isLoggedIn)}>이메일 확인</button>
-                        {/* ^카카오 이메일 확인용*/}
-                </div>
+                    </section>
+
+
+                    <section className="mb-10">
+                    <h2 className="text-2xl font-bold text-green-600 mb-6 text-center">로그인</h2>
+                    <div className="space-y-4">
+                        <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
+                            아이디
+                        </label>
+                        <input
+                            type="email"
+                            maxLength="50"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                        />
+                        </div>
+                        <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
+                            비밀번호
+                        </label>
+                        <input
+                            type="password"
+                            maxLength="25"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                        />
+                        </div>
+                        <button className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
+                        로그인 하기
+                        </button>
+                    </div>
+                    </section>
+
+
+                    <section>
+                    <h2 className="text-2xl font-bold text-green-600 mb-6 text-center">회원가입</h2>
+                    <form id="register" method="post" action="/register" className="space-y-5">
+                        <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">이메일</label>
+                        <div className="flex space-x-2 items-center">
+                            <input
+                            type="email"
+                            maxLength="50"
+                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                            />
+                            <button
+                            type="button"
+                            id="emailCheck"
+                            className="bg-green-500 text-white px-4 rounded-md hover:bg-green-600 transition ml-auto"
+                            >
+                            확인
+                            </button>
+                        </div>
+                        </div>
+
+
+                        <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">비밀번호</label>
+                        <input
+                            type="password"
+                            maxLength="25"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none mb-3"
+                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
+                            비밀번호 재확인
+                        </label>
+                        <input
+                            type="password"
+                            maxLength="25"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                        />
+                        </div>
+
+
+                        <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">닉네임</label>
+                        <div className="flex space-x-2 items-center">
+                            <input
+                            type="text"
+                            maxLength="10"
+                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                            />
+                            <button
+                            type="button"
+                            id="nicknameCheck"
+                            className="bg-green-500 text-white px-4 rounded-md hover:bg-green-600 transition ml-auto"
+                            >
+                            확인
+                            </button>
+                        </div>
+                        </div>
+
+
+                        <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">전화번호</label>
+                        <div className="flex items-center justify-between space-x-2">
+                            <div className="flex items-center space-x-2 flex-1">
+                            <select className="border border-gray-300 rounded-md px-2 py-2 focus:ring-2 focus:ring-green-500 outline-none">
+                                <option value="010" selected>
+                                010
+                                </option>
+                            </select>
+                            <span>-</span>
+                            <input
+                                type="number"
+                                maxLength="4"
+                                className="w-16 border border-gray-300 rounded-md px-2 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                            />
+                            <span>-</span>
+                            <input
+                                type="number"
+                                maxLength="4"
+                                className="w-16 border border-gray-300 rounded-md px-2 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                            />
+                            </div>
+                            <button
+                            type="button"
+                            id="phoneNumberCheck"
+                            className="bg-green-500 text-white px-4 rounded-md hover:bg-green-600 transition"
+                            >
+                            확인
+                            </button>
+                        </div>
+                        </div>
+
+
+
+
+
+
+                        <button className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
+                        계정 생성
+                        </button>
+                    </form>
+                    </section>
+                </>
+                ) : (
+                <>
+                    <section className="mb-10">
+                    <h2 className="text-2xl font-bold text-green-600 mb-4 text-center">닉네임 변경</h2>
+                    <div className="space-y-3">
+                        <div className="flex space-x-2 items-center">
+                        <input
+                            type="text"
+                            maxLength="10"
+                            placeholder="user001"
+                            className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                        />
+                        <button className="bg-green-500 text-white px-4 rounded-md hover:bg-green-600 transition ml-auto">
+                            확인
+                        </button>
+                        </div>
+                        <button className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
+                        닉네임 변경
+                        </button>
+                    </div>
+                    </section>
+
+
+                    <section className="mb-10 text-center">
+                    <h3 className="text-xl font-semibold text-green-600 mb-3">로그아웃</h3>
+                    <button
+                        className="w-full bg-white text-gray-800 py-2 border-2 border-gray-300 rounded-md hover:bg-gray-100 transition font-medium"
+                        onClick={logoutUser}
+                    >
+                        로그아웃하기
+                    </button>
+                    </section>
+
+
+
+
+                    <section>
+                    <h3 className="text-xl font-semibold text-green-600 mb-3 text-center">회원 탈퇴</h3>
+                    <div className="space-y-4">
+                        <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">이메일</label>
+                        <input
+                            type="email"
+                            maxLength="50"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                        />
+                        </div>
+                        <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">비밀번호</label>
+                        <input
+                            type="password"
+                            maxLength="25"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                        />
+                        </div>
+                        <button className="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600 transition">
+                        탈퇴하기
+                        </button>
+                    </div>
+                    </section>
+
+
+                    <button
+                    className="mt-6 w-full bg-[#F7D94C] text-black py-2 rounded-md hover:bg-yellow-400 transition"
+                    onClick={() => console.log(isLoggedIn)}
+                    >
+                    이메일 확인
+                    </button>
+                </>
                 )}
-
-
             </div>
-           
+            </div>
+
+
             <br /><br />
-            <div className=' text-sm text-gray-500 text-center'>그린맵 v1.0.0</div>
+            <div className=' text-sm text-gray-500 pb-32 text-center'>그린맵 v1.0.0</div>
         </div>
         </>
     );
 }
+
+
+
+
 
