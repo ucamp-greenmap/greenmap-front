@@ -1,4 +1,6 @@
 import React from 'react';
+
+
 // 챌린지 데이터 받는거 필요한거 얘기 하기.
 const sampleChallenges = [
     {
@@ -205,7 +207,7 @@ function ChallengeCard({ challenge_id, challenge_name, description, point_amount
         {filter === 'completed' && (
           <div className="relative w-full h-full flex items-center justify-center mb-2">
             <img
-              src="src/assets/Stamp.png"
+              src="src/assets/stamp.png"
               alt="도장"
               className="w-full h-full object-contain rotate-90"
               style={{ filter: 'brightness(0) saturate(100%) invert(14%) sepia(56%) saturate(4000%) hue-rotate(345deg) brightness(95%) contrast(100%)' }}
@@ -229,9 +231,6 @@ function ChallengeCard({ challenge_id, challenge_name, description, point_amount
           </button>
         )}
       </div>
-
-
-
 
     </div>
   );
