@@ -6,22 +6,20 @@ export default function LoginSuccess() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("✅ LoginSuccess 페이지 렌더링됨:", window.location.href);
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get("token");
 
-    const currentUrl = window.location.href;
-    if (currentUrl.includes("token=")) {
-      const token = currentUrl.split("token=")[1].split(/[&#]/)[0];
-      console.log("✅ 토큰 감지됨:", token);
-
+    if (token) {
+      console.log("JWT 토큰 감지됨:", token);
       localStorage.setItem("token", token);
 
-      window.history.replaceState({}, "", "/login");
-      navigate("/login");
+      setTimeout(() => navigate("/login", { replace: true }), 100);
     } else {
-      console.log("토큰이 없음:", currentUrl);
-      navigate("/login");
+      console.warn("토큰이 없습니다. 로그인 페이지로 이동합니다.");
+      navigate("/login", { replace: true });
     }
-  }, [navigate]);
+  }, []);
+
 
   return <div>로그인 처리 중입니다...</div>;
 }
