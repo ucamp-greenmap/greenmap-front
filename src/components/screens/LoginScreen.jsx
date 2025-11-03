@@ -1,21 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import { useLocation } from 'react-router-dom';
-
-
 
 
 export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
-    const location = useLocation();
-
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [showSetting, setShowSetting] = useState(false);
 
-
-   
-   
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
@@ -30,36 +23,20 @@ export default function LoginScreen({ onNavigate }) {
 
     // 카카오 로그인 버튼 클릭
     const kakaoLogin = () => {
-        window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
-    };
-   
+        window.location.href = 'https://greenmap-api-1096735261131.asia-northeast3.run.app/oauth2/authorization/kakao';
+    }; 
+    // http://localhost:8080/oauth2/authorization/kakao'; 배포용 링크로 교체
    
     useEffect(() => {
-        console.log("useEffect 실행됨");
+    console.log("LoginScreen useEffect 실행됨");
 
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+        setIsLoggedIn(true);
+        console.log("저장된 토큰으로 로그인 상태 유지:", storedToken);
+    }
+    }, []);
 
-        const query = new URLSearchParams(location.search);
-        const token = query.get('token');
-        console.log(token);
-
-
-        if (token) {
-            localStorage.setItem('token', token);
-            console.log("토큰 저장됨:", token);
-
-
-            setIsLoggedIn(true);
-
-
-            window.history.replaceState({}, '', '/login');
-        } else {
-            const storedToken = localStorage.getItem('token');
-            if (storedToken) {
-                setIsLoggedIn(true);
-                console.log("저장된 토큰으로 로그인 상태 유지:", storedToken);
-            }
-        }
-    }, [location]);
    
     return (
         <>
@@ -93,7 +70,7 @@ export default function LoginScreen({ onNavigate }) {
         </div>
         <div id='loginBox' className='p-4 space-y-4'>
                
-            <div className="flex justify-center items-center min-h-screen">
+            <div className="flex justify-center">
             <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-8">
                 {!isLoggedIn ? (
                 <>
@@ -101,12 +78,12 @@ export default function LoginScreen({ onNavigate }) {
                     <h2 className="text-2xl font-bold text-green-600 text-center">간편 로그인</h2>
                     <p className="text-gray-500 p-2 text-sm mb-3">비회원일 시 회원가입이 자동으로 진행됩니다.</p>
                     <div className="flex flex-col space-y-3">
-                        <button
+                        {/* <button
                         className="bg-white border border-gray-300 text-gray-800 py-2 rounded-md hover:bg-gray-100 transition"
                         onClick={() => console.log('구글 로그인')}
                         >
                         구글 로그인
-                        </button>
+                        </button> */}
                         <button
                         className="bg-[#F7D94C] text-black py-2 rounded-md hover:bg-yellow-400 transition"
                         onClick={kakaoLogin}
@@ -146,10 +123,22 @@ export default function LoginScreen({ onNavigate }) {
                     </div>
                     </section>
 
+                    <section className="mb-10 text-center">
+                    <h2 className="text-2xl font-bold text-green-600 text-center mb-3">비밀번호 찾기</h2>
+                    <div className="flex flex-col space-y-3">
+                        <button
+                        className="bg-white border border-gray-300 text-gray-800 py-2 rounded-md hover:bg-gray-100 transition"
+                        onClick={() => console.log('비밀번호 찾기')}
+                        >
+                        이메일 전송
+                        </button>
+                    </div>
+                    </section>
+
 
                     <section>
-                    <h2 className="text-2xl font-bold text-green-600 mb-6 text-center">회원가입</h2>
-                    <form id="register" method="post" action="/register" className="space-y-5">
+                    <h2 onClick={() => setShowSetting((prev) => !prev)} className="text-2xl font-bold text-green-600 mb-6 text-center">회원가입</h2>
+                    <form id="register" method="post" action="/register" className={`${showSetting ? '' : 'hidden'} space-y-5`}>
                         <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1 text-left">이메일</label>
                         <div className="flex space-x-2 items-center">
