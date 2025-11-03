@@ -75,8 +75,54 @@ export default function EcoNewsList({ placeholder }) {
     // ------------------------------------
     // 뉴스 읽기 처리 및 포인트 적립 (POST /news)
     // ------------------------------------
-    const handleReadArticle = async (articleTitle, points) => {
-        // 로컬에서 읽음 한도 확인 (3개)
+    // const handleReadArticle = async (articleTitle, points) => {
+    //     // 로컬에서 읽음 한도 확인 (3개)
+    //     if (readArticles.length >= 3) {
+    //         setToast('오늘의 뉴스 보상 한도에 도달했습니다');
+    //         setTimeout(() => setToast(null), 2000);
+    //         return;
+    //     }
+
+    //     try {
+    //         // 1. 서버에 뉴스 조회 기록 전송 (POST 요청)
+    //         const response = await fetch(`${API_BASE_URL}/news`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 memberId: CURRENT_MEMBER_ID,
+    //                 title: articleTitle,
+    //             }),
+    //         });
+
+    //         const result = await response.json();
+
+    //         if (result.status === 'ERROR') {
+    //             // 서버에서 DB 문제 등으로 "실패" 응답이 온 경우
+    //             throw new Error(
+    //                 result.message || '뉴스 조회 처리 중 서버 오류'
+    //             );
+    //         }
+
+    //         // 2. 서버에서 성공 응답 시 로컬 상태 업데이트 및 포인트 지급
+    //         setReadArticles((prev) => [...prev, articleTitle]);
+    //         dispatch(
+    //             addPoints({
+    //                 points,
+    //                 type: `뉴스 읽기: ${articleTitle.substring(0, 10)}...`,
+    //                 category: '뉴스',
+    //             })
+    //         );
+    //         setToast(`+${points}P 획득!`);
+    //     } catch (err) {
+    //         console.error('뉴스 조회/포인트 처리 오류:', err);
+    //         setToast(`처리 실패: ${err.message}`);
+    //     } finally {
+    //         setTimeout(() => setToast(null), 2000);
+    //     }
+    // };
+    const handleReadArticle = async (articleTitle) => {
         if (readArticles.length >= 3) {
             setToast('오늘의 뉴스 보상 한도에 도달했습니다');
             setTimeout(() => setToast(null), 2000);
@@ -84,7 +130,6 @@ export default function EcoNewsList({ placeholder }) {
         }
 
         try {
-            // 1. 서버에 뉴스 조회 기록 전송 (POST 요청)
             const response = await fetch(`${API_BASE_URL}/news`, {
                 method: 'POST',
                 headers: {
@@ -93,31 +138,32 @@ export default function EcoNewsList({ placeholder }) {
                 body: JSON.stringify({
                     memberId: CURRENT_MEMBER_ID,
                     title: articleTitle,
+                    // point 필드 제거 (백엔드가 5로 고정 처리)
                 }),
             });
 
             const result = await response.json();
 
-            if (result.status === 'ERROR') {
-                // 서버에서 DB 문제 등으로 "실패" 응답이 온 경우
-                throw new Error(
-                    result.message || '뉴스 조회 처리 중 서버 오류'
-                );
+            if (result.status === 'FAIL') {
+                setToast(result.message);
+                setTimeout(() => setToast(null), 2000);
+                return;
             }
 
-            // 2. 서버에서 성공 응답 시 로컬 상태 업데이트 및 포인트 지급
-            setReadArticles((prev) => [...prev, articleTitle]);
-            dispatch(
-                addPoints({
-                    points,
-                    type: `뉴스 읽기: ${articleTitle.substring(0, 10)}...`,
-                    category: '뉴스',
-                })
-            );
-            setToast(`+${points}P 획득!`);
+            if (result.status === 'SUCCESS') {
+                setReadArticles((prev) => [...prev, articleTitle]);
+                dispatch(
+                    addPoints({
+                        points: 5,
+                        type: `뉴스 읽기: ${articleTitle.substring(0, 10)}...`,
+                        category: '뉴스',
+                    })
+                );
+                setToast('+5P 획득');
+            }
         } catch (err) {
             console.error('뉴스 조회/포인트 처리 오류:', err);
-            setToast(`처리 실패: ${err.message}`);
+            setToast('처리 실패: 네트워크 오류');
         } finally {
             setTimeout(() => setToast(null), 2000);
         }
