@@ -9,9 +9,16 @@ import { addPoints } from '../../store/slices/pointSlice';
 export default function EcoNewsList({ placeholder }) {
     const dispatch = useDispatch();
     // 1. 서버에서 가져온 뉴스 목록을 저장할 상태
-    const [newsList, setNewsList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const newsImages = [
+        '/src/assets/news1.png',
+        '/src/assets/news2.png',
+        '/src/assets/news3.png',
+        '/src/assets/news4.png',
+    ];
+
+    const [newsList, setNewsList] = useState([]);
 
     // 기존의 읽은 기사 상태 및 토스트 상태
     const [readArticles, setReadArticles] = useState([]);
@@ -189,7 +196,7 @@ export default function EcoNewsList({ placeholder }) {
                             }`}
                         >
                             <img
-                                src={placeholder}
+                                src={newsImages[article.id % 4] || placeholder}
                                 alt={cleanTitle}
                                 loading='lazy'
                                 className='w-20 h-20 object-cover rounded-xl flex-shrink-0 mr-3'
