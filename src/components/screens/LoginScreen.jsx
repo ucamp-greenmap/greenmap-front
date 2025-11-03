@@ -35,31 +35,15 @@ export default function LoginScreen({ onNavigate }) {
    
    
     useEffect(() => {
-        console.log("useEffect 실행됨");
+    console.log("LoginScreen useEffect 실행됨");
 
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+        setIsLoggedIn(true);
+        console.log("저장된 토큰으로 로그인 상태 유지:", storedToken);
+    }
+    }, []);
 
-        const query = new URLSearchParams(location.search);
-        const token = query.get('token');
-        console.log(token);
-
-
-        if (token) {
-            localStorage.setItem('token', token);
-            console.log("토큰 저장됨:", token);
-
-
-            setIsLoggedIn(true);
-
-
-            window.history.replaceState({}, '', '/login');
-        } else {
-            const storedToken = localStorage.getItem('token');
-            if (storedToken) {
-                setIsLoggedIn(true);
-                console.log("저장된 토큰으로 로그인 상태 유지:", storedToken);
-            }
-        }
-    }, [location]);
    
     return (
         <>
