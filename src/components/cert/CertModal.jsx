@@ -10,7 +10,7 @@ import { verifyBike, verifyCar, verifyShop } from '../../util/certApi';
 import { useSelector } from 'react-redux';
 
 export default function CertModal({ type, onClose }) {
-    const memberId = useSelector((s) => s.user?.memberId) || 1;
+    const memberId = useSelector((s) => s.user?.memberId) || 1; 
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
@@ -204,15 +204,13 @@ export default function CertModal({ type, onClose }) {
             setIsSubmitting(false);
         }
     };
+
     return (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto'>
-            <div
-                className='bg-white rounded-3xl max-w-md w-full my-4 flex flex-col shadow-2xl'
-                style={{ maxHeight: 'calc(100vh - 64px)' }}
-            >
-                {/* 모달 헤더 - 고정 */}
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+            <div className='bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl'>
+                {/* 모달 헤더 */}
                 <div
-                    className={`bg-gradient-to-br ${type.color} p-6 rounded-t-3xl relative flex-shrink-0`}
+                    className={`bg-gradient-to-br ${type.color} p-6 rounded-t-3xl relative`}
                 >
                     <button
                         onClick={onClose}
@@ -230,15 +228,12 @@ export default function CertModal({ type, onClose }) {
                     </p>
                 </div>
 
-                {/* 모달 내용 - 스크롤 가능 */}
-                <div
-                    className='overflow-y-auto flex-1 p-6 pb-0 space-y-4'
-                    style={{ overscrollBehavior: 'contain' }}
-                >
+                {/* 모달 내용 */}
+                <div className='p-6 space-y-4'>
                     {/* 업로드 버튼 */}
                     <label
                         className={`
-        block w-full rounded-2xl p-6 text-center cursor-pointer transition-all flex-shrink-0
+        block w-full rounded-2xl p-6 text-center cursor-pointer transition-all
         ${
             isProcessing
                 ? 'bg-gray-300 cursor-not-allowed'
@@ -261,12 +256,14 @@ export default function CertModal({ type, onClose }) {
                             className='hidden'
                         />
                     </label>
+
+                    {/* 미리보기 */}
                     {previewImage && (
                         <div className='rounded-2xl overflow-hidden border-2 border-gray-200'>
                             <img
                                 src={previewImage}
                                 alt='미리보기'
-                                className='w-full max-h-64 object-contain bg-gray-50'
+                                className='w-full'
                             />
                         </div>
                     )}
@@ -376,28 +373,25 @@ export default function CertModal({ type, onClose }) {
                     )}
 
                     {/* 인증 요청 버튼 */}
-                    <div className='pt-2 pb-2'>
-                        <button
-                            onClick={handleCertification}
-                            disabled={
-                                isSubmitting ||
-                                isProcessing ||
-                                (type.id === 'bike' &&
-                                    extractedDistance <= 0) ||
-                                (type.id !== 'bike' &&
-                                    extractedCharge <= 0 &&
-                                    extractedPrice <= 0)
-                            }
-                            className={`w-full py-4 rounded-xl font-bold transition-all 
-    ${
-        isSubmitting || isProcessing
-            ? 'bg-gray-400 text-white cursor-not-allowed'
-            : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
-    }`}
-                        >
-                            {isSubmitting ? '인증 처리 중...' : '인증 요청하기'}
-                        </button>
-                    </div>
+                    <button
+                        onClick={handleCertification}
+                        disabled={
+                            isSubmitting ||
+                            isProcessing ||
+                            (type.id === 'bike' && extractedDistance <= 0) ||
+                            (type.id !== 'bike' &&
+                                extractedCharge <= 0 &&
+                                extractedPrice <= 0)
+                        }
+                        className={`w-full py-4 rounded-xl font-bold transition-all 
+        ${
+            isSubmitting || isProcessing
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
+        }`}
+                    >
+                        {isSubmitting ? '인증 처리 중...' : '인증 요청하기'}
+                    </button>
                 </div>
             </div>
         </div>
