@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { getCategoryColor, createMarkerImage } from '../util/mapHelpers';
+import { createMarkerImage } from '../util/mapHelpers';
 
 /**
  * Custom hook for managing map markers
@@ -29,10 +29,9 @@ export const useMarkers = (
         if (!window.kakao) return null;
 
         if (!markerImageCacheRef.current[category]) {
-            const color = getCategoryColor(category);
             markerImageCacheRef.current[category] = createMarkerImage(
                 window.kakao,
-                color
+                category
             );
         }
 
