@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { getCategoryLabel } from '../../util/mapHelpers';
 
 export default function FacilityList({
@@ -7,69 +7,111 @@ export default function FacilityList({
     onFacilityClick,
     onBookmarkToggle,
 }) {
+    // 북마크 조회 최적화를 위한 Set 생성
+    const bookmarkSet = useMemo(() => new Set(bookmarkedIds), [bookmarkedIds]);
+
+    // 시설이 없을 때 메시지 표시
+    if (facilities.length === 0) {
+        return (
+            <div className='flex flex-col items-center justify-center py-8 text-gray-500'>
+                <svg
+                    className='w-16 h-16 mb-4 text-gray-300'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                >
+                    <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7'
+                    />
+                </svg>
+                <p className='text-sm font-medium'>
+                    이 영역에 표시할 시설이 없습니다
+                </p>
+                <p className='text-xs mt-1'>지도를 이동하거나 확대해보세요</p>
+            </div>
+        );
+    }
+
     return (
         <>
-            <h3 className='text-base font-bold mb-3 px-1'>시설 목록</h3>
+            <div className='flex items-center justify-between mb-3 px-1'>
+                <h3 className='text-base font-bold'>시설 목록</h3>
+                <span className='text-sm text-gray-500'>
+                    {facilities.length}개
+                </span>
+            </div>
             <ul className='space-y-2' role='list' aria-label='시설 목록'>
-                {facilities.map((facility) => (
-                    <li
-                        key={facility.id}
-                        role='listitem'
-                        onClick={() => onFacilityClick(facility)}
-                        className='flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer'
-                    >
-                        <div>
-                            <div className='font-semibold text-gray-800'>
-                                {facility.name}
+                {facilities.map((facility) => {
+                    const isBookmarked = bookmarkSet.has(facility.id);
+
+                    return (
+                        <li
+                            key={facility.id}
+                            role='listitem'
+                            onClick={() => onFacilityClick(facility)}
+                            className='flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer'
+                        >
+                            <div className='flex-1 min-w-0'>
+                                <div className='font-semibold text-gray-800 truncate'>
+                                    {facility.name}
+                                </div>
+                                <div className='text-sm text-gray-500'>
+                                    {getCategoryLabel(facility.category)}
+                                </div>
                             </div>
-                            <div className='text-sm text-gray-500'>
-                                {getCategoryLabel(facility.category)}
-                            </div>
-                        </div>
-                        <div className='flex items-center gap-2'>
-                            <button
-                                className='text-2xl text-gray-400 hover:text-blue-500 transition-colors'
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onBookmarkToggle(facility.id);
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
+                            <div className='flex items-center gap-2 flex-shrink-0 ml-3'>
+                                <button
+                                    className={`text-2xl transition-colors ${
+                                        isBookmarked
+                                            ? 'text-blue-500'
+                                            : 'text-gray-400 hover:text-blue-500'
+                                    }`}
+                                    onClick={(e) => {
                                         e.stopPropagation();
                                         onBookmarkToggle(facility.id);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (
+                                            e.key === 'Enter' ||
+                                            e.key === ' '
+                                        ) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            onBookmarkToggle(facility.id);
+                                        }
+                                    }}
+                                    aria-pressed={isBookmarked}
+                                    aria-label={
+                                        isBookmarked
+                                            ? `${facility.name} 북마크 해제`
+                                            : `${facility.name} 북마크 추가`
                                     }
-                                }}
-                                aria-pressed={bookmarkedIds.includes(
-                                    facility.id
-                                )}
-                                aria-label={
-                                    bookmarkedIds.includes(facility.id)
-                                        ? `${facility.name} 북마크 해제`
-                                        : `${facility.name} 북마크 추가`
-                                }
-                            >
-                                <svg
-                                    className='w-6 h-6'
-                                    fill={
-                                        bookmarkedIds.includes(facility.id)
-                                            ? 'currentColor'
-                                            : 'none'
-                                    }
-                                    stroke='currentColor'
-                                    viewBox='0 0 24 24'
                                 >
-                                    <path
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                        strokeWidth={2}
-                                        d='M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z'
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </li>
-                ))}
+                                    <svg
+                                        className='w-6 h-6'
+                                        fill={
+                                            isBookmarked
+                                                ? 'currentColor'
+                                                : 'none'
+                                        }
+                                        stroke='currentColor'
+                                        viewBox='0 0 24 24'
+                                    >
+                                        <path
+                                            strokeLinecap='round'
+                                            strokeLinejoin='round'
+                                            strokeWidth={2}
+                                            d='M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z'
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                        </li>
+                    );
+                })}
             </ul>
         </>
     );

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { createMarkerImage } from '../util/mapHelpers';
 
 /**
@@ -16,6 +16,9 @@ export const useMarkers = (
     const markerImageCacheRef = useRef({}); // MarkerImage 캐시
     const _isMountedRef = useRef(true); // 마운트 상태 추적 (언더스코어로 unused 허용)
     const _abortControllerRef = useRef(null); // 마커 생성 중단용 (언더스코어로 unused 허용)
+
+    // 현재 화면에 표시되는 시설 목록 (BottomSheet용)
+    const [visibleFacilities, setVisibleFacilities] = useState([]);
 
     // 현재 지도 영역에 마커가 포함되는지 확인
     const isMarkerInBounds = useCallback((marker, bounds) => {
@@ -49,7 +52,10 @@ export const useMarkers = (
         // 줌 레벨 6 이하(더 확대)일 때만 마커 표시
         const shouldShowMarkers = currentLevel <= 5;
 
-        markersRef.current.forEach(({ id, category, marker }) => {
+        // 현재 화면에 표시되는 시설들을 추적
+        const currentlyVisible = [];
+
+        markersRef.current.forEach(({ id, category, marker, data }) => {
             const isVisible = isMarkerInBounds(marker, bounds);
 
             // 필터 조건 확인
@@ -63,10 +69,14 @@ export const useMarkers = (
             // 줌 레벨, 필터 조건, 영역 모두 만족해야 표시
             if (shouldShowMarkers && isVisible && shouldShow) {
                 marker.setMap(mapInstance);
+                currentlyVisible.push(data); // 표시되는 시설 데이터 추가
             } else {
                 marker.setMap(null);
             }
         });
+
+        // BottomSheet에 표시할 시설 목록 업데이트
+        setVisibleFacilities(currentlyVisible);
     }, [mapInstance, isMarkerInBounds, selectedFilter, bookmarkedIds]);
 
     // Create/update markers based on facilities
@@ -244,5 +254,5 @@ export const useMarkers = (
         };
     }, []);
 
-    return { markersRef, updateVisibleMarkers };
+    return { markersRef, updateVisibleMarkers, visibleFacilities };
 };
