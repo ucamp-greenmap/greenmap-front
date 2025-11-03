@@ -3,12 +3,45 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
+import { useMemo } from 'react';
+
+const ECO_TIPS = [
+    {
+        icon: '🛍️',
+        title: '제로웨이스트 쇼핑 팁',
+        content:
+            '제로웨이스트 스토어에서 쇼핑할 때 재사용 가능한 장바구니를 가져가세요. 플라스틱 쓰레기를 줄이고 포인트를 받을 수 있어요',
+    },
+    {
+        icon: '☕',
+        title: '텀블러 사용 습관',
+        content:
+            '일회용 컵 대신 개인 텀블러를 가지고 다니며 커피나 음료를 테이크아웃하세요. 많은 카페에서 할인 혜택을 제공하며, 지구를 위한 작은 실천이 됩니다.',
+    },
+    {
+        icon: '⚡',
+        title: '대기 전력 차단',
+        content:
+            '사용하지 않는 전자제품의 플러그를 뽑거나 멀티탭 스위치를 끄는 습관을 들이세요. 대기 전력 차단으로 전기 요금을 절약하고 탄소 배출을 줄일 수 있습니다.',
+    },
+    {
+        icon: '🚲',
+        title: '그린맵 교통 활용',
+        content:
+            '그린맵에서 따릉이 지도를 활용해 탄소 배출 없는 경로를 찾아보세요. 자동차 대신 대중교통이나 자전거, 걷기를 이용하면 환경과 건강에 모두 이롭습니다.',
+    },
+];
 
 // HomeScreen
 // Props: onNavigate?: (tab: string) => void
 export default function HomeScreen({ onNavigate }) {
     const dispatch = useDispatch();
     const currentPoints = useSelector((s) => s.point.currentPoints);
+
+    const randomTip = useMemo(() => {
+        const randomIndex = Math.floor(Math.random() * ECO_TIPS.length);
+        return ECO_TIPS[randomIndex];
+    }, []);
 
     const placeholderSvg = encodeURIComponent(
         "<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'>" +
@@ -61,9 +94,9 @@ export default function HomeScreen({ onNavigate }) {
                 <div className='relative w-full'>
                     <input
                         type='text'
-                        placeholder='지도...'
+                        placeholder='지도 검색...'
                         className='w-full pl-12 pr-4 py-4 rounded-[30px] text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white shadow-lg'
-                        aria-label='시설, 뉴스, 챌린지 검색'
+                        aria-label='지도 검색'
                     />
                     <div className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400'>
                         🔍
@@ -170,10 +203,7 @@ export default function HomeScreen({ onNavigate }) {
                                         오늘의 에코 팁
                                     </h3>
                                     <p className='text-gray-600 text-sm'>
-                                        제로웨이스트 스토어에서 쇼핑할 때 재사용
-                                        가능한 장바구니를 가져가세요. 플라스틱
-                                        쓰레기를 줄이고 추가 포인트를 받을 수
-                                        있어요!
+                                        {randomTip.title}: {randomTip.content}
                                     </p>
                                 </div>
                             </div>
