@@ -19,7 +19,7 @@ import {
     EXCHANGE_HISTORY,
 } from './PointExchangeScreen.data';
 
-export default function PointExchangeScreen({ onBack }) {
+export default function PointExchangeScreen({ onNavigate }) {
     const [currentPoints] = useState(25000); // 보유 포인트
     const [activeTab, setActiveTab] = useState('gifticon'); // gifticon or transfer
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -134,7 +134,7 @@ export default function PointExchangeScreen({ onBack }) {
             >
                 <div className='flex items-center p-4'>
                     <button
-                        onClick={onBack}
+                        onClick={() => window.history.back()}
                         className='mr-3 p-2 hover:bg-gray-100 rounded-full transition-colors'
                         aria-label='뒤로가기'
                     >
