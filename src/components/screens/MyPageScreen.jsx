@@ -68,12 +68,16 @@ export default function MyPageScreen({ onNavigate }) {
                     <div className='text-xs text-gray-500'>포인트</div>
                     <div className='font-bold text-lg'>1,500</div>
                 </button>
-                <div className='bg-white rounded-2xl p-3 shadow text-center'>
+                <button
+                    onClick={() => navigate('carbon-info')}
+                    className='bg-white rounded-2xl p-3 shadow text-center focus:outline-none hover:bg-green-50 transition-colors '
+                    aria-label='탄소 감축 상세 정보 보기'
+                >
                     <div className='text-xs text-gray-500'>탄소 감축</div>
-                    <div className='font-bold text-lg'>
+                    <div className='font-bold text-lg text-gray-500'>
                         {stats.carbonReduction} kg
                     </div>
-                </div>
+                </button>
                 <button
                     onClick={() => navigate('ranking')}
                     className='bg-white rounded-2xl p-3 shadow text-center focus:outline-none hover:bg-gray-50 transition-colors'
