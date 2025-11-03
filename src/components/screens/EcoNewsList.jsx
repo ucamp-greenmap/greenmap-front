@@ -24,8 +24,9 @@ export default function EcoNewsList({ placeholder }) {
     const [readArticles, setReadArticles] = useState([]);
     const [toast, setToast] = useState(null);
 
-    // 백엔드 API 기본 URL (프런트엔드 포트 5173과 다름)
-    const API_BASE_URL = 'http://localhost:8080';
+    // 백엔드 API 기본 URL
+    const API_BASE_URL =
+        'https://greenmap-api-1096735261131.asia-northeast3.run.app';
 
     // 현재는 memberId를 1로 하드코딩
     const CURRENT_MEMBER_ID = 1;
@@ -48,7 +49,7 @@ export default function EcoNewsList({ placeholder }) {
 
             const result = await response.json();
 
-            // 2. 서버 응답의 status 필드 확인
+            // 2. 서버 응답의 status 필드 확인g
             if (result.status !== 'SUCCESS') {
                 throw new Error(
                     result.message || '서버 내부 오류로 뉴스 로드 실패.'
@@ -63,7 +64,6 @@ export default function EcoNewsList({ placeholder }) {
             }
         } catch (err) {
             console.error('뉴스 fetch 오류:', err);
-            // 어떤 오류가 발생하든 사용자에게는 일관된 실패 메시지를 표시
             setError(
                 '뉴스 목록을 불러오지 못했습니다. 서버 상태를 확인하세요.'
             );
