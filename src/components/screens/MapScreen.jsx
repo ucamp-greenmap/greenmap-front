@@ -87,16 +87,6 @@ export default function MapScreen() {
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [selectedFacility, setSelectedFacility] = useState(null);
 
-    const filtered = useMemo(
-        () =>
-            selectedFilter === 'all'
-                ? allFacilities
-                : selectedFilter === 'bookmark'
-                ? allFacilities.filter((d) => bookmarkedIds.includes(d.id))
-                : allFacilities.filter((d) => d.category === selectedFilter),
-        [selectedFilter, allFacilities, bookmarkedIds]
-    );
-
     // Map refs
     const mapRef = useRef(null);
     const currentInfoWindowRef = useRef(null);
@@ -153,7 +143,7 @@ export default function MapScreen() {
     }, []);
 
     // Manage markers
-    const { markersRef, updateVisibleMarkers } = useMarkers(
+    const { markersRef, updateVisibleMarkers, visibleFacilities } = useMarkers(
         mapInstance,
         mapLoaded,
         allFacilities,
@@ -360,7 +350,7 @@ export default function MapScreen() {
                             />
                         ) : (
                             <FacilityList
-                                facilities={filtered}
+                                facilities={visibleFacilities}
                                 bookmarkedIds={bookmarkedIds}
                                 onFacilityClick={showDetail}
                                 onBookmarkToggle={toggleBookmarkLocal}
