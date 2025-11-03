@@ -67,13 +67,3 @@ button:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.18);
 }
-
-/* Scrollbar hide utility */
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
