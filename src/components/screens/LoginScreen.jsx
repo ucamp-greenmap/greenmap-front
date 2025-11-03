@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import { useLocation } from 'react-router-dom';
-
-
 
 
 export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
-    const location = useLocation();
 
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);

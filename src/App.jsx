@@ -29,7 +29,6 @@ import FaqScreen from './components/screens/FaqScreen';
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
-
 const TAB_TO_PATH = {
     home: '/',
     map: '/map',
@@ -155,6 +154,4 @@ export default function App() {
         </BrowserRouter>
     );
 }
-
-
 
