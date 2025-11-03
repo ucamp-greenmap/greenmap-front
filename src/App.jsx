@@ -28,6 +28,7 @@ import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
 
+
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
 const TAB_TO_PATH = {

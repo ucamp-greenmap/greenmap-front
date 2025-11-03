@@ -18,7 +18,7 @@ export default function LoginSuccess() {
       window.history.replaceState({}, "", "/login");
       navigate("/login");
     } else {
-      console.log("❌ 토큰이 없음:", currentUrl);
+      console.log("토큰이 없음:", currentUrl);
       navigate("/login");
     }
   }, [navigate]);
