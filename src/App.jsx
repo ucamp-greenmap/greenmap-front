@@ -21,11 +21,13 @@ import PointHistoryScreen from './components/screens/PointHistoryScreen';
 import PointExchangeScreen from './components/screens/PointExchangeScreen';
 import RankingScreen from './components/screens/RankingScreen';
 import LoginScreen from './components/screens/LoginScreen';
+import LoginSuccess from './components/screens/LoginSuccess';
 import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
+
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -45,18 +47,22 @@ const TAB_TO_PATH = {
     'carbon-info': '/carbon-info',
 };
 
+
 export default function App() {
     const appState = useSelector((state) => state.app.appState);
     const activeTab = useSelector((state) => state.app.activeTab);
     const dispatch = useDispatch();
     // removed top-level navigate; navigation is handled inside AppContent via react-router
 
+
     if (appState === 'splash') return <SplashScreen />;
     if (appState === 'onboarding') return <OnboardingScreen />;
+
 
     function AppContent() {
         const nav = useNavigate();
         const location = useLocation();
+
 
         useEffect(() => {
             // when location changes, update redux activeTab
@@ -66,9 +72,11 @@ export default function App() {
             const tab = pathToTab[location.pathname] || 'home';
             dispatch(setActiveTab(tab));
 
+
             // 라우트 변경 시 스크롤을 최상단으로 이동
             window.scrollTo(0, 0);
         }, [location.pathname]);
+
 
         const navigate = (tab) => {
             const to = TAB_TO_PATH[tab] || '/';
@@ -76,6 +84,7 @@ export default function App() {
             // also keep redux in sync
             dispatch(setActiveTab(tab));
         };
+
 
         return (
             <div className='min-h-screen w-full'>
@@ -117,10 +126,10 @@ export default function App() {
                         path='/login'
                         element={<LoginScreen onNavigate={navigate} />}
                     />
-                    <Route 
-                        path="/login/success" 
-                        element={<LoginScreen />} 
-                    /> 
+                    <Route
+                        path="/login/success"
+                        element={<LoginSuccess />}
+                    />
                     <Route
                         path='/badge'
                         element={<BadgeScreen onNavigate={navigate} />}
@@ -143,6 +152,7 @@ export default function App() {
                     <Route path='*' element={<Navigate to='/' replace />} />
                 </Routes>
 
+
                 <BottomNavigation
                     active={activeTab}
                     onChange={(tab) => navigate(tab)}
@@ -151,9 +161,11 @@ export default function App() {
         );
     }
 
+
     return (
         <BrowserRouter>
             <AppContent />
         </BrowserRouter>
     );
 }
+
