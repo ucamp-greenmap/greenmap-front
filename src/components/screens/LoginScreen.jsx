@@ -6,12 +6,8 @@ import { setActiveTab } from '../../store/slices/appSlice';
 export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
 
-
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-
-   
-   
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
