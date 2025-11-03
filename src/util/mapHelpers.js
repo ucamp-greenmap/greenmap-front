@@ -5,27 +5,27 @@ const CATEGORY_CONFIG = {
     recycle: {
         color: '#4CAF50',
         label: '재활용 센터',
-        // Lucide RefreshCw (순환) icon - 재활용을 더 명확하게 표현
+        // Lucide Recycle icon 
         iconPath:
-            'M21 2v6h-6 M3 12a9 9 0 0 1 15-6.7L21 8 M3 22v-6h6 M21 12a9 9 0 0 1-15 6.7L3 16',
+            'M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5 M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12 M14 16l-3 3 3 3 M8.293 13.596 7.196 9.5 3.1 10.598 M9.344 5.811l1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843 M13.378 9.633l4.096 1.098 1.097-4.096',
     },
     ev: {
         color: '#2196F3',
         label: '전기차 충전소',
-        // Lucide Zap icon - 유지
+        // Lucide Zap icon
         iconPath: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
     },
     store: {
         color: '#9C27B0',
         label: '제로웨이스트',
-        // Lucide ShoppingBag icon - 더 단순하고 명확한 가게 모양
+        // Lucide ShoppingBag icon 
         iconPath:
             'M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z M3 6h18 M16 10a4 4 0 0 1-8 0',
     },
     bike: {
         color: '#FF9800',
         label: '따릉이',
-        // Lucide Bike icon (정확한 경로)
+        // Lucide Bike icon 
         iconPath:
             'M18.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M5.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2z M12 17.5V14l-3-3 4-3 2 3h2',
     },
