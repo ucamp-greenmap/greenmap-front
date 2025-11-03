@@ -12,6 +12,7 @@
         "postinstall": "node ./scripts/postinstall.js || true"
     },
     "dependencies": {
+        "@heroicons/react": "^2.2.0",
         "@reduxjs/toolkit": "^2.9.2",
         "axios": "^1.4.0",
         "classnames": "^2.3.2",
