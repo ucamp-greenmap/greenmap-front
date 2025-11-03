@@ -1,8 +1,9 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useMemo } from 'react';
 import { setActiveTab } from '../../store/slices/appSlice';
 import EcoNewsList from '../screens/EcoNewsList';
+import { TrophyIcon } from '@heroicons/react/24/solid';
+import { useMemo } from 'react';
 
 const ECO_TIPS = [
     {
@@ -93,9 +94,9 @@ export default function HomeScreen({ onNavigate }) {
                 <div className='relative w-full'>
                     <input
                         type='text'
-                        placeholder='지도 검색'
+                        placeholder='지도 검색...'
                         className='w-full pl-12 pr-4 py-4 rounded-[30px] text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white shadow-lg'
-                        aria-label='지도검색'
+                        aria-label='지도 검색'
                     />
                     <div className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400'>
                         🔍
@@ -121,7 +122,7 @@ export default function HomeScreen({ onNavigate }) {
                                 </div>
                             </div>
                             <div className='bg-white/20 p-3 rounded-2xl backdrop-blur-sm'>
-                                <div className='text-white text-2xl'>🏆</div>
+                                <TrophyIcon className='w-6 h-6 text-white' />
                             </div>
                         </div>
 
@@ -130,7 +131,6 @@ export default function HomeScreen({ onNavigate }) {
                                 <span className='text-white/90'>
                                     탄소 감축량
                                 </span>
-                                <div className='text-white'>📈</div>
                             </div>
                             <div className='flex items-baseline gap-2'>
                                 <span className='text-2xl font-semibold'>
@@ -197,8 +197,7 @@ export default function HomeScreen({ onNavigate }) {
                     {/* Eco tip */}
                     <div>
                         <div className='bg-[#8BC34A] bg-opacity-10 rounded-2xl p-4 border-2 border-[#8BC34A] border-opacity-30'>
-                            <div className='flex items-start gap-3'>
-                                <div className='text-3xl'>💡</div>
+                            <div className='items-center gap-3'>
                                 <div>
                                     <h3 className='text-gray-900 mb-2 font-semibold'>
                                         오늘의 에코 팁
