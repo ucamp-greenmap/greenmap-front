@@ -310,7 +310,6 @@ export const EXCHANGE_HISTORY = [
         brand: '스타벅스',
         points: 4500,
         date: '2025-11-03',
-        status: 'completed',
     },
     {
         id: 2,
@@ -319,7 +318,6 @@ export const EXCHANGE_HISTORY = [
         brand: '계좌이체',
         points: 10000,
         date: '2025-11-02',
-        status: 'processing',
     },
     {
         id: 3,
@@ -328,7 +326,6 @@ export const EXCHANGE_HISTORY = [
         brand: 'GS25',
         points: 4500,
         date: '2025-11-01',
-        status: 'completed',
     },
     {
         id: 4,
@@ -337,7 +334,6 @@ export const EXCHANGE_HISTORY = [
         brand: 'CGV',
         points: 13000,
         date: '2025-10-30',
-        status: 'completed',
     },
     {
         id: 5,
@@ -346,7 +342,6 @@ export const EXCHANGE_HISTORY = [
         brand: '계좌이체',
         points: 5000,
         date: '2025-10-28',
-        status: 'completed',
     },
     {
         id: 6,
@@ -355,7 +350,6 @@ export const EXCHANGE_HISTORY = [
         brand: '쿠팡',
         points: 5000,
         date: '2025-10-25',
-        status: 'completed',
     },
     {
         id: 7,
@@ -364,6 +358,5 @@ export const EXCHANGE_HISTORY = [
         brand: '맥도날드',
         points: 6500,
         date: '2025-10-20',
-        status: 'pending',
     },
 ];

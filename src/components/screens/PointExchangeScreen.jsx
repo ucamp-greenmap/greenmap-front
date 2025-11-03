@@ -124,27 +124,6 @@ export default function PointExchangeScreen({ onBack }) {
         setAccountHolder(account.accountHolder);
     };
 
-    // 상태별 배지 스타일
-    const getStatusBadge = (status) => {
-        const styles = {
-            completed: 'bg-green-100 text-green-700',
-            processing: 'bg-blue-100 text-blue-700',
-            pending: 'bg-yellow-100 text-yellow-700',
-        };
-        const labels = {
-            completed: '완료',
-            processing: '처리중',
-            pending: '대기중',
-        };
-        return (
-            <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}
-            >
-                {labels[status]}
-            </span>
-        );
-    };
-
     return (
         <div className='min-h-screen bg-gray-50 pb-20'>
             {/* 헤더 */}
@@ -607,10 +586,9 @@ export default function PointExchangeScreen({ onBack }) {
                                     </div>
                                 </div>
                                 <div className='text-right'>
-                                    <div className='font-bold text-gray-800 mb-1'>
+                                    <div className='font-bold text-gray-800'>
                                         -{item.points.toLocaleString()}P
                                     </div>
-                                    {getStatusBadge(item.status)}
                                 </div>
                             </div>
                         </motion.div>
