@@ -23,9 +23,11 @@ export default function LoginScreen({ onNavigate }) {
 
     // 카카오 로그인 버튼 클릭
     const kakaoLogin = () => {
-        window.location.href = 'https://greenmap-api-1096735261131.asia-northeast3.run.app/oauth2/authorization/kakao';
+        window.location.href = 'http://34.50.38.218/oauth2/authorization/kakao';
     }; 
     // http://localhost:8080/oauth2/authorization/kakao'; 배포용 링크로 교체
+    // https://greenmap-api-1096735261131.asia-northeast3.run.app/oauth2/authorization/kakao';
+    // http://34.50.38.218:8080/oauth2/authorization/kakao
    
     useEffect(() => {
     console.log("LoginScreen useEffect 실행됨");
