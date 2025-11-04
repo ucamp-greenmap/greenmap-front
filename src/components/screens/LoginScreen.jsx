@@ -1,43 +1,66 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-
+import { updateProfile } from '../../store/slices/userSlice'; // updateProfile 액션 임포트
+import api from '../../api/axios';
+import axios from 'axios';
 
 export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userInfo, setUserInfo] = useState(null);
     const [showSetting, setShowSetting] = useState(false);
+    const [error, setError] = useState(null);
 
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
     };
 
-
     function logoutUser() {
         setIsLoggedIn(false);
         localStorage.removeItem('token');
     }
 
-
-    // 카카오 로그인 버튼 클릭
     const kakaoLogin = () => {
-        window.location.href = 'http://34.50.38.218/oauth2/authorization/kakao';
-    }; 
-    // http://localhost:8080/oauth2/authorization/kakao'; 배포용 링크로 교체
-    // https://greenmap-api-1096735261131.asia-northeast3.run.app/oauth2/authorization/kakao';
-    // http://34.50.38.218:8080/oauth2/authorization/kakao
-   
-    useEffect(() => {
-    console.log("LoginScreen useEffect 실행됨");
+        window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
+    };
+    // 'http://localhost:8080/oauth2/authorization/kakao'; 배포용 링크로 교체
+    // 'https://greenmap-api-1096735261131.asia-northeast3.run.app/oauth2/authorization/kakao';
+    // 'http://34.50.38.218:8080/oauth2/authorization/kakao';
+    // 'http://34.50.38.218/oauth2/authorization/kakao'; // 최종 주소
 
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-        setIsLoggedIn(true);
-        console.log("저장된 토큰으로 로그인 상태 유지:", storedToken);
-    }
-    }, []);
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        if (!token) return;
+
+        axios.get("http://localhost:8080/member/me", {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then((res) => {
+            console.log("회원 정보 응답:", res.data);
+            setUserInfo(res.data.data);
+
+            // Redux로 회원정보 업데이트
+            dispatch(updateProfile({
+                name: res.data.data.nickname, // 닉네임을 이름에 설정
+                email: res.data.data.email,    // 이메일을 이메일에 설정
+            }));
+        })
+        .catch((err) => {
+            console.error("회원 정보 조회 실패", err.response || err);
+            setError("회원 정보를 가져오는데 실패했습니다.");
+        });
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (userInfo) {
+            console.log('회원 이메일:', userInfo.email);  // 이메일 출력
+        }
+    }, [userInfo]);
+
 
    
     return (

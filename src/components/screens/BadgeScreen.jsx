@@ -60,7 +60,7 @@ export default function BadgeScreen({onNavigate}) {
           try {
             const res = await api.get('/badge'); // axios.js 확인
             if (res.data.status === 'SUCCESS') {
-              setbadgesList(res.data.data); // 안돼면 [] 없애기
+              setbadgesList(res.data.data);
             } else {
               setError('뱃지 데이터를 불러오지 못했습니다.');
             }
@@ -72,12 +72,11 @@ export default function BadgeScreen({onNavigate}) {
           }
         };
         fetchBadges();
+        console.log('뱃지 목록', badgesList);
       }, []);
 
-      if (loading) return <div className="p-10 text-center text-gray-500">로딩 중 ...</div>;
-      if (error) return <div className="p-10 text-center text-gray-500">{error}</div>;
-
-
+      if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
+      if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
 
 
 
