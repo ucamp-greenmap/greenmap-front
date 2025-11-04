@@ -1,4 +1,4 @@
-const BASE_URL = 'https://greenmap-api-1096735261131.asia-northeast3.run.app';
+const BASE_URL = '';
 
 // 인증 요청 (공통)
 async function sendVerification(url, memberId, body) {
