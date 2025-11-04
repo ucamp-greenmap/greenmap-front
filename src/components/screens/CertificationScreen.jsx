@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // ⭐️ useCallback 임포트 추가
 import { useSelector } from 'react-redux';
 import CertTypeCard from '../cert/CertTypeCard';
 import CertModal from '../cert/CertModal';
@@ -9,12 +9,13 @@ import {
 } from '../../util/certApi';
 
 export default function CertificationScreen() {
-    //  const isOnline = useSelector((s) => s.app.isOnline);
-    const memberId = useSelector((s) => s.user?.memberId) || 1; // 멤버 생기면 Redux에서 memberId 가져오기
+    // ⭐️ memberId는 Redux에서 가져오거나, 하드코딩된 기본값 1을 사용합니다.
+    const memberId = useSelector((s) => s.user?.memberId) || 1;
     const [selectedType, setSelectedType] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [recentCertifications, setRecentCertifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null); // ⭐️ 에러 상태 추가
     const [monthlyStats, setMonthlyStats] = useState({
         count: 0,
         totalPoints: 0,
@@ -38,16 +39,17 @@ export default function CertificationScreen() {
     };
 
     // 최근 인증 내역 불러오기
-    const loadCertificationHistory = async () => {
-        console.log('🔍 내역 조회 시작, memberId:', memberId);
+    const loadCertificationHistory = useCallback(async () => {
+        console.log('내역 조회 시작, memberId:', memberId);
         setIsLoading(true);
+        setError(null); // 새로운 로드 시작 시 에러 초기화
 
         try {
+            // 1. 인증 내역 불러오기
             const result = await fetchCertificationHistory(memberId);
-            console.log('📥 API 응답:', result);
 
             if (result.success) {
-                console.log('✅ 받아온 데이터:', result.data);
+                // ✅ 성공 처리
                 const formattedData = result.data.map((item, index) => ({
                     id: index + 1,
                     type: getCategoryLabel(item.category),
@@ -55,44 +57,40 @@ export default function CertificationScreen() {
                     points: item.point,
                     category: item.category,
                 }));
-                console.log('✅ 변환된 데이터:', formattedData);
                 setRecentCertifications(formattedData);
 
-                // 이번 달 통계 API 호출
+                // 2. 이번 달 통계 API 호출
                 const statsResult = await fetchMonthlyStats(memberId);
                 if (statsResult.success) {
                     setMonthlyStats({
-                        count: statsResult.data.verifyTimes,
-                        totalPoints: statsResult.data.pointSum,
+                        count: statsResult.data.verifyTimes || 0, // 안전한 접근
+                        totalPoints: statsResult.data.pointSum || 0, // 안전한 접근
                     });
                 } else {
-                    setMonthlyStats({
-                        count: 0,
-                        totalPoints: 0,
-                    });
+                    console.error('❌ 통계 API 실패:', statsResult.message);
+                    setMonthlyStats({ count: 0, totalPoints: 0 });
                 }
             } else {
+                // ❌ API 실패 (success: false) 처리
                 console.error('❌ API 실패:', result.message);
-                alert(result.message || '인증 내역을 불러오는데 실패했습니다.');
+                setError(
+                    result.message || '인증 내역을 불러오는데 실패했습니다.'
+                );
             }
-        } catch (error) {
-            console.error('❌ 내역 조회 오류:', error);
-
-            // 서버 에러 메시지 확인
-            if (error.message && error.message.includes("doesn't exist")) {
-                alert('백엔드 팀에게 문의하세요.');
-            } else {
-                alert('내역 조회 중 오류가 발생했습니다.');
-            }
+        } catch (err) {
+            // ❌ 네트워크/Axios 오류 처리 (certApi.js 내부에서 처리되므로 여기서는 간결하게)
+            console.error('❌ 내역 조회 오류:', err);
+            setError(
+                '내역 조회 중 오류가 발생했습니다. 네트워크 상태를 확인하세요.'
+            );
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [memberId]);
 
-    // 컴포넌트 마운트 시 데이터 로드
     useEffect(() => {
         loadCertificationHistory();
-    }, [memberId]);
+    }, [loadCertificationHistory]);
 
     function openCertModal(type) {
         setSelectedType(type);
@@ -102,7 +100,6 @@ export default function CertificationScreen() {
     function closeModal() {
         setShowModal(false);
         setSelectedType(null);
-        // 모달 닫을 때 최신 데이터 다시 불러오기
         loadCertificationHistory();
     }
 
@@ -154,7 +151,8 @@ export default function CertificationScreen() {
                             <li className='flex items-start gap-2'>
                                 <span className='text-[#4CAF50] mt-0.5'>✓</span>
                                 <span>
-                                    GPS 인증을 위해 위치 서비스를 활성화해주세요
+                                    전자 영수증, 따릉이 이용내역 등 결제 증빙
+                                    화면이 선명하게 보이도록 촬영해주세요.
                                 </span>
                             </li>
                             <li className='flex items-start gap-2'>
@@ -174,6 +172,13 @@ export default function CertificationScreen() {
                                 <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#4CAF50] mx-auto'></div>
                                 <p className='text-gray-500 mt-3'>
                                     불러오는 중...
+                                </p>
+                            </div>
+                        ) : error ? (
+                            <div className='bg-white rounded-2xl p-8 text-center border border-red-500 text-red-500 font-semibold'>
+                                <p>조회 실패</p>
+                                <p className='text-sm mt-2 text-gray-700'>
+                                    {error}
                                 </p>
                             </div>
                         ) : recentCertifications.length > 0 ? (
