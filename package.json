@@ -1,52 +1,54 @@
 {
-    "name": "green-map",
-    "private": true,
-    "version": "0.0.0",
-    "type": "module",
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "lint": "eslint .",
-        "preview": "vite preview",
-        "tailwind:build": "tailwindcss -i ./src/index.css -o ./dist/tailwind.css --minify",
-        "postinstall": "node ./scripts/postinstall.js || true"
-    },
-    "dependencies": {
-        "@heroicons/react": "^2.2.0",
-        "@reduxjs/toolkit": "^2.9.2",
-        "axios": "^1.13.1",
-        "classnames": "^2.3.2",
-        "framer-motion": "^12.23.24",
-        "lucide-react": "^0.548.0",
-        "postinstall": "^0.11.2",
-        "react": "^19.2.0",
-        "react-dom": "^19.2.0",
-        "react-redux": "^9.2.0",
-        "react-router-dom": "^7.9.4",
-        "redux-persist": "^6.0.0",
-        "tesseract.js": "^6.0.1"
-    },
-    "devDependencies": {
-        "@eslint/js": "^9.37.0",
-        "@types/react": "^18.0.28",
-        "@types/react-dom": "^18.0.11",
-        "@vite-pwa/assets-generator": "^1.0.2",
-        "@vitejs/plugin-react": "^5.0.4",
-        "autoprefixer": "^10.4.14",
-        "eslint": "^9.37.0",
-        "eslint-plugin-react-hooks": "^5.2.0",
-        "eslint-plugin-react-refresh": "^0.4.23",
-        "eslint-plugin-tailwindcss": "^3.9.0",
-        "globals": "^16.4.0",
-        "postcss": "^8.4.23",
-        "tailwindcss": "^3.4.7",
-        "vite": "^7.1.9",
-        "vite-plugin-pwa": "^1.1.0",
-        "workbox-core": "^7.3.0",
-        "workbox-window": "^7.3.0"
-    },
-    "overrides": {
-        "sharp": "^0.33.5",
-        "sharp-ico": "^0.1.5"
-    }
+  "name": "green-map",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "tailwind:build": "tailwindcss -i ./src/index.css -o ./dist/tailwind.css --minify",
+    "postinstall": "node ./scripts/postinstall.js || true"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@reduxjs/toolkit": "^2.9.2",
+    "axios": "^1.13.1",
+    "classnames": "^2.3.2",
+    "cors": "^2.8.5",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.548.0",
+    "postinstall": "^0.11.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.9.4",
+    "redux-persist": "^6.0.0",
+    "tesseract.js": "^6.0.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@vite-pwa/assets-generator": "^1.0.2",
+    "@vitejs/plugin-react": "^5.0.4",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^9.37.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.23",
+    "eslint-plugin-tailwindcss": "^3.9.0",
+    "globals": "^16.4.0",
+    "postcss": "^8.4.23",
+    "tailwindcss": "^3.4.7",
+    "vite": "^7.1.9",
+    "vite-plugin-pwa": "^1.1.0",
+    "workbox-core": "^7.3.0",
+    "workbox-window": "^7.3.0"
+  },
+  "overrides": {
+    "sharp": "^0.33.5",
+    "sharp-ico": "^0.1.5"
+  },
+  "proxy": "http://localhost:8080" 
 }

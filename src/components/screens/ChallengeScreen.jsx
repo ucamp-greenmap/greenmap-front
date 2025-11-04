@@ -1,6 +1,7 @@
 import React from 'react';
+import api from '../../api/axios';
 
-
+// 챌린지 목록
 const sampleChallenges = [
     {
         challenge_id: 1,
@@ -49,7 +50,6 @@ const sampleChallenges = [
     },
 ];
 
-
  // 참여하는 챌린지 목록
 const followedChallenges = [
     {
@@ -71,20 +71,13 @@ const followedChallenges = [
         updated_at: '2023-10-12',
     },
 ];
-
+// 데이터 가져오면 삭제
 
 
 
 export default function ChallengeScreen() {
     const [filter, setFilter] = React.useState('ongoing');
-   
-
-
-
-
-    // sampleChallenges, followedChallenges 에 챌린지 대체.
-
-
+    
     const mergedChallenges = React.useMemo(() => {
         return sampleChallenges.map(c => {
             const fc = followedChallenges.find(fc => fc.challenge_id === c.challenge_id);
@@ -95,7 +88,78 @@ export default function ChallengeScreen() {
             };
         });
     }, []);
+    
+      const [available, setAvailable] = React.useState([]);
+      const [end, setEnd] = React.useState([]);
+      const [attend, setAttend] = React.useState([]);
 
+
+      const [loading, setLoading] = React.useState(true);
+      const [error, setError] = React.useState(null);
+
+      React.useEffect(() => {
+        // 참여가능
+        const fetchAvailable = async () => {
+          try {
+            const res = await api.get('/chal/available');
+            if (res.data.status === 'SUCCESS') {
+              setAvailable([res.data.availableChallenges]); // 받아오는 코드 수정 필요.
+            } else {
+              setError('참여 가능한 데이터를 불러오지 못했습니다.');
+            }
+          } catch (err) {
+            console.log('에러 메시지', err);
+            setError('서버 요청 중 오류가 발생했습니다.');
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        // 완료
+        const fetchEnd = async () => {
+          try {
+            const res = await api.get('/chal/end');
+            if (res.data.status === 'SUCCESS') {
+              setEnd([res.data.challenges]);
+            } else {
+              setError('완료한 챌린지 데이터를 불러오지 못했습니다.');
+            }
+          } catch (err) {
+            console.log('에러 메시지', err);
+            setError('서버 요청 중 오류가 발생했습니다.');
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        // 참여중 
+        const fetchAttend = async () => {
+          try {
+            const res = await api.get('/chal/attend');
+            if (res.data.status === 'SUCCESS') {
+              setAttend([res.data.challenges]);
+            } else {
+              setError('진행중인 챌린지 데이터를 불러오지 못했습니다.');
+            }
+          } catch (err) {
+            console.log('에러 메시지', err);
+            setError('서버 요청 중 오류가 발생했습니다.');
+          } finally {
+            setLoading(false);
+          }
+        };
+        
+        fetchAvailable();
+        fetchEnd();
+        fetchAttend();
+        console.log('참여가능', available); // 데이터 확인.
+        console.log('완료', end);
+        console.log('참여중', attend);
+      }, []);
+
+      //if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
+      //if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
+  
 
 
 
@@ -157,7 +221,7 @@ function ChallengeCard({ challenge_id, challenge_name, description, point_amount
 
 
   return (
-<div className="flex items-center mb-6">
+    <div className="flex items-center mb-6">
       <div
         className="flex bg-white rounded-2xl shadow overflow-hidden flex-1 relative"
         style={{ height: `${ticketHeight}px` }}
@@ -222,7 +286,7 @@ function ChallengeCard({ challenge_id, challenge_name, description, point_amount
 
 
         {filter !== 'completed' && (
-          <button className="relative flex flex-col items-center justify-center bg-green-600 text-white rounded-l-2xl h-full w-full px-0">
+          <button className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#8BC34A] to-[#4CAF50] text-white rounded-l-2xl h-full w-full px-0">
             <div hidden id={challenge_id}></div>
             <span className="text-sm font-medium">
               {filter === 'available' ? '참여' : '인증'}

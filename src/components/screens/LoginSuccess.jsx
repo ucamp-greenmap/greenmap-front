@@ -1,39 +1,28 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 export default function LoginSuccess() {
   const navigate = useNavigate();
 
-
   useEffect(() => {
-    console.log(" LoginSuccess 페이지 렌더링됨:", window.location.href);
+    console.log("✅ LoginSuccess 페이지 렌더링됨:", window.location.href);
 
+    const currentUrl = window.location.href;
 
-    const url = new URL(window.location.href);
-    const token = url.searchParams.get("token");
+    // URL에서 토큰을 추출하여 로컬 스토리지에 저장
+    if (currentUrl.includes("token=")) {
+      const token = currentUrl.split("token=")[1].split(/[&#]/)[0];
+      console.log("✅ 토큰 감지됨:", token);
 
+      localStorage.setItem("token", token); // 로컬 스토리지에 토큰 저장
 
-    if (token) {
-      console.log(" 토큰 감지됨:", token);
-      localStorage.setItem("token", token);
-
-
-      // ✅ localStorage에 저장된 걸 확실히 보장하기 위해 약간 지연 후 이동
-      setTimeout(() => {
-        if (localStorage.getItem("token")) {
-          console.log(" 토큰 저장 확인, /login 으로 이동");
-          navigate("/login", { replace: true });
-        } else {
-          console.warn(" 토큰이 저장되지 않음, 재시도");
-        }
-      }, 300);
+      window.history.replaceState({}, "", "/login"); // URL 변경 (파라미터 제거)
+      navigate("/login"); // 로그인 페이지로 이동
     } else {
-      console.log(" URL에 token 없음:", window.location.href);
-      navigate("/login", { replace: true });
+      console.log("토큰이 없음:", currentUrl);
+      navigate("/login"); // 토큰이 없으면 로그인 페이지로 이동
     }
   }, [navigate]);
-
 
   return <div>로그인 처리 중입니다...</div>;
 }
