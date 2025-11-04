@@ -1,24 +1,18 @@
-const BASE_URL = '';
+import api from '../api/axios';
 
 // 인증 요청 (공통)
 async function sendVerification(url, memberId, body) {
     try {
-        console.log(`📤 API 요청: ${BASE_URL}${url}`);
+        console.log(`📤 API 요청: ${url}`);
         console.log('📦 body:', body);
 
-        const response = await fetch(`${BASE_URL}${url}`, {
-            method: 'POST',
+        const response = await api.post(url, body, {
             headers: {
-                'Content-Type': 'application/json',
                 memberId: memberId.toString(),
             },
-            body: JSON.stringify(body),
         });
 
-        console.log('📥 Response Status:', response.status);
-
-        const result = await response.json();
-        console.log('📥 Response Data:', result);
+        const result = response.data;
 
         if (result.status === 'SUCCESS') {
             return {
@@ -33,10 +27,21 @@ async function sendVerification(url, memberId, body) {
             };
         }
     } catch (error) {
-        console.error('❌ API 요청 오류:', error);
+        console.error(
+            '❌ API 요청 오류:',
+            error.response?.data || error.message
+        );
+
+        let message = '네트워크 오류가 발생했습니다.';
+        if (error.response?.data?.message) {
+            message = error.response.data.message;
+        } else if (error.response?.status) {
+            message = `서버 오류 (${error.response.status})가 발생했습니다.`;
+        }
+
         return {
             success: false,
-            message: '네트워크 오류가 발생했습니다.',
+            message: message,
         };
     }
 }
@@ -59,15 +64,13 @@ export async function verifyShop(memberId, data) {
 // 이번 달 인증 통계 조회
 export async function fetchMonthlyStats(memberId) {
     try {
-        const response = await fetch(`${BASE_URL}/verification/monthly`, {
-            method: 'GET',
+        const response = await api.get('/verification/monthly', {
             headers: {
-                'Content-Type': 'application/json',
                 memberId: memberId.toString(),
             },
         });
 
-        const result = await response.json();
+        const result = response.data;
 
         if (result.status === 'SUCCESS') {
             return {
@@ -83,7 +86,7 @@ export async function fetchMonthlyStats(memberId) {
             };
         }
     } catch (error) {
-        console.error('API 요청 오류:', error);
+        console.error('API 요청 오류:', error.response?.data || error.message);
         return {
             success: false,
             data: { verifyTimes: 0, pointSum: 0 },
@@ -95,15 +98,13 @@ export async function fetchMonthlyStats(memberId) {
 // 최근 인증 내역 조회
 export async function fetchCertificationHistory(memberId) {
     try {
-        const response = await fetch(`${BASE_URL}/verification/history`, {
-            method: 'GET',
+        const response = await api.get('/verification/history', {
             headers: {
-                'Content-Type': 'application/json',
                 memberId: memberId.toString(),
             },
         });
 
-        const result = await response.json();
+        const result = response.data;
 
         if (result.status === 'SUCCESS') {
             return {
@@ -119,7 +120,7 @@ export async function fetchCertificationHistory(memberId) {
             };
         }
     } catch (error) {
-        console.error('API 요청 오류:', error);
+        console.error('API 요청 오류:', error.response?.data || error.message);
         return {
             success: false,
             data: [],
