@@ -62,11 +62,19 @@ export default defineConfig({
                 theme_color: '#03c75a',
             },
 
-            workbox: {
-                globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
-                cleanupOutdatedCaches: true,
-                clientsClaim: true,
-            },
+           workbox: {
+
+    globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+    cleanupOutdatedCaches: true,
+    clientsClaim: true,
+    runtimeCaching: [{
+      urlPattern: ({ url }) => url.pathname.includes('/news'),
+      handler: 'NetworkOnly', 
+      options: {
+        matchOptions: { ignoreMethod: true } 
+      }
+    }]
+},
 
             devOptions: {
                 enabled: false,
