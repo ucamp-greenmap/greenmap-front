@@ -60,7 +60,7 @@ export default function BadgeScreen({onNavigate}) {
           try {
             const res = await api.get('/badge'); // axios.js 확인
             if (res.data.status === 'SUCCESS') {
-              setbadgesList([res.data.data]);
+              setbadgesList(res.data.data); // 안돼면 [] 없애기
             } else {
               setError('뱃지 데이터를 불러오지 못했습니다.');
             }
