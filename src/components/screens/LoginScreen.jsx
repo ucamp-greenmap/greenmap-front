@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import { updateProfile } from '../../store/slices/userSlice'; // updateProfile 액션 임포트
+import { updateProfile } from '../../store/slices/userSlice'; 
 import api from '../../api/axios';
 import axios from 'axios';
 
@@ -43,10 +43,12 @@ export default function LoginScreen({ onNavigate }) {
             console.log("회원 정보 응답:", res.data);
             setUserInfo(res.data.data);
 
+            setIsLoggedIn(true);
+
             // Redux로 회원정보 업데이트
             dispatch(updateProfile({
-                name: res.data.data.nickname, // 닉네임을 이름에 설정
-                email: res.data.data.email,    // 이메일을 이메일에 설정
+                name: res.data.data.nickname,
+                email: res.data.data.email, 
             }));
         })
         .catch((err) => {
@@ -54,12 +56,6 @@ export default function LoginScreen({ onNavigate }) {
             setError("회원 정보를 가져오는데 실패했습니다.");
         });
     }, [dispatch]);
-
-    useEffect(() => {
-        if (userInfo) {
-            console.log('회원 이메일:', userInfo.email);  // 이메일 출력
-        }
-    }, [userInfo]);
 
 
    
