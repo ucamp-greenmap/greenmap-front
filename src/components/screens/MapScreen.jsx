@@ -11,10 +11,7 @@ import { useKakaoMap } from '../../hooks/useKakaoMap';
 import { useMarkers } from '../../hooks/useMarkers';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { createCurrentLocationOverlay } from '../../util/location';
-import {
-    getBikeStations,
-    convertBikeStationToFacility,
-} from '../../util/bikeStationApi';
+import { getPlaces, convertPlaceToFacility } from '../../util/placeApi';
 import FilterBar from '../map/FilterBar';
 import CurrentLocationButton from '../map/CurrentLocationButton';
 import BottomSheet from '../map/BottomSheet';
@@ -22,67 +19,23 @@ import FacilityList from '../map/FacilityList';
 import FacilityDetail from '../map/FacilityDetail';
 
 export default function MapScreen() {
-    const facilities = useSelector((s) => s.facility.facilities || []);
     const dispatch = useDispatch();
-    const bookmarkedIds = useSelector((s) => s.facility.bookmarkedIds || []); // 따릉이 데이터 상태
-    const [bikeStations, setBikeStations] = useState([]);
-    const [bikeStationsLoading, setBikeStationsLoading] = useState(false);
+    const bookmarkedIds = useSelector((s) => s.facility.bookmarkedIds || []);
 
-    // 따릉이 시설 데이터 메모이제이션 (변환 비용 절감)
-    const bikeFacilities = useMemo(() => {
-        if (bikeStations.length === 0) return [];
-        return bikeStations.map(convertBikeStationToFacility);
-    }, [bikeStations]);
+    // 장소 데이터 상태
+    const [places, setPlaces] = useState([]);
+    const [placesLoading, setPlacesLoading] = useState(false);
 
-    // Dummy facility data with coordinates (used if store has none)
-    const dummyFacilities = useMemo(
-        () =>
-            facilities && facilities.length > 0
-                ? facilities
-                : [
-                      {
-                          id: 'f1',
-                          name: '재활용 센터 A',
-                          category: 'recycle',
-                          lat: 37.57,
-                          lng: 126.976,
-                      },
-                      {
-                          id: 'f2',
-                          name: '전기차 충전소 B',
-                          category: 'ev',
-                          lat: 37.565,
-                          lng: 126.977,
-                      },
-                      {
-                          id: 'f3',
-                          name: '제로웨이스트 샵 C',
-                          category: 'store',
-                          lat: 37.564,
-                          lng: 126.982,
-                      },
-                      {
-                          id: 'f4',
-                          name: '따릉이 스테이션 D',
-                          category: 'bike',
-                          lat: 37.568,
-                          lng: 126.981,
-                      },
-                      {
-                          id: 'f5',
-                          name: '재활용 센터 E',
-                          category: 'recycle',
-                          lat: 37.562,
-                          lng: 126.975,
-                      },
-                  ],
-        [facilities]
-    );
+    // 장소 시설 데이터 메모이제이션
+    const placeFacilities = useMemo(() => {
+        if (places.length === 0) return [];
+        return places.map(convertPlaceToFacility);
+    }, [places]);
 
-    // 따릉이 데이터와 더미 데이터 병합
+    // 모든 시설 데이터
     const allFacilities = useMemo(() => {
-        return [...dummyFacilities, ...bikeFacilities];
-    }, [dummyFacilities, bikeFacilities]);
+        return placeFacilities;
+    }, [placeFacilities]);
 
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [selectedFacility, setSelectedFacility] = useState(null);
@@ -124,23 +77,25 @@ export default function MapScreen() {
         handleMapClick
     );
 
-    // 따릉이 대여소 데이터 로드
+    // 장소 데이터 로드
     useEffect(() => {
-        const loadBikeStations = async () => {
+        const loadPlaces = async () => {
+            // 현재 위치 또는 기본 위치 사용 (강남역 근처)
+            const location = currentLocation || { lat: 37.4979, lng: 127.0276 };
+            console.log('장소 데이터 로드 위치:', location);
             try {
-                setBikeStationsLoading(true);
-                const stations = await getBikeStations();
-                setBikeStations(stations);
+                setPlacesLoading(true);
+                const placesData = await getPlaces(location.lng, location.lat);
+                setPlaces(placesData);
             } catch (error) {
-                console.error('따릉이 대여소 로드 실패:', error);
-                // 실패해도 계속 진행 (다른 시설은 표시)
+                console.error('장소 데이터 로드 실패:', error);
             } finally {
-                setBikeStationsLoading(false);
+                setPlacesLoading(false);
             }
         };
 
-        loadBikeStations();
-    }, []);
+        loadPlaces();
+    }, [currentLocation]);
 
     // Manage markers
     const { markersRef, updateVisibleMarkers, visibleFacilities } = useMarkers(
@@ -354,6 +309,7 @@ export default function MapScreen() {
                                 bookmarkedIds={bookmarkedIds}
                                 onFacilityClick={showDetail}
                                 onBookmarkToggle={toggleBookmarkLocal}
+                                isLoading={placesLoading}
                             />
                         )}
                     </BottomSheet>
