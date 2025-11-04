@@ -27,6 +27,7 @@ export default function LoginScreen({ onNavigate }) {
     }; 
     // http://localhost:8080/oauth2/authorization/kakao'; 배포용 링크로 교체
    
+    
     useEffect(() => {
     console.log("LoginScreen useEffect 실행됨");
 
