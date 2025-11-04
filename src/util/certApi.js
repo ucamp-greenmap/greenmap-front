@@ -1,4 +1,4 @@
-const BASE_URL = 'http://34.50.38.218:8080';
+const BASE_URL = '';
 
 // 인증 요청 (공통)
 async function sendVerification(url, memberId, body) {
