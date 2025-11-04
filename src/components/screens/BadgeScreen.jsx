@@ -1,72 +1,85 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import axios from 'axios';
+import api from '../../api/axios';
 
 
-const badgesList = [
-    {
-    "name" : "친환경 한걸음",
-    "wholePoint" : 1800, // 누적 포인트
-    "currentPoint" : 0, // 다음 단계 포인트 기준 X >>>!! 현재단계 포인트 기준
-    "description" : "GreenMap을 통한 친환경 활동의 시작을 기념하는 뱃지",
-    "image_url" : String,
-    "created_at" : "2025-10-22", // null 가능
-    "badge_count" : 1,
-    "total_badge" : 5,
-    },
-    {
-    "name" : "친환경 활동가",
-    "wholePoint" : 1800,
-    "currentPoint" : 1000,
-    "description" : "포인트를 1000 모은 친환경 활동가를 기념하는 뱃지",
-    "image_url" : String,
-    "created_at" : "2025-11-01",
-    "badge_count" : 2,
-    "total_badge" : 5,
-    },
-    {
-    "name" : "환경 전사",
-    "wholePoint" : 1800,
-    "currentPoint" : 2000,
-    "description" : "포인트를 2000 모은 친환경 전사를 기념하는 뱃지",
-    "image_url" : String,
-    "created_at" : null,
-    "badge_count" : 3,
-    "total_badge" : 5,
-    },
-]
+// const badgesList = [
+//     {
+//     "name" : "친환경 한걸음",
+//     "wholePoint" : 1800, // 누적 포인트
+//     "currentPoint" : 0, // 다음 단계 포인트 기준 X >>>!! 현재단계 포인트 기준
+//     "description" : "GreenMap을 통한 친환경 활동의 시작을 기념하는 뱃지",
+//     "image_url" : String,
+//     "created_at" : "2025-10-22", // null 가능
+//     "badge_count" : 1,
+//     "total_badge" : 5,
+//     },
+//     {
+//     "name" : "친환경 활동가",
+//     "wholePoint" : 1800,
+//     "currentPoint" : 1000,
+//     "description" : "포인트를 1000 모은 친환경 활동가를 기념하는 뱃지",
+//     "image_url" : String,
+//     "created_at" : "2025-11-01",
+//     "badge_count" : 2,
+//     "total_badge" : 5,
+//     },
+//     {
+//     "name" : "환경 전사",
+//     "wholePoint" : 1800,
+//     "currentPoint" : 2000,
+//     "description" : "포인트를 2000 모은 친환경 전사를 기념하는 뱃지",
+//     "image_url" : String,
+//     "created_at" : null,
+//     "badge_count" : 3,
+//     "total_badge" : 5,
+//     },
+// ]
 
 
 export default function BadgeScreen({onNavigate}) {
     const dispatch = useDispatch();
     const [filter, setFilter] = useState('all');
 
-    
-    
-    // 뱃지 정보 가져오기. 
-    const [badges, setBadges] = useState([]); // badgesList 말고 badges 넣어서 돌리기.
-
-    useEffect(() => {
-        const fetchBadges = async () => {
-            try {
-                const response = await axios.get('/badge');
-                setBadges(response.data);
-
-                console.log("회원의 뱃지 리스트 - ", badges); // 이후 삭제
-            } catch (error) {
-                console.log('Error fetching data: ', error);
-            }
-        };
-        fetchBadges();
-    }, []);
-    // --뱃지 정보
-
-
     const navigate = (tab) => {
       if (typeof onNavigate === 'function') return onNavigate(tab);
       dispatch(setActiveTab(tab));
-    };
+    };  
+
+    
+    // 뱃지 정보 가져오기. 
+      const [badgesList, setbadgesList] = React.useState([]);
+
+
+      const [loading, setLoading] = React.useState(true);
+      const [error, setError] = React.useState(null);
+
+      useEffect(() => {
+        const fetchBadges = async () => {
+          try {
+            const res = await api.get('/badge'); // axios.js 확인
+            if (res.data.status === 'SUCCESS') {
+              setbadgesList([res.data.data]);
+            } else {
+              setError('뱃지 데이터를 불러오지 못했습니다.');
+            }
+          } catch (err) {
+            console.log('에러 메시지', err);
+            setError('서버 요청 중 오류가 발생했습니다.');
+          } finally {
+            setLoading(false);
+          }
+        };
+        fetchBadges();
+      }, []);
+
+      if (loading) return <div className="p-10 text-center text-gray-500">로딩 중 ...</div>;
+      if (error) return <div className="p-10 text-center text-gray-500">{error}</div>;
+
+
+
+
 
 
     return (
