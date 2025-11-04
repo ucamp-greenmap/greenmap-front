@@ -7,10 +7,12 @@
 //     Zap,
 //     Recycle,
 // } from 'lucide-react';
+// import api from '../../api/axios';
 
 // const Card = ({ children, className }) => {
 //     return <div className={className}>{children}</div>;
 // };
+
 // const Progress = ({ value, className }) => {
 //     return (
 //         <div
@@ -29,51 +31,33 @@
 //     const [loading, setLoading] = useState(true);
 //     const [error, setError] = useState(null);
 
-//     // API 호출
-//     // useEffect(() => {
-//     //     const fetchCarbonData = async () => {
-//     //         try {
-//     //             const response = await fetch(
-//     //                 'https://greenmap-api-1096735261131.asia-northeast3.run.app/point/carbon',
-//     //                 {
-//     //                     headers: {
-//     //                         Authorization: 'YOUR_TOKEN_HERE',
-//     //                     },
-//     //                 }
-//     //             );
-
-//     //             const result = await response.json();
-
-//     //             if (result.status === 'SUCCESS') {
-//     //                 setCarbonData(result.data);
-//     //             } else {
-//     //                 setError(result.data.message);
-//     //             }
-//     //         } catch (err) {
-//     //             setError('데이터를 불러오는데 실패했습니다.');
-//     //         } finally {
-//     //             setLoading(false);
-//     //         }
-//     //     };
-
-//     //     fetchCarbonData();
-//     // }, []);
-
 //     useEffect(() => {
 //         const fetchCarbonData = async () => {
 //             try {
-//                 const response = await fetch(
-//                     'http://34.50.38.218:8080/point/carbon'
-//                 );
-//                 const result = await response.json();
+//                 const response = await api.get('/point/carbon');
+
+//                 const result = response.data;
 
 //                 if (result.status === 'SUCCESS') {
 //                     setCarbonData(result.data);
 //                 } else {
-//                     setError(result.data.message);
+//                     setError(
+//                         result.message || '데이터를 불러오는데 실패했습니다.'
+//                     );
 //                 }
 //             } catch (err) {
-//                 setError('데이터를 불러오는데 실패했습니다.');
+//                 console.error('API 요청 오류:', err);
+
+//                 let errorMessage =
+//                     '데이터를 불러오는데 실패했습니다. 네트워크 상태를 확인하세요.';
+
+//                 if (err.response) {
+//                     errorMessage =
+//                         err.response.data?.message ||
+//                         `서버 오류 (${err.response.status})가 발생했습니다.`;
+//                 }
+
+//                 setError(errorMessage);
 //             } finally {
 //                 setLoading(false);
 //             }
@@ -81,6 +65,7 @@
 
 //         fetchCarbonData();
 //     }, []);
+
 //     // 로딩중
 //     if (loading) {
 //         return (
@@ -91,16 +76,25 @@
 //     }
 
 //     // 에러
-//     if (error) {
+//     if (error || !carbonData) {
 //         return (
-//             <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-//                 <div className='text-red-600'>{error}</div>
+//             <div className='min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6'>
+//                 <div className='text-red-600 text-center mb-4'>
+//                     {error || '데이터를 찾을 수 없습니다.'}
+//                 </div>
+//                 <button
+//                     onClick={onBack}
+//                     className='px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors'
+//                 >
+//                     <ArrowLeft className='w-4 h-4 inline mr-2' /> 뒤로 돌아가기
+//                 </button>
 //             </div>
 //         );
 //     }
 
 //     // 데이터에서 값 가져오기
 //     const totalCarbon = carbonData.carbonSave || 0;
+//     // 계산 로직 (기존 유지)
 //     const treeEffect = (totalCarbon / 6.6).toFixed(1);
 //     const powerSaved = (totalCarbon * 2.096).toFixed(0);
 //     const recycleEffect = (totalCarbon * 10).toFixed(0);
@@ -286,33 +280,30 @@
 //                 </div>
 
 //                 {/* What is Carbon Neutral */}
-//                 <Card className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-2xl p-6 text-white shadow-lg'>
-//                     <div className='flex items-start gap-3 mb-4'>
-//                         <Leaf className='w-8 h-8 flex-shrink-0' />
-//                         <div>
-//                             <h3 className='text-white text-lg font-bold mb-2'>
-//                                 탄소 중립이란?
-//                             </h3>
-//                             <p className='text-white/90 text-sm leading-relaxed'>
-//                                 탄소 중립(Carbon Neutral)은 온실가스 배출량과
-//                                 흡수량이 균형을 이루어 순배출량이 '0'이 되는
-//                                 상태를 의미합니다.
-//                             </p>
-//                         </div>
+//    <Card className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-2xl p-6 text-white shadow-lg'>
+//                 <Leaf className='w-8 h-8 flex-shrink-0' />
+//                 <div className='flex flex-col items-center justify-center gap-3 mb-4 text-center'>
+//                     <div>
+//                         <h3 className='text-white text-lg font-bold mb-2 text-center'>
+//                             탄소 중립이란? 탄소 중립(Carbon Neutral)은
+//                             온실가스 배출량과 흡수량이 균형을 이루어
+//                             순배출량이 '0'이 되는 상태를 의미합니다.
+//                         </h3>
 //                     </div>
+//                 </div>
 
-//                     <div className='bg-white/20 rounded-xl p-4 backdrop-blur-sm space-y-2'>
-//                         <h4 className='text-white font-semibold'>
-//                             💡 탄소 감축 실천 방법
-//                         </h4>
-//                         <ul className='space-y-1 text-white/90 text-sm'>
-//                             <li>• 대중교통 및 친환경 이동수단 이용</li>
-//                             <li>• 전기차 충전 및 에너지 효율적 사용</li>
-//                             <li>• 재활용 및 분리배출 실천</li>
-//                             <li>• 제로웨이스트 생활 습관</li>
-//                         </ul>
-//                     </div>
-//                 </Card>
+//                 <div className='bg-white/20 rounded-xl p-4 backdrop-blur-sm space-y-2 **text-center**'>
+//                     <h4 className='text-white text-lg font-bold text-center'>
+//                         💡 탄소 감축 실천 방법
+//                     </h4>
+//                     <ul className='space-y-1 text-white/90 text-base **list-none p-0** '>
+//                         <li> 대중교통 및 친환경 이동수단 이용 </li>
+//                         <li> 전기차 충전 및 에너지 효율적 사용 </li>
+//                         <li> 재활용 및 분리배출 실천 </li>
+//                         <li> 제로웨이스트 생활 습관 </li>
+//                     </ul>
+//                 </div>
+//             </Card>
 
 //                 {/* Monthly Comparison */}
 //                 <div>
@@ -358,6 +349,7 @@
 //         </div>
 //     );
 // }
+
 import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft,
@@ -369,8 +361,13 @@ import {
 } from 'lucide-react';
 
 const Card = ({ children, className }) => {
-    return <div className={className}>{children}</div>;
+    return (
+        <div className={`bg-white rounded-xl shadow-md ${className}`}>
+            {children}
+        </div>
+    );
 };
+
 const Progress = ({ value, className }) => {
     return (
         <div
@@ -384,54 +381,45 @@ const Progress = ({ value, className }) => {
     );
 };
 
-export default function CarbonInfoScreen({ onBack }) {
+// 화면 테스트를 위한 가짜 데이터 (Mock Data)
+const mockCarbonData = {
+    carbonSave: 42.5, // 총 탄소 절감량 (kg CO₂)
+    car: 15.0, // 전기차 충전 기여도
+    recycle: 12.5, // 재활용 기여도
+    bike: 10.0, // 따릉이 이용 기여도
+    zero: 5.0, // 제로웨이스트 쇼핑 기여도
+};
+
+export default function CarbonInfoScreen({
+    onBack = () => console.log('뒤로가기 버튼 클릭됨'),
+}) {
     const [carbonData, setCarbonData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchCarbonData = async () => {
-            try {
-                const response = await fetch(
-                    '/point/carbon'
-                    // 참고: 만약 API가 인증이 필요하다면 아래 헤더를 다시 추가해야 합니다.
-                    /* , {
-                        headers: {
-                            Authorization: 'YOUR_TOKEN_HERE',
-                        },
-                    } */
-                );
-
-                // HTTP 오류 응답(4xx, 5xx) 처리
-                if (!response.ok) {
-                    throw new Error(`HTTP Error! status: ${response.status}`);
+        // API 호출 대신 가짜 데이터 사용
+        const simulateFetch = () => {
+            setLoading(true);
+            // 실제 API 호출을 시뮬레이션하기 위해 딜레이 추가 (선택 사항)
+            setTimeout(() => {
+                try {
+                    // 성공적으로 데이터를 불러온 것으로 간주
+                    setCarbonData(mockCarbonData);
+                    setError(null);
+                } catch (e) {
+                    // 가짜 데이터 로드 실패 시 에러 처리 (거의 발생하지 않음)
+                    setError('가짜 데이터 로딩에 실패했습니다.');
+                } finally {
+                    setLoading(false);
                 }
-
-                const result = await response.json();
-
-                if (result.status === 'SUCCESS') {
-                    setCarbonData(result.data);
-                } else {
-                    // 서버에서 받은 에러 메시지를 사용
-                    setError(
-                        result.message || '데이터를 불러오는데 실패했습니다.'
-                    );
-                }
-            } catch (err) {
-                // 네트워크 오류 또는 JSON 파싱 오류 처리
-                console.error('API 요청 오류:', err);
-                setError(
-                    '데이터를 불러오는데 실패했습니다. 네트워크 또는 서버 상태를 확인하세요.'
-                );
-            } finally {
-                setLoading(false);
-            }
+            }, 500); // 0.5초 딜레이
         };
 
-        fetchCarbonData();
+        simulateFetch();
     }, []);
 
-    // 로딩중
+    // 로딩중 (로딩 상태를 시각적으로 확인하기 위해 유지)
     if (loading) {
         return (
             <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
@@ -440,12 +428,12 @@ export default function CarbonInfoScreen({ onBack }) {
         );
     }
 
-    // 에러
+    // 에러 (에러 상태를 시각적으로 확인하기 위해 유지)
     if (error || !carbonData) {
         return (
             <div className='min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6'>
                 <div className='text-red-600 text-center mb-4'>
-                    {error || '데이터를 찾을 수 없습니다.'}
+                    {error || '가짜 데이터를 찾을 수 없습니다.'}
                 </div>
                 <button
                     onClick={onBack}
@@ -457,7 +445,9 @@ export default function CarbonInfoScreen({ onBack }) {
         );
     }
 
+    // 데이터에서 값 가져오기
     const totalCarbon = carbonData.carbonSave || 0;
+    // 계산 로직 (기존 유지)
     const treeEffect = (totalCarbon / 6.6).toFixed(1);
     const powerSaved = (totalCarbon * 2.096).toFixed(0);
     const recycleEffect = (totalCarbon * 10).toFixed(0);
@@ -494,6 +484,7 @@ export default function CarbonInfoScreen({ onBack }) {
         },
     ];
 
+    // 활동별 기여도 데이터 계산 (기존 유지)
     const activitiesContribution = [
         {
             activity: '전기차 충전',
@@ -540,7 +531,7 @@ export default function CarbonInfoScreen({ onBack }) {
                     >
                         <ArrowLeft className='w-5 h-5 text-white' />
                     </button>
-                    <h1 className='text-white text-xl font-bold'>탄소 중립</h1>
+                    <h1 className='text-white text-2xl font-bold'>탄소 중립</h1>
                 </div>
 
                 {/* Main Carbon Card */}
@@ -644,29 +635,26 @@ export default function CarbonInfoScreen({ onBack }) {
 
                 {/* What is Carbon Neutral */}
                 <Card className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-2xl p-6 text-white shadow-lg'>
-                    <div className='flex items-start gap-3 mb-4'>
-                        <Leaf className='w-8 h-8 flex-shrink-0' />
+                    <Leaf className='w-8 h-8 flex-shrink-0' />
+                    <div className='flex flex-col items-center justify-center gap-3 mb-4 text-center'>
                         <div>
-                            <h3 className='text-white text-lg font-bold mb-2'>
-                                탄소 중립이란?
+                            <h3 className='text-white text-lg font-bold mb-2 text-center'>
+                                탄소 중립이란? 탄소 중립(Carbon Neutral)은
+                                온실가스 배출량과 흡수량이 균형을 이루어
+                                순배출량이 '0'이 되는 상태를 의미합니다.
                             </h3>
-                            <p className='text-white/90 text-sm leading-relaxed'>
-                                탄소 중립(Carbon Neutral)은 온실가스 배출량과
-                                흡수량이 균형을 이루어 순배출량이 '0'이 되는
-                                상태를 의미합니다.
-                            </p>
                         </div>
                     </div>
 
-                    <div className='bg-white/20 rounded-xl p-4 backdrop-blur-sm space-y-2'>
-                        <h4 className='text-white font-semibold'>
+                    <div className='bg-white/20 rounded-xl p-4 backdrop-blur-sm space-y-2 **text-center**'>
+                        <h4 className='text-white text-lg font-bold text-center'>
                             💡 탄소 감축 실천 방법
                         </h4>
-                        <ul className='space-y-1 text-white/90 text-sm'>
-                            <li>• 대중교통 및 친환경 이동수단 이용</li>
-                            <li>• 전기차 충전 및 에너지 효율적 사용</li>
-                            <li>• 재활용 및 분리배출 실천</li>
-                            <li>• 제로웨이스트 생활 습관</li>
+                        <ul className='space-y-1 text-white/90 text-base **list-none p-0** '>
+                            <li> 대중교통 및 친환경 이동수단 이용 </li>
+                            <li> 전기차 충전 및 에너지 효율적 사용 </li>
+                            <li> 재활용 및 분리배출 실천 </li>
+                            <li> 제로웨이스트 생활 습관 </li>
                         </ul>
                     </div>
                 </Card>
@@ -674,7 +662,7 @@ export default function CarbonInfoScreen({ onBack }) {
                 {/* Monthly Comparison */}
                 <div>
                     <h3 className='text-lg font-bold text-gray-900 mb-4'>
-                        📈 월별 비교
+                        월별 비교
                     </h3>
                     <Card className='bg-white rounded-2xl p-5 shadow'>
                         <div className='space-y-3'>

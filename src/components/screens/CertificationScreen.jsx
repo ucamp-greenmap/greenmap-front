@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'; // ⭐️ useCallback 임포트 추가
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import CertTypeCard from '../cert/CertTypeCard';
 import CertModal from '../cert/CertModal';
@@ -9,13 +9,12 @@ import {
 } from '../../util/certApi';
 
 export default function CertificationScreen() {
-    // ⭐️ memberId는 Redux에서 가져오거나, 하드코딩된 기본값 1을 사용합니다.
     const memberId = useSelector((s) => s.user?.memberId) || 1;
     const [selectedType, setSelectedType] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [recentCertifications, setRecentCertifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null); // ⭐️ 에러 상태 추가
+    const [error, setError] = useState(null);
     const [monthlyStats, setMonthlyStats] = useState({
         count: 0,
         totalPoints: 0,
@@ -49,7 +48,6 @@ export default function CertificationScreen() {
             const result = await fetchCertificationHistory(memberId);
 
             if (result.success) {
-                // ✅ 성공 처리
                 const formattedData = result.data.map((item, index) => ({
                     id: index + 1,
                     type: getCategoryLabel(item.category),
