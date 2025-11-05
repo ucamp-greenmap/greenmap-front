@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
+import { fetchPointInfo } from '../../store/slices/userSlice';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
@@ -32,11 +33,16 @@ const ECO_TIPS = [
     },
 ];
 
-// HomeScreen
-// Props: onNavigate?: (tab: string) => void
 export default function HomeScreen({ onNavigate }) {
     const dispatch = useDispatch();
-    const currentPoints = useSelector((s) => s.point.currentPoints);
+
+    // Redux에서 상태 가져오기
+    const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
+
+    // 🔄 처음 화면 열릴 때 사용자 정보 가져오기
+    useEffect(() => {
+        dispatch(fetchPointInfo());
+    }, [dispatch]);
 
     const randomTip = useMemo(() => {
         const randomIndex = Math.floor(Math.random() * ECO_TIPS.length);
@@ -58,22 +64,6 @@ export default function HomeScreen({ onNavigate }) {
     };
 
     return (
-        /**
-         * 📱 HomeScreen 스크롤 영역 설정
-         *
-         * paddingBottom: var(--bottom-nav-inset)
-         * - 하단에 BottomNavigation 높이만큼 padding 추가
-         * - 스크롤 시 BottomNavigation이 콘텐츠를 가리지 않도록 함
-         * - --bottom-nav-inset는 index.css에서 정의 (기본값: 96px)
-         *
-         * 조정 방법:
-         * - padding을 더 크게: index.css에서 --bottom-nav-inset 값 증가
-         * - padding을 더 작게: index.css에서 --bottom-nav-inset 값 감소
-         *
-         * ⚠️ 주의: className='pb-24' 대신 inline style 사용
-         * - pb-24는 고정 padding (96px)
-         * - CSS 변수 사용으로 일관된 spacing 유지
-         */
         <div style={{ paddingBottom: 'var(--bottom-nav-inset)' }}>
             {/* Header - gradient */}
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 pt-12 pb-6 rounded-b-3xl text-white'>
@@ -106,52 +96,99 @@ export default function HomeScreen({ onNavigate }) {
 
             {/* Page content */}
             <div className='px-4'>
-                {/* Point card */}
-                <div className='mt-4'>
-                    <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-3xl p-6 text-white shadow-xl border-0'>
-                        <div className='flex items-center justify-between mb-4'>
-                            <div>
-                                <p className='text-white/90 mb-1'>
-                                    나의 그린 포인트
-                                </p>
-                                <div className='flex items-baseline gap-2'>
-                                    <span className='text-4xl font-bold'>
-                                        {currentPoints}
-                                    </span>
-                                    <span className='text-lg'>P</span>
-                                </div>
-                            </div>
-                            <div className='bg-white/20 p-3 rounded-2xl backdrop-blur-sm'>
-                                <TrophyIcon className='w-6 h-6 text-white' />
-                            </div>
-                        </div>
+                {/* ⏳ 로딩 중 */}
+                {loading && (
+                    <div className='mt-4 bg-white rounded-3xl p-6 text-center shadow-xl'>
+                        <p className='text-gray-600'>정보를 불러오는 중...</p>
+                    </div>
+                )}
 
-                        <div className='bg-white/20 rounded-2xl p-3 backdrop-blur-sm mb-4'>
-                            <div className='flex items-center justify-between mb-2'>
-                                <span className='text-white/90'>
-                                    탄소 감축량
-                                </span>
-                            </div>
-                            <div className='flex items-baseline gap-2'>
-                                <span className='text-2xl font-semibold'>
-                                    42.5
-                                </span>
-                                <span className='text-sm'>kg CO₂</span>
-                            </div>
-                        </div>
-
+                {/* 🔒 로그인 안 됨 */}
+                {!loading && !isLoggedIn && (
+                    <div className='mt-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl p-6 text-center shadow-xl'>
+                        <div className='text-5xl mb-4'>🔒</div>
+                        <h3 className='text-gray-900 text-xl font-bold mb-2'>
+                            로그인이 필요해요
+                        </h3>
+                        <p className='text-gray-600 mb-4'>
+                            그린 포인트와 활동 내역을 확인하려면 로그인해주세요
+                        </p>
                         <button
-                            onClick={() => navigate('cert')}
-                            className='w-full bg-white text-[#4CAF50] py-3 rounded-[20px] text-center transition-transform hover:scale-105'
+                            onClick={() => navigate('login')}
+                            className='bg-[#4CAF50] text-white px-6 py-3 rounded-[20px] hover:bg-[#45a049]'
                         >
-                            활동 인증하고 포인트 받기
+                            로그인하러 가기
                         </button>
                     </div>
-                </div>
+                )}
+
+                {/* ✅ 로그인 됨 - 포인트 카드 */}
+                {!loading && isLoggedIn && (
+                    <div className='mt-4'>
+                        <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-3xl p-6 text-white shadow-xl border-0'>
+                            {/* 사용자 이름 표시 */}
+                            <div className='flex items-center gap-2 mb-4'>
+                                {profile.avatar && (
+                                    <img
+                                        src={profile.avatar}
+                                        alt='프로필'
+                                        className='w-10 h-10 rounded-full'
+                                    />
+                                )}
+                                <p className='text-white/90 text-sm'>
+                                    {profile.nickname || profile.name}님의 그린
+                                    활동
+                                </p>
+                            </div>
+
+                            <div className='flex items-center justify-between mb-4'>
+                                <div>
+                                    <p className='text-white/90 mb-1'>
+                                        나의 그린 포인트
+                                    </p>
+                                    <div className='flex items-baseline gap-2'>
+                                        <span className='text-4xl font-bold'>
+                                            {stats.point}
+                                        </span>
+                                        <span className='text-lg'>P</span>
+                                    </div>
+                                </div>
+                                <div className='bg-white/20 p-3 rounded-2xl backdrop-blur-sm'>
+                                    <TrophyIcon className='w-6 h-6 text-white' />
+                                </div>
+                            </div>
+
+                            <div className='bg-white/20 rounded-2xl p-3 backdrop-blur-sm mb-4'>
+                                <div className='flex items-center justify-between mb-2'>
+                                    <span className='text-white/90'>
+                                        탄소 감축량
+                                    </span>
+                                    {stats.rank && (
+                                        <span className='text-white/90 text-sm'>
+                                            🏆 {stats.rank}위
+                                        </span>
+                                    )}
+                                </div>
+                                <div className='flex items-baseline gap-2'>
+                                    <span className='text-2xl font-semibold'>
+                                        {stats.carbonReduction}
+                                    </span>
+                                    <span className='text-sm'>kg CO₂</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => navigate('cert')}
+                                className='w-full bg-white text-[#4CAF50] py-3 rounded-[20px] text-center transition-transform hover:scale-105'
+                            >
+                                활동 인증하고 포인트 받기
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Sections */}
                 <div className='mt-6 space-y-6'>
-                    {/*  EcoNewsList 컴포넌트 삽입 */}
                     <EcoNewsList placeholder={placeholder} />
 
                     {/* Quick actions */}
