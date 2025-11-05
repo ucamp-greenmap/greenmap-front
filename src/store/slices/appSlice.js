@@ -7,6 +7,8 @@ const appSlice = createSlice({
         activeTab: 'home',
         isOnline: true,
         lastSyncTime: null,
+        onboardingCompleted:
+            sessionStorage.getItem('onboardingCompleted') === 'true',
     },
     reducers: {
         setAppState: (state, action) => {
@@ -21,9 +23,20 @@ const appSlice = createSlice({
         updateSyncTime: (state) => {
             state.lastSyncTime = new Date().toISOString();
         },
+        completeOnboarding: (state) => {
+            state.onboardingCompleted = true;
+            state.appState = 'main';
+            sessionStorage.setItem('onboardingCompleted', 'true');
+        },
     },
 });
 
-export const { setAppState, setActiveTab, setOnlineStatus, updateSyncTime } =
-    appSlice.actions;
+export const {
+    setAppState,
+    setActiveTab,
+    setOnlineStatus,
+    updateSyncTime,
+    completeOnboarding,
+} = appSlice.actions;
+
 export default appSlice.reducer;

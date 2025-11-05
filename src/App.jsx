@@ -21,6 +21,7 @@ import PointHistoryScreen from './components/screens/PointHistoryScreen';
 import PointExchangeScreen from './components/screens/PointExchangeScreen';
 import RankingScreen from './components/screens/RankingScreen';
 import LoginScreen from './components/screens/LoginScreen';
+import LoginSignupScreen from './components/screens/LoginSignupScreen'
 import LoginSuccess from './components/screens/LoginSuccess';
 import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
@@ -127,7 +128,7 @@ export default function App() {
                     />
                     <Route
                         path='/login'
-                        element={<LoginScreen onNavigate={navigate} />}
+                        element={<LoginSignupScreen onNavigate={navigate} />}
                     />
                     <Route path='/login/success' element={<LoginSuccess />} />
                     <Route
