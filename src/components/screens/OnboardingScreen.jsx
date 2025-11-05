@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { setAppState, setActiveTab } from '../../store/slices/appSlice';
+import { completeOnboarding, setActiveTab } from '../../store/slices/appSlice';
 import OnboardingImage1 from '../../assets/2803064_17627.jpg';
 import OnboardingImage2 from '../../assets/22890508_6692213.jpg';
 import OnboardingImage3 from '../../assets/bd09ab29-a980-41cd-9f3a-9edacf7ce5e7.jpg';
@@ -37,7 +37,8 @@ export default function OnboardingScreen() {
     const currentSlide = slides[index];
 
     function handleStart() {
-        dispatch(setAppState('main'));
+        // 온보딩 완료 상태 저장 및 메인으로 이동
+        dispatch(completeOnboarding());
         dispatch(setActiveTab('home'));
     }
 
@@ -89,7 +90,7 @@ export default function OnboardingScreen() {
                     />
                     <div className='absolute inset-0 bg-gradient-to-b from-transparent to-white/30 z-20' />
                 </div>
-                <div className='flex-1 flex flex-col justify-between p-6 sm:p-8 text-black w-full **max-w-lg** mx-auto'>
+                <div className='flex-1 flex flex-col justify-between p-6 sm:p-8 text-black w-full max-w-lg mx-auto'>
                     <div className='flex flex-col items-center text-center'>
                         <div className='bg-[#4CAF50] rounded-full p-6 shadow-lg mb-4'>
                             <div className='w-12 h-12 text-white flex items-center justify-center text-4xl'>
