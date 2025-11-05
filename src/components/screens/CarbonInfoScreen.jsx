@@ -7,7 +7,7 @@ import {
     Zap,
     Recycle,
 } from 'lucide-react';
-import api from '../../api/axios';
+import { fetchCarbonData } from '../../util/carbonApi';
 
 const Card = ({ children, className }) => {
     return <div className={className}>{children}</div>;
@@ -32,38 +32,24 @@ export default function CarbonInfoScreen({ onBack }) {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchCarbonData = async () => {
+        const loadCarbonData = async () => {
             try {
-                const response = await api.get('/point/carbon');
+                const result = await fetchCarbonData();
 
-                const result = response.data;
-
-                if (result.status === 'SUCCESS') {
+                if (result.success) {
                     setCarbonData(result.data);
                 } else {
-                    setError(
-                        result.message || '데이터를 불러오는데 실패했습니다.'
-                    );
+                    setError(result.message);
                 }
             } catch (err) {
-                console.error('API 요청 오류:', err);
-
-                let errorMessage =
-                    '데이터를 불러오는데 실패했습니다. 네트워크 상태를 확인하세요.';
-
-                if (err.response) {
-                    errorMessage =
-                        err.response.data?.message ||
-                        `서버 오류 (${err.response.status})가 발생했습니다.`;
-                }
-
-                setError(errorMessage);
+                console.error('탄소 데이터 로드 오류:', err);
+                setError('데이터를 불러오는데 실패했습니다.');
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchCarbonData();
+        loadCarbonData();
     }, []);
 
     // 로딩중
@@ -94,7 +80,6 @@ export default function CarbonInfoScreen({ onBack }) {
 
     // 데이터에서 값 가져오기
     const totalCarbon = carbonData.carbonSave || 0;
-    // 계산 로직 (기존 유지)
     const treeEffect = (totalCarbon / 6.6).toFixed(1);
     const powerSaved = (totalCarbon * 2.096).toFixed(0);
     const recycleEffect = (totalCarbon * 10).toFixed(0);

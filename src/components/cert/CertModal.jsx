@@ -125,7 +125,6 @@ export default function CertModal({ type, onClose }) {
         }
     }
 
-    // API 전송 (실제 호출)
     const handleCertification = async () => {
         let isValid = false;
 
@@ -151,7 +150,6 @@ export default function CertModal({ type, onClose }) {
 
             if (type.id === 'bike') {
                 const body = {
-                    // category: 'bike'는 verifyBike 함수 내부에서 처리되도록 가정
                     bike_number: parseInt(extraData.bike_number) || 0,
                     distance: Math.round(extractedDistance * 100) / 100,
                     start_time: extraData.startTime,
@@ -172,14 +170,12 @@ export default function CertModal({ type, onClose }) {
                 }
 
                 const carBody = {
-                    // category: 'EVCAR' 또는 'HCAR'는 verifyEVCar/verifyHCar 내부에서 처리됨
                     chargeAmount: finalChargeAmount,
                     chargeFee: finalChargeFee,
                     start_time: extraData.startTime,
                     end_time: extraData.endTime,
                 };
 
-                // type.carType에 따라 적절한 API 호출 (verifyEVCar/verifyHCar)
                 if (isHydrogenCar) {
                     result = await verifyHCar(carBody);
                 } else {
@@ -193,16 +189,16 @@ export default function CertModal({ type, onClose }) {
                     price: extractedPrice,
                     approveNum: parseInt(extraData.approveNum) || 0,
                 };
-                // memberId 없이 body만 전달
                 result = await verifyShop(body);
             }
 
-            // 결과 처리: carbon_save로 수정
             if (result.success) {
+                const carbonAmount =
+                    result.data.carbon_save || result.data.carbonSave || 0;
                 alert(
                     `✅ ${result.message}\n\n` +
                         ` 획득 포인트: ${result.data.point}P\n` +
-                        ` 탄소 감소량: ${result.data.carbon_save}kg`
+                        ` 탄소 감소량: ${carbonAmount}kg`
                 );
                 onClose();
             } else {
@@ -217,7 +213,6 @@ export default function CertModal({ type, onClose }) {
         }
     };
 
-    // UI 렌더링 부분은 변경 없음
     return (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto'>
             <div
