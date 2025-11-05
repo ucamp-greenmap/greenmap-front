@@ -60,37 +60,37 @@ export default function BadgeScreen({onNavigate}) {
 
       // const { auth } = useAuth(); // 로그인 상태에서 멤버 ID와 토큰 가져오기
 
-      //   useEffect(() => {
-      //     const fetchBadges = async () => {
-      //       if (!auth.memberId || !auth.token) {
-      //         setError('로그인 정보가 없습니다.');
-      //         setLoading(false);
-      //         return;
-      //       }
-      //       try {
-      //         const res = await api.get(`/badge?memberId=${auth.memberId}`, {
-      //           headers: {
-      //             Authorization: `Bearer ${auth.token}`, // 로그인 토큰을 Authorization 헤더에 추가
-      //           },
-      //         });
-      //         console.log(res.data);
-      //         if (res.data.status === 'SUCCESS') {
-      //           setbadgesList(res.data.data);
-      //         } else {
-      //           setError('뱃지 데이터를 불러오지 못했습니다.');
-      //         }
-      //       } catch (err) {
-      //         console.log('에러 메시지', err);
-      //         setError('서버 요청 중 오류가 발생했습니다.');
-      //       } finally {
-      //         setLoading(false);
-      //       }
-      //     };
-      //     fetchBadges();
-      //   }, [auth.memberId, auth.token]);
+        // useEffect(() => {
+        //   const fetchBadges = async () => {
+        //     if (!auth.memberId || !auth.token) {
+        //       setError('로그인 정보가 없습니다.');
+        //       setLoading(false);
+        //       return;
+        //     }
+        //     try {
+        //       const res = await api.get(`/badge?memberId=${auth.memberId}`, {
+        //         headers: {
+        //           Authorization: `Bearer ${auth.token}`, // 로그인 토큰을 Authorization 헤더에 추가
+        //         },
+        //       });
+        //       console.log(res.data);
+        //       if (res.data.status === 'SUCCESS') {
+        //         setbadgesList(res.data.data);
+        //       } else {
+        //         setError('뱃지 데이터를 불러오지 못했습니다.');
+        //       }
+        //     } catch (err) {
+        //       console.log('에러 메시지', err);
+        //       setError('서버 요청 중 오류가 발생했습니다.');
+        //     } finally {
+        //       setLoading(false);
+        //     }
+        //   };
+        //   fetchBadges();
+        // }, [auth.memberId, auth.token]);
 
-      // if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
-      // if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
+      if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
+      if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
 
 
 

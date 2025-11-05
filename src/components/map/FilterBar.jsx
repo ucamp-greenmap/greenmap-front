@@ -3,7 +3,8 @@ import React from 'react';
 const FILTER_OPTIONS = [
     { key: 'all', label: '전체' },
     { key: 'recycle', label: '재활용 센터' },
-    { key: 'ev', label: '충전소' },
+    { key: 'ev', label: '전기차' },
+    { key: 'hcar', label: '수소차' },
     { key: 'store', label: '제로웨이스트' },
     { key: 'bike', label: '따릉이' },
     { key: 'bookmark', label: '북마크' },

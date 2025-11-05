@@ -232,19 +232,22 @@ export default function CertModal({ type, onClose }) {
 
                 {/* 모달 내용 - 스크롤 가능 */}
                 <div
-                    className='overflow-y-auto flex-1 p-6 pb-0 space-y-4'
-                    style={{ overscrollBehavior: 'contain' }}
+                    className='overflow-y-auto p-6 space-y-4'
+                    style={{
+                        overscrollBehavior: 'contain',
+                        maxHeight: 'calc(100vh - 400px)',
+                    }}
                 >
                     {/* 업로드 버튼 */}
                     <label
                         className={`
-        block w-full rounded-2xl p-6 text-center cursor-pointer transition-all flex-shrink-0
-        ${
-            isProcessing
-                ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-white border-2 border-green-500 hover:bg-green-50'
-        }
-    `}
+            block w-full rounded-2xl p-6 text-center cursor-pointer transition-all flex-shrink-0
+            ${
+                isProcessing
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : 'bg-white border-2 border-green-500 hover:bg-green-50'
+            }
+        `}
                     >
                         <Upload className='w-12 h-12 mx-auto mb-3 text-green-500' />
                         <div className='text-green-600 font-semibold'>
@@ -368,36 +371,35 @@ export default function CertModal({ type, onClose }) {
                                         인식된 텍스트
                                     </p>
                                 </div>
-                                <div className='bg-white rounded-xl p-3 max-h-40 overflow-y-auto text-sm text-gray-700 whitespace-pre-wrap'>
+                                <div className='bg-white rounded-xl p-3 max-h-20 overflow-y-auto text-sm text-gray-700 whitespace-pre-wrap'>
                                     {ocrResult}
                                 </div>
                             </div>
                         </div>
                     )}
+                </div>
 
-                    {/* 인증 요청 버튼 */}
-                    <div className='pt-2 pb-2'>
-                        <button
-                            onClick={handleCertification}
-                            disabled={
-                                isSubmitting ||
-                                isProcessing ||
-                                (type.id === 'bike' &&
-                                    extractedDistance <= 0) ||
-                                (type.id !== 'bike' &&
-                                    extractedCharge <= 0 &&
-                                    extractedPrice <= 0)
-                            }
-                            className={`w-full py-4 rounded-xl font-bold transition-all 
-    ${
-        isSubmitting || isProcessing
-            ? 'bg-gray-400 text-white cursor-not-allowed'
-            : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
-    }`}
-                        >
-                            {isSubmitting ? '인증 처리 중...' : '인증 요청하기'}
-                        </button>
-                    </div>
+                {/* 인증 요청 버튼 - 하단 고정 */}
+                <div className='p-6 pt-4 border-t border-gray-200 flex-shrink-0 bg-white rounded-b-3xl'>
+                    <button
+                        onClick={handleCertification}
+                        disabled={
+                            isSubmitting ||
+                            isProcessing ||
+                            (type.id === 'bike' && extractedDistance <= 0) ||
+                            (type.id !== 'bike' &&
+                                extractedCharge <= 0 &&
+                                extractedPrice <= 0)
+                        }
+                        className={`w-full py-4 rounded-xl font-bold transition-all
+        ${
+            isSubmitting || isProcessing
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
+        }`}
+                    >
+                        {isSubmitting ? '인증 처리 중...' : '인증 요청하기'}
+                    </button>
                 </div>
             </div>
         </div>
