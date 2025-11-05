@@ -111,6 +111,7 @@ export default function MyPageScreen({ onNavigate }) {
                             <p className='text-gray-600 text-sm'>
                                 {profile.email || '이메일 없음'}
                             </p>
+                            {/** 뱃지 */}
                             <button
                                 onClick={() => navigate('badge')}
                                 className='flex items-center gap-2 mt-2 bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-3 py-1 rounded-full text-sm hover:bg-opacity-20 transition-colors'

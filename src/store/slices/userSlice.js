@@ -61,6 +61,7 @@ export const fetchMyBadgeData = createAsyncThunk(
   }
 );
 
+
 const userSlice = createSlice({
     name: 'user',
     initialState: {

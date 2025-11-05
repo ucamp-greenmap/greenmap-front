@@ -7,9 +7,7 @@ export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [userInfo, setUserInfo] = useState(null);
     const [showSetting, setShowSetting] = useState(false);
-    const [error, setError] = useState(null);
 
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);

@@ -15,13 +15,10 @@ export default function BadgeScreen({onNavigate}) {
       dispatch(setActiveTab(tab));
     };
 
-
       React.useEffect(() => {
         const token = localStorage.getItem("token");
 
-
         if (!token) return;
-
 
         api.get("/badge", {
             headers: { Authorization: `Bearer ${token}` }
@@ -33,15 +30,11 @@ export default function BadgeScreen({onNavigate}) {
         .catch((err) => {
             console.error("완료한 챌린지 정보 조회 실패", err.response || err);
         });
-
-
     }, []);
 
     useEffect(() => {
         dispatch(fetchMyBadgeData());
     }, [dispatch]);
-
-
 
 
     return (
@@ -54,9 +47,6 @@ export default function BadgeScreen({onNavigate}) {
         </div>
         <div className="w-full max-w-3xl  rounded-2xl p-6">
             <div className="bg-white rounded-xl shadow p-5 mb-6 flex items-center justify-between">
-
-
-
 
             <div className="flex justify-center">
               <div className=" rounded-2xl flex items-center space-x-4 w-auto">
@@ -76,15 +66,11 @@ export default function BadgeScreen({onNavigate}) {
               </div>
             </div>
 
-
-
-
             <button onClick={() => navigate('mypage')}
             className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition shadow-sm">
               마이페이지로
             </button>
           </div>
-
 
           <div className="bg-gray-200 rounded-2xl p-3 mb-4  flex justify-center space-x-6">
             <button
@@ -133,9 +119,6 @@ export default function BadgeScreen({onNavigate}) {
                 total_badge={myBadge.total_badge} />
           </div>
 
-
-
-
             <div className="flex justify-center p-3">
               <div className=" rounded-2xl flex items-center space-x-4 w-auto">
                 <div className="text-left">
@@ -145,13 +128,9 @@ export default function BadgeScreen({onNavigate}) {
                 </div>
               </div>
             </div>
-
-
         </div>
         <div className=' text-sm text-gray-500 pb-32 text-center'>그린맵 v1.0.0</div>
       </div>
-
-
     );
 }
 
@@ -159,7 +138,6 @@ export default function BadgeScreen({onNavigate}) {
 function BadgeCard({ name, wholePoint, currentPoint, description, image_url, created_at }) {
   // 프론트에서 보여줄 '완료' 상태 — 실제로는 created_at이 생기면 진짜 완료로 간주됨
   const isCompleted = wholePoint >= currentPoint;
-
 
   return (
     <div
@@ -172,14 +150,11 @@ function BadgeCard({ name, wholePoint, currentPoint, description, image_url, cre
           완료
         </span>
       )}
-
-
       <img
         src={image_url || '/default-badge.png'}
         alt={name}
         className="w-20 h-20 object-cover rounded-full border-2 border-green-400 mb-2"
       />
-
 
       {/* 진행 바 */}
       <div className="w-full bg-gray-200 h-3 rounded-full">
@@ -189,7 +164,6 @@ function BadgeCard({ name, wholePoint, currentPoint, description, image_url, cre
         ></div>
       </div>
 
-
       <div className="text-sm text-gray-500 mb-2">
         {isCompleted ? currentPoint : `${wholePoint} / ${currentPoint}`}
       </div>
@@ -197,7 +171,6 @@ function BadgeCard({ name, wholePoint, currentPoint, description, image_url, cre
 
       <div className="font-semibold text-gray-800">{name}</div>
       <div className="text-xs text-gray-500 mt-1">{description}</div>
-
 
       {/* created_at은 실제로 백엔드에서 완료 처리될 때 표시됨 */}
       {created_at && (

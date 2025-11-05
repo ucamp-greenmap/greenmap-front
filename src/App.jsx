@@ -47,6 +47,7 @@ const TAB_TO_PATH = {
     'carbon-info': '/carbon-info',
 };
 
+
 export default function App() {
     const appState = useSelector((state) => state.app.appState);
     const activeTab = useSelector((state) => state.app.activeTab);
