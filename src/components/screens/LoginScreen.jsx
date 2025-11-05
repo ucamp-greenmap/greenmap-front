@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-// import { updateProfile } from '../../store/slices/userSlice';
 import api from '../../api/axios';
 
 export default function LoginScreen({ onNavigate }) {

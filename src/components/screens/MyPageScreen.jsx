@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import { fetchMyPageData } from '../../store/slices/userSlice';
+import { fetchMyBadgeData, fetchMyPageData } from '../../store/slices/userSlice';
 
 export default function MyPageScreen({ onNavigate }) {
     const dispatch = useDispatch();
-    const { isLoggedIn, profile, stats, ranking, loading, error } = useSelector(
+    const { isLoggedIn, profile, stats, ranking, badges, loading, error } = useSelector(
         (s) => s.user
     );
 
@@ -14,6 +14,7 @@ export default function MyPageScreen({ onNavigate }) {
     // 🔄 화면 열릴 때 마이페이지 데이터 가져오기
     useEffect(() => {
         dispatch(fetchMyPageData());
+        dispatch(fetchMyBadgeData());
     }, [dispatch]);
 
     const navigate = (tab) => {
@@ -114,7 +115,7 @@ export default function MyPageScreen({ onNavigate }) {
                                 onClick={() => navigate('badge')}
                                 className='flex items-center gap-2 mt-2 bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-3 py-1 rounded-full text-sm hover:bg-opacity-20 transition-colors'
                             >
-                                <span>🌱 첫걸음</span>
+                                <span className='block text-sm text-gray-600'>{badges.name}</span>
                                 <span>→</span>
                             </button>
                         </div>

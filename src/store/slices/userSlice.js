@@ -41,6 +41,26 @@ export const fetchMyPageData = createAsyncThunk(
     }
 );
 
+export const fetchMyBadgeData = createAsyncThunk(
+  'user/fetchMyBadgeData',
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('로그인이 필요합니다');
+
+      const response = await api.get('/badge', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.message || '뱃지 정보를 가져올 수 없습니다');
+    }
+  }
+);
+
 const userSlice = createSlice({
     name: 'user',
     initialState: {
@@ -59,6 +79,7 @@ const userSlice = createSlice({
             point: 0,
             carbonReduction: 0,
         },
+        badges: {},
         loading: false,
         error: null,
     },
@@ -79,6 +100,7 @@ const userSlice = createSlice({
                 point: 0,
                 carbonReduction: 0,
             };
+            state.badges = {};
             localStorage.removeItem('token');
         },
 
@@ -142,6 +164,18 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
                 state.isLoggedIn = false;
+            })
+            .addCase(fetchMyBadgeData.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchMyBadgeData.fulfilled, (state, action) => {
+                state.loading = false;
+                state.badges = action.payload;
+            })
+            .addCase(fetchMyBadgeData.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     },
 });
