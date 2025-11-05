@@ -5,7 +5,7 @@ const CATEGORY_CONFIG = {
     recycle: {
         color: '#4CAF50',
         label: '재활용 센터',
-        // Lucide Recycle icon 
+        // Lucide Recycle icon
         iconPath:
             'M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5 M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12 M14 16l-3 3 3 3 M8.293 13.596 7.196 9.5 3.1 10.598 M9.344 5.811l1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843 M13.378 9.633l4.096 1.098 1.097-4.096',
     },
@@ -15,17 +15,24 @@ const CATEGORY_CONFIG = {
         // Lucide Zap icon
         iconPath: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
     },
+    hcar: {
+        color: '#00BCD4',
+        label: '수소차 충전소',
+        // Lucide Fuel icon
+        iconPath:
+            'M3 22h12 M4 9h10 M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18 M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5',
+    },
     store: {
         color: '#9C27B0',
         label: '제로웨이스트',
-        // Lucide ShoppingBag icon 
+        // Lucide ShoppingBag icon
         iconPath:
             'M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z M3 6h18 M16 10a4 4 0 0 1-8 0',
     },
     bike: {
         color: '#FF9800',
         label: '따릉이',
-        // Lucide Bike icon 
+        // Lucide Bike icon
         iconPath:
             'M18.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M5.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2z M12 17.5V14l-3-3 4-3 2 3h2',
     },

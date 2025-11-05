@@ -6,9 +6,25 @@ export default function FacilityList({
     bookmarkedIds,
     onFacilityClick,
     onBookmarkToggle,
+    isLoading = false,
 }) {
     // 북마크 조회 최적화를 위한 Set 생성
     const bookmarkSet = useMemo(() => new Set(bookmarkedIds), [bookmarkedIds]);
+
+    // 로딩 중일 때 로딩 메시지 표시
+    if (isLoading) {
+        return (
+            <div className='flex flex-col items-center justify-center py-8 text-gray-500'>
+                <div className='relative'>
+                    <div className='w-12 h-12 border-4 border-gray-200 rounded-full'></div>
+                    <div className='w-12 h-12 border-4 border-[#4CAF50] border-t-transparent rounded-full animate-spin absolute top-0 left-0'></div>
+                </div>
+                <p className='text-sm font-medium mt-4'>
+                    시설 정보를 불러오는 중...
+                </p>
+            </div>
+        );
+    }
 
     // 시설이 없을 때 메시지 표시
     if (facilities.length === 0) {
