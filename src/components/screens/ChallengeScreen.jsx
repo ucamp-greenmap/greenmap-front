@@ -60,8 +60,6 @@ export default function ChallengeScreen({ onNavigate }) {
 
   }, []);
 
-    // if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
-    // if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
     
   const handleChallengeParticipated = (challengeId) => {
       setAttend((prevAttend) => [
