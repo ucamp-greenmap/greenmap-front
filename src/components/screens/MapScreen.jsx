@@ -82,7 +82,7 @@ export default function MapScreen() {
         const loadPlaces = async () => {
             // 현재 위치 또는 기본 위치 사용 (강남역 근처)
             const location = currentLocation || { lat: 37.4979, lng: 127.0276 };
-            console.log('장소 데이터 로드 위치:', location);
+
             try {
                 setPlacesLoading(true);
                 const placesData = await getPlaces(location.lng, location.lat);
@@ -106,18 +106,6 @@ export default function MapScreen() {
         selectedFilter,
         bookmarkedIds
     );
-
-    // 필터나 북마크 변경 시 마커 업데이트
-    useEffect(() => {
-        if (!mapInstance || !markersRef.current) return;
-        updateVisibleMarkers();
-    }, [
-        selectedFilter,
-        bookmarkedIds,
-        mapInstance,
-        markersRef,
-        updateVisibleMarkers,
-    ]);
 
     // Relayout map on resize
     useEffect(() => {

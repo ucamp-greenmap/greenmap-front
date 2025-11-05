@@ -48,7 +48,6 @@ export async function getPlaces(longitude, latitude) {
                 latitude,
             },
         });
-        console.log('장소 데이터 응답:', response.data);
         if (response.data.status === 'SUCCESS') {
             return response.data.data.places || [];
         } else {
