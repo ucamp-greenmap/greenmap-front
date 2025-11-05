@@ -27,6 +27,7 @@ import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
+import { fetchPointInfo, fetchMyPageData } from "./store/slices/userSlice";
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -52,6 +53,15 @@ export default function App() {
     const dispatch = useDispatch();
     // removed top-level navigate; navigation is handled inside AppContent via react-router
 
+      useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        if (token) {
+        // 로그인된 상태에서 정보를 가져오기
+        dispatch(fetchMyPageData());
+        dispatch(fetchPointInfo());
+        }
+    }, [dispatch]);
     if (appState === 'splash') return <SplashScreen />;
     if (appState === 'onboarding') return <OnboardingScreen />;
 

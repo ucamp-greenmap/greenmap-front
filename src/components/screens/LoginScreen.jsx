@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 // import { updateProfile } from '../../store/slices/userSlice';
 import api from '../../api/axios';
-import axios from 'axios';
 
 export default function LoginScreen({ onNavigate }) {
     const dispatch = useDispatch();
@@ -24,43 +23,22 @@ export default function LoginScreen({ onNavigate }) {
     }
 
     const kakaoLogin = () => {
-        window.location.href = `${
-            import.meta.env.VITE_APP_SERVER_URL
-        }/oauth2/authorization/kakao`;
+        const serverUrl = import.meta.env.VITE_APP_SERVER_URL || 'http://localhost:8080';
+        window.location.href = `${serverUrl}/oauth2/authorization/kakao`;
     };
-    // 'http://localhost:8080/oauth2/authorization/kakao'; 배포용 링크로 교체
-    // 'http://34.50.38.218:8080/oauth2/authorization/kakao';
-    // 'http://34.50.38.218/oauth2/authorization/kakao'; // 최종 주소
 
-    // useEffect(() => {
-    //     const token = localStorage.getItem('token');
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        
+        if (token) {
+            setIsLoggedIn(true);
+        } else {
+            setIsLoggedIn(false);
+        }
+    }, []);
+ 
 
-    //     if (!token) return;
-
-    //     axios
-    //         .get(`${import.meta.env.VITE_APP_SERVER_URL}/member/me`, {
-    //             headers: { Authorization: `Bearer ${token}` },
-    //         })
-    //         .then((res) => {
-    //             console.log('회원 정보 응답:', res.data);
-    //             setUserInfo(res.data.data);
-
-    //             setIsLoggedIn(true);
-
-    //             // Redux로 회원정보 업데이트
-    //             dispatch(
-    //                 updateProfile({
-    //                     name: res.data.data.nickname,
-    //                     email: res.data.data.email,
-    //                 })
-    //             );
-    //         })
-    //         .catch((err) => {
-    //             console.error('회원 정보 조회 실패', err.response || err);
-    //             setError('회원 정보를 가져오는데 실패했습니다.');
-    //         });
-    // }, [dispatch]);
-
+    
     return (
         <>
             <div className='bg-gradient-to-r from-[#4CAF50] to-[#8BC34A] rounded-2xl p-4 text-white'>

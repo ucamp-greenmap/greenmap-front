@@ -1,118 +1,128 @@
 import React from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
+
+export default function ChallengeScreen({ onNavigate }) {
 
 
-
-export default function ChallengeScreen() {
-    const [filter, setFilter] = React.useState('ongoing');
+  const [filter, setFilter] = React.useState('ongoing');
     
-      const [available, setAvailable] = React.useState([]);
-      const [end, setEnd] = React.useState([]);
-      const [attend, setAttend] = React.useState([]);
+  const [available, setAvailable] = React.useState([]);
+  const [end, setEnd] = React.useState([]);
+  const [attend, setAttend] = React.useState([]);
 
 
-      const [loading, setLoading] = React.useState(true);
-      const [error, setError] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
 
 
-    React.useEffect(() => {
-        const token = localStorage.getItem("token");
+  React.useEffect(() => {
+      const token = localStorage.getItem("token");
 
-        if (!token) return;
+      if (!token) return;
 
-        axios.get("http://localhost:8080/chal/attend", {
+      api.get('/chal/attend', {
             headers: { Authorization: `Bearer ${token}` }
-        })
-        .then((res) => {
+      })
+      .then((res) => {
             console.log("정보 응답:", res.data.data.challenges);
             setAttend(res.data.data.challenges);
 
-        })
-        .catch((err) => {
+      })
+      .catch((err) => {
             console.error("참여중인 챌린지 정보 조회 실패", err.response || err);
             setError("회원 정보를 가져오는데 실패했습니다.");
-        });
+      });
 
-        axios.get("http://localhost:8080/chal/available", {
+      api.get("/chal/available", {
             headers: { Authorization: `Bearer ${token}` }
-        })
-        .then((res) => {
+      })
+      .then((res) => {
             console.log("정보 응답:", res.data.data.availableChallenges);
             setAvailable(res.data.data.availableChallenges);
 
-        })
-        .catch((err) => {
+      })
+      .catch((err) => {
             console.error("참여가능한 챌린지 정보 조회 실패", err.response || err);
             setError("회원 정보를 가져오는데 실패했습니다.");
-        });
+      });
 
-        axios.get("http://localhost:8080/chal/end", {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        .then((res) => {
-            console.log("정보 응답:", res.data.data.challenges);
-            setEnd(res.data.data.challenges);
-        })
-        .catch((err) => {
-            console.error("완료한 챌린지 정보 조회 실패", err.response || err);
-            setError("회원 정보를 가져오는데 실패했습니다.");
-        });
+      api.get("/chal/end", {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then((res) => {
+          console.log("정보 응답:", res.data.data.challenges);
+          setEnd(res.data.data.challenges);
+      })
+      .catch((err) => {
+          console.error("완료한 챌린지 정보 조회 실패", err.response || err);
+          setError("회원 정보를 가져오는데 실패했습니다.");
+      });
 
-    }, []);
+  }, []);
 
     // if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
     // if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
+    
+  const handleChallengeParticipated = (challengeId) => {
+      setAttend((prevAttend) => [
+          ...prevAttend,
+          available.find(challenge => challenge.challengeId === challengeId)
+      ]);
+      setAvailable((prevAvailable) => 
+          prevAvailable.filter(challenge => challenge.challengeId !== challengeId)
+      );
+  };
 
 
-    return (
-    <>
-    <div className="w-full bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] py-10 text-center text-white mb-8 shadow-md">
-      <h1 className="text-3xl font-bold text-white mb-2">챌린지</h1>
-      <p className="text-white text-opacity-90 text-sm">
-        친환경 활동을 인증하고 포인트를 받으세요 🌱
-      </p>
+  return (
+  <>
+  <div className="w-full bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] py-10 text-center text-white mb-8 shadow-md">
+    <h1 className="text-3xl font-bold text-white mb-2">챌린지</h1>
+    <p className="text-white text-opacity-90 text-sm">
+      친환경 활동을 인증하고 포인트를 받으세요 🌱
+    </p>
+  </div>
+
+
+  <div className="min-h-screen bg-gray-50 p-4 flex flex-col items-center">
+    <div className="w-full max-w-3xl bg-gray-100 rounded-2xl p-3 mb-6 flex justify-center space-x-4 shadow">
+      {['available','ongoing','completed'].map(f => (
+        <button
+          key={f}
+          onClick={() => setFilter(f)}
+          className={`px-5 py-2 rounded-lg font-medium transition ${
+            filter === f ? 'bg-green-600 text-white shadow' : 'text-gray-600 hover:text-green-600'
+          }`}
+        >
+          {f === 'available' ? '참여가능' : f === 'ongoing' ? '진행중' : '완료'}
+        </button>
+      ))}
     </div>
 
 
-    <div className="min-h-screen bg-gray-50 p-4 flex flex-col items-center">
-      <div className="w-full max-w-3xl bg-gray-100 rounded-2xl p-3 mb-6 flex justify-center space-x-4 shadow">
-        {['available','ongoing','completed'].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-5 py-2 rounded-lg font-medium transition ${
-              filter === f ? 'bg-green-600 text-white shadow' : 'text-gray-600 hover:text-green-600'
-            }`}
-          >
-            {f === 'available' ? '참여가능' : f === 'ongoing' ? '진행중' : '완료'}
-          </button>
-        ))}
-      </div>
-
-
-      <div className="w-full max-w-3xl space-y-4">
-        
-        {
-          filter === 'available' && available.map(c => (
-            <ChallengeCard key={c.challenge_id} filter={filter} {...c} />
-          ))
-        }
-                {
-          filter === 'ongoing' && attend.map(c => (
-            <ChallengeCard key={c.challenge_id} filter={filter} {...c} />
-          ))
-        }
-                {
-          filter === 'completed' && end.map(c => (
-            <ChallengeCard key={c.challenge_id} filter={filter} {...c} />
-          ))
-        }
-      </div>
+    <div className="w-full max-w-3xl space-y-4">
+      
+      {
+        filter === 'available' && available.map(c => (
+          <ChallengeCard key={c.challengeId} filter={filter} {...c} onChall={handleChallengeParticipated} onNavigate={onNavigate} />
+        ))
+      }
+              {
+        filter === 'ongoing' && attend.map(c => (
+          <ChallengeCard key={c.challengeId} filter={filter} {...c} onChall={handleChallengeParticipated} onNavigate={onNavigate} />
+        ))
+      }
+              {
+        filter === 'completed' && end.map(c => (
+          <ChallengeCard key={c.challengeId} filter={filter} {...c} onChall={handleChallengeParticipated} onNavigate={onNavigate} />
+        ))
+      }
     </div>
-    </>
+  </div>
+  </>
 
 
-    );
+  );
 }
 
 
@@ -120,8 +130,28 @@ export default function ChallengeScreen() {
 
 
 
-function ChallengeCard({ challenge_id, challengeName, description, pointAmount, progress, success, createdAt, deadline, image_url, filter }) {
+function ChallengeCard({ challengeId, challengeName, description, pointAmount, progress, success, createdAt, deadline, image_url, filter, onChall, onNavigate }) {
   const ticketHeight = 160; //
+
+  const handleChallenge = () => {
+    const token = localStorage.getItem("token");
+
+    api.post("/chal", 
+      {
+        challengeId: challengeId,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then((res) => {
+          console.log("챌린지 참여 응답:", res.data);
+          onChall(challengeId);
+      })
+      .catch((err) => {
+          console.error("챌린지 참여 실패", err.response || err);
+    });
+  };
+
 
 
   return (
@@ -188,20 +218,18 @@ function ChallengeCard({ challenge_id, challengeName, description, pointAmount, 
           </div>
         )}
 
-
         {filter !== 'completed' && (
-          <button className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#8BC34A] to-[#4CAF50] text-white rounded-l-2xl h-full w-full px-0">
-            <div hidden id={challenge_id}></div>
+          <button
+            onClick={filter === 'available' ? handleChallenge : () => onNavigate('cert')}
+            className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#8BC34A] to-[#4CAF50] text-white rounded-l-2xl h-full w-full px-0"
+          >
+            <div hidden id={challengeId}></div>
             <span className="text-sm font-medium">
               {filter === 'available' ? '참여' : '인증'}
             </span>
           </button>
         )}
       </div>
-
-
-
-
     </div>
   );
 }

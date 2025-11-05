@@ -1,14 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/axios';
+
 export const fetchPointInfo = createAsyncThunk(
     'user/fetchPointInfo',
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token');
-
-            if (!token) {
-                throw new Error('로그인이 필요합니다');
-            }
+            if (!token) throw new Error('로그인이 필요합니다');
 
             const response = await api.get('/point/info', {
                 headers: {
@@ -16,27 +14,9 @@ export const fetchPointInfo = createAsyncThunk(
                 },
             });
 
-            const result = response.data;
-
-            if (result.status !== 'SUCCESS') {
-                throw new Error(result.message || '정보를 가져올 수 없습니다');
-            }
-
-            return result.data;
+            return response.data.data;
         } catch (error) {
-            console.error(
-                '❌ 포인트 정보 조회 오류:',
-                error.response?.data || error.message
-            );
-
-            let message = '네트워크 오류가 발생했습니다.';
-            if (error.response?.data?.message) {
-                message = error.response.data.message;
-            } else if (error.message) {
-                message = error.message;
-            }
-
-            return rejectWithValue(message);
+            return rejectWithValue(error.message || '포인트 정보를 가져올 수 없습니다');
         }
     }
 );
@@ -46,10 +26,7 @@ export const fetchMyPageData = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token');
-
-            if (!token) {
-                throw new Error('로그인이 필요합니다');
-            }
+            if (!token) throw new Error('로그인이 필요합니다');
 
             const response = await api.get('/mypage', {
                 headers: {
@@ -57,27 +34,9 @@ export const fetchMyPageData = createAsyncThunk(
                 },
             });
 
-            const result = response.data;
-
-            if (result.status !== 'SUCCESS') {
-                throw new Error(result.message || '정보를 가져올 수 없습니다');
-            }
-
-            return result.data;
+            return response.data.data;
         } catch (error) {
-            console.error(
-                '❌ 마이페이지 조회 오류:',
-                error.response?.data || error.message
-            );
-
-            let message = '네트워크 오류가 발생했습니다.';
-            if (error.response?.data?.message) {
-                message = error.response.data.message;
-            } else if (error.message) {
-                message = error.message;
-            }
-
-            return rejectWithValue(message);
+            return rejectWithValue(error.message || '회원 정보를 가져올 수 없습니다');
         }
     }
 );
@@ -93,16 +52,13 @@ const userSlice = createSlice({
             avatar: null,
             nickname: '',
         },
-
         ranking: {
             rank: null,
         },
-
         stats: {
             point: 0,
             carbonReduction: 0,
         },
-
         loading: false,
         error: null,
     },
@@ -111,7 +67,7 @@ const userSlice = createSlice({
             state.isLoggedIn = false;
             state.profile = {
                 memberId: null,
-                name: '',
+                name: '그린 발자국',
                 email: '',
                 avatar: null,
                 nickname: '',
@@ -126,7 +82,6 @@ const userSlice = createSlice({
             localStorage.removeItem('token');
         },
 
-        // 로그인 처리 (토큰 저장)
         login: (state, action) => {
             state.isLoggedIn = true;
             if (action.payload.token) {
@@ -134,7 +89,6 @@ const userSlice = createSlice({
             }
         },
 
-        // 프로필 업데이트 (MyPageScreen용)
         updateProfile: (state, action) => {
             state.profile = { ...state.profile, ...action.payload };
         },
@@ -148,7 +102,6 @@ const userSlice = createSlice({
             .addCase(fetchPointInfo.fulfilled, (state, action) => {
                 state.loading = false;
                 state.isLoggedIn = true;
-
                 state.stats = {
                     point: action.payload.point,
                     carbonReduction: action.payload.carbon_save,
@@ -159,7 +112,6 @@ const userSlice = createSlice({
                 state.error = action.payload;
                 state.isLoggedIn = false;
             })
-
             .addCase(fetchMyPageData.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -167,10 +119,8 @@ const userSlice = createSlice({
             .addCase(fetchMyPageData.fulfilled, (state, action) => {
                 state.loading = false;
                 state.isLoggedIn = true;
-
                 const { member, point, ranking } = action.payload;
 
-                // 프로필 정보 저장
                 state.profile = {
                     memberId: member.memberId,
                     name: member.nickname,
