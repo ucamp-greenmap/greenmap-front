@@ -74,8 +74,8 @@ export function convertPlaceToFacility(place) {
         distance: place.distance,
         openingHours: place.openingHours,
         telNum: place.telNum,
-        lat: place.longitude, // API의 longitude가 실제 위도
-        lng: place.latitude, // API의 latitude가 실제 경도
+        lat: place.latitude,
+        lng: place.longitude,
         imageUrl: place.imageUrl,
         isBookMarked: place.isBookMarked,
         category: categoryIdToFilter[place.categoryId] || 'store',
