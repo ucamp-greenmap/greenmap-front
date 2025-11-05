@@ -1,19 +1,65 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
+import { fetchMyPageData } from '../../store/slices/userSlice';
 
 export default function MyPageScreen({ onNavigate }) {
     const dispatch = useDispatch();
-    const profile = useSelector((s) => s.user.profile);
-    const stats = useSelector((s) => s.user.stats);
+    const { isLoggedIn, profile, stats, ranking, loading, error } = useSelector(
+        (s) => s.user
+    );
 
     const [showSetting, setShowSetting] = React.useState(true);
+
+    // 🔄 화면 열릴 때 마이페이지 데이터 가져오기
+    useEffect(() => {
+        dispatch(fetchMyPageData());
+    }, [dispatch]);
 
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
     };
 
+    // ⏳ 로딩 중
+    if (loading) {
+        return (
+            <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+                <div className='text-center'>
+                    <div className='text-5xl mb-4'>⏳</div>
+                    <p className='text-gray-600'>정보를 불러오는 중...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // 🔒 로그인 안 됨
+    if (!isLoggedIn) {
+        return (
+            <div className='min-h-screen bg-gray-50 flex items-center justify-center px-6'>
+                <div className='text-center bg-white rounded-3xl p-8 shadow-xl max-w-md w-full'>
+                    <div className='text-6xl mb-4'>🔒</div>
+                    <h2 className='text-2xl font-bold text-gray-900 mb-2'>
+                        로그인이 필요해요
+                    </h2>
+                    <p className='text-gray-600 mb-6'>
+                        마이페이지를 확인하려면 로그인해주세요
+                    </p>
+                    {error && (
+                        <p className='text-red-500 text-sm mb-4'>{error}</p>
+                    )}
+                    <button
+                        onClick={() => navigate('login')}
+                        className='w-full bg-[#4CAF50] text-white py-3 rounded-2xl hover:bg-[#45a049] transition-colors'
+                    >
+                        로그인하러 가기
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // ✅ 로그인 됨 - 마이페이지 표시
     return (
         <div className='min-h-screen bg-gray-50 pb-24'>
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 pt-8 pb-12'>
@@ -46,21 +92,29 @@ export default function MyPageScreen({ onNavigate }) {
 
                 <div className='bg-white rounded-3xl p-6 shadow-lg'>
                     <div className='flex items-center gap-4 mb-6'>
-                        <div className='w-20 h-20 rounded-full bg-white border-4 border-[#4CAF50] flex items-center justify-center text-4xl shadow-md'>
-                            {profile.avatar || '👤'}
+                        <div className='w-20 h-20 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
+                            {profile.avatar ? (
+                                <img
+                                    src={profile.avatar}
+                                    alt='프로필'
+                                    className='w-full h-full object-cover'
+                                />
+                            ) : (
+                                <span className='text-4xl'>👤</span>
+                            )}
                         </div>
                         <div className='flex-1'>
-                            <h2 className='flex  text-gray-900 font-bold text-xl '>
-                                {profile.name}
+                            <h2 className='text-gray-900 font-bold text-xl'>
+                                {profile.nickname || profile.name || '사용자'}
                             </h2>
-                            <p className='flex text-gray-600 text-sm'>
-                                {profile.email}
+                            <p className='text-gray-600 text-sm'>
+                                {profile.email || '이메일 없음'}
                             </p>
                             <button
                                 onClick={() => navigate('badge')}
                                 className='flex items-center gap-2 mt-2 bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-3 py-1 rounded-full text-sm hover:bg-opacity-20 transition-colors'
                             >
-                                <span>{profile.badge}</span>
+                                <span>🌱 첫걸음</span>
                                 <span>→</span>
                             </button>
                         </div>
@@ -78,7 +132,7 @@ export default function MyPageScreen({ onNavigate }) {
                                 포인트
                             </div>
                             <div className='font-bold text-base text-[#4CAF50]'>
-                                1,500
+                                {stats.point}
                             </div>
                         </button>
                         <button
@@ -102,7 +156,7 @@ export default function MyPageScreen({ onNavigate }) {
                                 랭킹
                             </div>
                             <div className='font-bold text-base text-[#4CAF50]'>
-                                #{stats.rank}
+                                #{ranking.rank || '-'}
                             </div>
                         </button>
                     </div>
@@ -119,7 +173,7 @@ export default function MyPageScreen({ onNavigate }) {
                         <li>
                             <button
                                 onClick={() => navigate('point-exchange')}
-                                className='w-full text-left px-4 **py-4** rounded-xl hover:bg-gray-50 transition-all text-gray-700 flex items-center justify-between'
+                                className='w-full text-left px-4 py-4 rounded-xl hover:bg-gray-50 transition-all text-gray-700 flex items-center justify-between'
                                 aria-label='포인트 교환소 가기'
                             >
                                 <span className='flex items-center gap-3'>
@@ -132,12 +186,12 @@ export default function MyPageScreen({ onNavigate }) {
                         <li>
                             <button
                                 onClick={() => navigate('cert-history')}
-                                className='w-full text-left px-4 **py-4** rounded-xl hover:bg-gray-50 transition-all text-gray-700 flex items-center justify-between'
+                                className='w-full text-left px-4 py-4 rounded-xl hover:bg-gray-50 transition-all text-gray-700 flex items-center justify-between'
                                 aria-label='인증 기록 보기'
                             >
                                 <span className='flex items-center gap-3'>
                                     <span className='text-xl'>📜</span>
-                                    <span>인증 기록 ({stats.totalCerts})</span>
+                                    <span>인증 기록</span>
                                 </span>
                                 <span className='text-gray-400'>→</span>
                             </button>
@@ -145,7 +199,7 @@ export default function MyPageScreen({ onNavigate }) {
                         <li>
                             <button
                                 onClick={() => navigate('FAQ')}
-                                className='w-full text-left px-4 **py-4** rounded-xl hover:bg-gray-50 transition-all text-gray-700 flex items-center justify-between'
+                                className='w-full text-left px-4 py-4 rounded-xl hover:bg-gray-50 transition-all text-gray-700 flex items-center justify-between'
                                 aria-label='FAQ & 고객지원 가기'
                             >
                                 <span className='flex items-center gap-3'>
