@@ -7,38 +7,38 @@ import { updateProfile } from '../../store/slices/userSlice';
 import api from '../../api/axios';
 
 
-// const badgesList = [
-//     {
-//     "name" : "친환경 한걸음",
-//     "wholePoint" : 1800, // 누적 포인트
-//     "currentPoint" : 0, // 다음 단계 포인트 기준 X >>>!! 현재단계 포인트 기준
-//     "description" : "GreenMap을 통한 친환경 활동의 시작을 기념하는 뱃지",
-//     "image_url" : String,
-//     "created_at" : "2025-10-22", // null 가능
-//     "badge_count" : 1,
-//     "total_badge" : 5,
-//     },
-//     {
-//     "name" : "친환경 활동가",
-//     "wholePoint" : 1800,
-//     "currentPoint" : 1000,
-//     "description" : "포인트를 1000 모은 친환경 활동가를 기념하는 뱃지",
-//     "image_url" : String,
-//     "created_at" : "2025-11-01",
-//     "badge_count" : 2,
-//     "total_badge" : 5,
-//     },
-//     {
-//     "name" : "환경 전사",
-//     "wholePoint" : 1800,
-//     "currentPoint" : 2000,
-//     "description" : "포인트를 2000 모은 친환경 전사를 기념하는 뱃지",
-//     "image_url" : String,
-//     "created_at" : null,
-//     "badge_count" : 3,
-//     "total_badge" : 5,
-//     },
-// ]
+const badgesList = [
+    {
+    "name" : "친환경 한걸음",
+    "wholePoint" : 1800, // 누적 포인트
+    "currentPoint" : 0, // 다음 단계 포인트 기준 X >>>!! 현재단계 포인트 기준
+    "description" : "GreenMap을 통한 친환경 활동의 시작을 기념하는 뱃지",
+    "image_url" : String,
+    "created_at" : "2025-10-22", // null 가능
+    "badge_count" : 1,
+    "total_badge" : 5,
+    },
+    {
+    "name" : "친환경 활동가",
+    "wholePoint" : 1800,
+    "currentPoint" : 1000,
+    "description" : "포인트를 1000 모은 친환경 활동가를 기념하는 뱃지",
+    "image_url" : String,
+    "created_at" : "2025-11-01",
+    "badge_count" : 2,
+    "total_badge" : 5,
+    },
+    {
+    "name" : "환경 전사",
+    "wholePoint" : 1800,
+    "currentPoint" : 2000,
+    "description" : "포인트를 2000 모은 친환경 전사를 기념하는 뱃지",
+    "image_url" : String,
+    "created_at" : null,
+    "badge_count" : 3,
+    "total_badge" : 5,
+    },
+]
 
 
 export default function BadgeScreen({onNavigate}) {
@@ -52,7 +52,7 @@ export default function BadgeScreen({onNavigate}) {
 
     
     // 뱃지 정보 가져오기. 
-      const [badgesList, setbadgesList] = React.useState([]);
+      // const [badgesList, setbadgesList] = React.useState([]);
 
 
       const [loading, setLoading] = React.useState(true);
