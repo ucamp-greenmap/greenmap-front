@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchMyPageData } from '../../store/slices/userSlice';
+import { logout } from '../../store/slices/userSlice';
 
 export default function MyPageScreen({ onNavigate }) {
     const dispatch = useDispatch();
@@ -11,7 +12,7 @@ export default function MyPageScreen({ onNavigate }) {
 
     const [showSetting, setShowSetting] = React.useState(true);
 
-    // 🔄 화면 열릴 때 마이페이지 데이터 가져오기
+
     useEffect(() => {
         dispatch(fetchMyPageData());
     }, [dispatch]);
@@ -21,7 +22,14 @@ export default function MyPageScreen({ onNavigate }) {
         dispatch(setActiveTab(tab));
     };
 
-    // ⏳ 로딩 중
+    const handleLogout = () => {
+        if (window.confirm('로그아웃 하시겠습니까?')) {
+            dispatch(logout());
+            navigate('home'); 
+        }
+    };
+
+
     if (loading) {
         return (
             <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
@@ -33,7 +41,7 @@ export default function MyPageScreen({ onNavigate }) {
         );
     }
 
-    // 🔒 로그인 안 됨
+
     if (!isLoggedIn) {
         return (
             <div className='min-h-screen bg-gray-50 flex items-center justify-center px-6'>
@@ -59,7 +67,7 @@ export default function MyPageScreen({ onNavigate }) {
         );
     }
 
-    // ✅ 로그인 됨 - 마이페이지 표시
+    // 로그인 됨 - 마이페이지 표시
     return (
         <div className='min-h-screen bg-gray-50 pb-24'>
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 pt-8 pb-12'>
@@ -162,7 +170,6 @@ export default function MyPageScreen({ onNavigate }) {
                     </div>
                 </div>
             </div>
-
             {/* 메뉴 카드 */}
             <div className='px-6 py-6 space-y-6'>
                 <div className='bg-white rounded-3xl p-6 shadow-md'>
@@ -211,6 +218,13 @@ export default function MyPageScreen({ onNavigate }) {
                         </li>
                     </ul>
                 </div>
+
+                <button
+                    onClick={handleLogout}
+                    className='w-full text-center px-4 py-4 rounded-3xl bg-white text-red-600 font-semibold hover:bg-red-50 transition-all shadow-md'
+                >
+                    로그아웃
+                </button>
             </div>
 
             {/* 버전 정보 */}
