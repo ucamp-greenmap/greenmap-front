@@ -1,14 +1,16 @@
 import api from '../api/axios';
 
 // 인증 요청 (공통)
-async function sendVerification(url, memberId, body) {
+async function sendVerification(url, body) {
+    const token = localStorage.getItem('token');
+
     try {
         console.log(`📤 API 요청: ${url}`);
         console.log('📦 body:', body);
 
         const response = await api.post(url, body, {
             headers: {
-                memberId: memberId.toString(),
+                Authorization: `Bearer ${token}`,
             },
         });
 
@@ -47,26 +49,41 @@ async function sendVerification(url, memberId, body) {
 }
 
 // 따릉이 인증
-export async function verifyBike(memberId, data) {
-    return sendVerification('/verification/bike', memberId, data);
+export async function verifyBike(data) {
+    return sendVerification('/verification/bike', data);
 }
 
 // 전기차 인증
-export async function verifyCar(memberId, data) {
-    return sendVerification('/verification/car', memberId, data);
+export async function verifyEVCar(data) {
+    const evCarBody = {
+        ...data,
+        category: 'EVCAR',
+    };
+    return sendVerification('/verification/car', evCarBody);
+}
+
+// 수소차 인증 (HCAR)
+export async function verifyHCar(data) {
+    const hCarBody = {
+        ...data,
+        category: 'HCAR',
+    };
+    return sendVerification('/verification/car', hCarBody);
 }
 
 // 상점 인증
-export async function verifyShop(memberId, data) {
-    return sendVerification('/verification/shop', memberId, data);
+export async function verifyShop(data) {
+    return sendVerification('/verification/shop', data);
 }
 
 // 이번 달 인증 통계 조회
-export async function fetchMonthlyStats(memberId) {
+export async function fetchMonthlyStats() {
+    const token = localStorage.getItem('token');
+
     try {
-        const response = await api.get('/verification/monthly', {
+        const response = await api.get('/verification/month', {
             headers: {
-                memberId: memberId.toString(),
+                Authorization: `Bearer ${token}`,
             },
         });
 
@@ -96,11 +113,13 @@ export async function fetchMonthlyStats(memberId) {
 }
 
 // 최근 인증 내역 조회
-export async function fetchCertificationHistory(memberId) {
+export async function fetchCertificationHistory() {
+    const token = localStorage.getItem('token');
+
     try {
         const response = await api.get('/verification/history', {
             headers: {
-                memberId: memberId.toString(),
+                Authorization: `Bearer ${token}`,
             },
         });
 

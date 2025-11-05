@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { ChevronLeft, Calendar, TrendingUp, Leaf } from 'lucide-react';
 import { fetchCertificationHistory } from '../../util/certApi';
 
 export default function CertificationHistoryScreen({ onBack }) {
-    const memberId = useSelector((s) => s.user?.memberId) || 1;
+    // const memberId = useSelector((s) => s.user?.memberId) || 1;
     const [certifications, setCertifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [filterCategory, setFilterCategory] = useState('all');
@@ -52,7 +51,7 @@ export default function CertificationHistoryScreen({ onBack }) {
     const loadCertifications = async () => {
         setIsLoading(true);
         try {
-            const result = await fetchCertificationHistory(memberId);
+            const result = await fetchCertificationHistory();
 
             if (result.success) {
                 const formattedData = result.data.map((item, index) => ({
@@ -79,7 +78,7 @@ export default function CertificationHistoryScreen({ onBack }) {
 
     useEffect(() => {
         loadCertifications();
-    }, [memberId]);
+    }, []);
 
     // 필터링된 데이터
     const filteredCertifications =
