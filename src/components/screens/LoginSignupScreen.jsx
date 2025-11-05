@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/axios';
+import api from '../../api/axios';
 // ↓ redux 안 쓰면 이 부분 제거해도됨
 import { useDispatch } from 'react-redux';
 import { updateProfile } from '../../store/slices/userSlice';
