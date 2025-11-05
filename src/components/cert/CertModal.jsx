@@ -6,21 +6,23 @@ import {
     extractAmounts,
     extractApiData,
 } from '../../util/ocrUtils';
-import { verifyBike, verifyCar, verifyShop } from '../../util/certApi';
-import { useSelector } from 'react-redux';
+import {
+    verifyBike,
+    verifyEVCar,
+    verifyHCar,
+    verifyShop,
+} from '../../util/certApi';
 
 export default function CertModal({ type, onClose }) {
-    const memberId = useSelector((s) => s.user?.memberId) || 1;
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [ocrResult, setOcrResult] = useState('');
 
-    // 추출된 값 상태
     const [extractedPrice, setExtractedPrice] = useState(0);
     const [extractedCharge, setExtractedCharge] = useState(0);
     const [extractedDistance, setExtractedDistance] = useState(0);
-    const [detectedCategory, setDetectedCategory] = useState('');
+    const [detectedCategory, setDetectedCategory] = useState(''); // 제로웨이스트/재활용 구분용
     const [extraData, setExtraData] = useState({
         approveNum: '',
         bike_number: '',
@@ -28,6 +30,8 @@ export default function CertModal({ type, onClose }) {
         endTime: '',
         name: '',
     });
+
+    const isHydrogenCar = type.carType === 'H';
 
     // OCR 실행 및 데이터 추출
     async function processImageWithOCR(file) {
@@ -147,14 +151,15 @@ export default function CertModal({ type, onClose }) {
 
             if (type.id === 'bike') {
                 const body = {
-                    category: 'bike',
+                    // category: 'bike'는 verifyBike 함수 내부에서 처리되도록 가정
                     bike_number: parseInt(extraData.bike_number) || 0,
                     distance: Math.round(extractedDistance * 100) / 100,
                     start_time: extraData.startTime,
                     end_time: extraData.endTime,
                 };
-                result = await verifyBike(memberId, body);
+                result = await verifyBike(body);
             } else if (type.id === 'ev') {
+                // 전기차/수소차 분리 및 호출
                 let finalChargeAmount = 0;
                 let finalChargeFee = 0;
 
@@ -166,14 +171,20 @@ export default function CertModal({ type, onClose }) {
                     finalChargeFee = extractedPrice;
                 }
 
-                const body = {
-                    category: 'car',
+                const carBody = {
+                    // category: 'EVCAR' 또는 'HCAR'는 verifyEVCar/verifyHCar 내부에서 처리됨
                     chargeAmount: finalChargeAmount,
                     chargeFee: finalChargeFee,
                     start_time: extraData.startTime,
                     end_time: extraData.endTime,
                 };
-                result = await verifyCar(memberId, body);
+
+                // type.carType에 따라 적절한 API 호출 (verifyEVCar/verifyHCar)
+                if (isHydrogenCar) {
+                    result = await verifyHCar(carBody);
+                } else {
+                    result = await verifyEVCar(carBody);
+                }
             } else if (type.id === 'z') {
                 const finalCategory = detectedCategory || 'zero';
                 const body = {
@@ -182,15 +193,16 @@ export default function CertModal({ type, onClose }) {
                     price: extractedPrice,
                     approveNum: parseInt(extraData.approveNum) || 0,
                 };
-                result = await verifyShop(memberId, body);
+                // memberId 없이 body만 전달
+                result = await verifyShop(body);
             }
 
-            // 결과 처리
+            // 결과 처리: carbon_save로 수정
             if (result.success) {
                 alert(
                     `✅ ${result.message}\n\n` +
                         ` 획득 포인트: ${result.data.point}P\n` +
-                        ` 탄소 감소량: ${result.data.carbonSave}kg`
+                        ` 탄소 감소량: ${result.data.carbon_save}kg`
                 );
                 onClose();
             } else {
@@ -204,6 +216,8 @@ export default function CertModal({ type, onClose }) {
             setIsSubmitting(false);
         }
     };
+
+    // UI 렌더링 부분은 변경 없음
     return (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto'>
             <div
@@ -392,11 +406,11 @@ export default function CertModal({ type, onClose }) {
                                 extractedPrice <= 0)
                         }
                         className={`w-full py-4 rounded-xl font-bold transition-all
-        ${
-            isSubmitting || isProcessing
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
-        }`}
+    ${
+        isSubmitting || isProcessing
+            ? 'bg-gray-400 text-white cursor-not-allowed'
+            : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
+    }`}
                     >
                         {isSubmitting ? '인증 처리 중...' : '인증 요청하기'}
                     </button>
