@@ -14,7 +14,9 @@ const validatePassword = (password) => password.length >= 6;
 
 //  카카오 로그인 버튼 클릭 시 이동
 const kakaoLogin = () => {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/kakao';
+    window.location.href = `${
+        import.meta.env.VITE_APP_SERVER_URL
+    }/oauth2/authorization/kakao`;
 };
 
 //  전역 스타일 그대로 유지
