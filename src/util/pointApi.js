@@ -55,11 +55,19 @@ import api from '../api/axios';
 
 /**
  * 포인트를 사용합니다. (바우처 구매 또는 현금 전환)
- * @param {number} point - 사용할 포인트
+ * @param {number} point - VOUCHER: voucher_id, CASH: 실제 포인트 양
  * @param {PointUsageType} type - 사용 유형 (VOUCHER 또는 CASH)
  * @returns {Promise<{memberId: number, point: number}>} 사용 후 남은 포인트 정보
+ *
+ * @example
+ * // 바우처 구매 시 (voucher_id 전달)
+ * await spendPoint(12345, 'VOUCHER');
+ *
+ * // 현금 전환 시 (포인트 양 전달)
+ * await spendPoint(5000, 'CASH');
  */
 export async function spendPoint(point, type) {
+    console.log('포인트 사용 함수 호출:', point, type);
     try {
         const token = localStorage.getItem('token');
         const response = await api.post(
@@ -72,7 +80,7 @@ export async function spendPoint(point, type) {
             }
         );
 
-        if (response.data.success) {
+        if (response.data.status === 'SUCCESS') {
             return response.data.data;
         } else {
             throw new Error(response.data.message || '포인트 사용 실패');
@@ -96,7 +104,7 @@ export async function getPointInfo() {
             },
         });
 
-        if (response.data.success) {
+        if (response.data.status === 'SUCCESS') {
             return response.data.data;
         } else {
             throw new Error(response.data.message || '포인트 정보 조회 실패');
@@ -120,7 +128,7 @@ export async function getPointShop() {
             },
         });
 
-      if (response.data.status === 'SUCCESS') {
+        if (response.data.status === 'SUCCESS') {
             return {
                 point: response.data.data.point,
                 voucherList: response.data.data.voucherList || [],

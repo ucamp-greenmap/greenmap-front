@@ -21,7 +21,10 @@ import {
 
 // Redux hooks import
 import { usePointShop, useSpendPoint } from '../../hooks/usePointApi';
-import { fetchPointShop } from '../../store/slices/pointSlice';
+import {
+    fetchPointShop,
+    fetchUsedPointLogs,
+} from '../../store/slices/pointSlice';
 import { convertVoucherToGifticon } from '../../util/pointApi';
 
 export default function PointExchangeScreen({ onNavigate }) {
@@ -118,8 +121,9 @@ export default function PointExchangeScreen({ onNavigate }) {
     const confirmPurchase = async () => {
         setShowConfirmModal(false);
         try {
+            // VOUCHER 타입일 때는 voucher_id를 전달
             await spendPoint({
-                point: selectedAmount,
+                point: selectedGifticon.voucherId, // voucher_id 전달
                 type: 'VOUCHER',
             });
             setShowSuccessModal(true);

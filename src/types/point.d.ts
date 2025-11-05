@@ -36,9 +36,11 @@ export type PointLogType = 'USED' | 'GET' | 'VOUCHER' | 'CASH';
 
 /**
  * 포인트 사용 요청
+ * - type이 'VOUCHER'일 때: point에 voucher_id를 전달 (백엔드에서 바우처 가격으로 자동 계산)
+ * - type이 'CASH'일 때: point에 실제 포인트 양을 전달
  */
 export interface UsePointRequest {
-    point: number;
+    point: number; // VOUCHER: voucher_id, CASH: 실제 포인트 양
     type: PointUsageType;
 }
 
