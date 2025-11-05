@@ -2,43 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { updateProfile } from '../../store/slices/userSlice';
-import { useAuth } from './authContext'; 
+// import { useAuth } from './authContext'; 
 
 import api from '../../api/axios';
 
 
-// const badgesList = [
-//     {
-//     "name" : "친환경 한걸음",
-//     "wholePoint" : 1800, // 누적 포인트
-//     "currentPoint" : 0, // 다음 단계 포인트 기준 X >>>!! 현재단계 포인트 기준
-//     "description" : "GreenMap을 통한 친환경 활동의 시작을 기념하는 뱃지",
-//     "image_url" : String,
-//     "created_at" : "2025-10-22", // null 가능
-//     "badge_count" : 1,
-//     "total_badge" : 5,
-//     },
-//     {
-//     "name" : "친환경 활동가",
-//     "wholePoint" : 1800,
-//     "currentPoint" : 1000,
-//     "description" : "포인트를 1000 모은 친환경 활동가를 기념하는 뱃지",
-//     "image_url" : String,
-//     "created_at" : "2025-11-01",
-//     "badge_count" : 2,
-//     "total_badge" : 5,
-//     },
-//     {
-//     "name" : "환경 전사",
-//     "wholePoint" : 1800,
-//     "currentPoint" : 2000,
-//     "description" : "포인트를 2000 모은 친환경 전사를 기념하는 뱃지",
-//     "image_url" : String,
-//     "created_at" : null,
-//     "badge_count" : 3,
-//     "total_badge" : 5,
-//     },
-// ]
+const badgesList = [
+    {
+    "name" : "친환경 한걸음",
+    "wholePoint" : 1800, // 누적 포인트
+    "currentPoint" : 0, // 다음 단계 포인트 기준 X >>>!! 현재단계 포인트 기준
+    "description" : "GreenMap을 통한 친환경 활동의 시작을 기념하는 뱃지",
+    "image_url" : String,
+    "created_at" : "2025-10-22", // null 가능
+    "badge_count" : 1,
+    "total_badge" : 5,
+    },
+    {
+    "name" : "친환경 활동가",
+    "wholePoint" : 1800,
+    "currentPoint" : 1000,
+    "description" : "포인트를 1000 모은 친환경 활동가를 기념하는 뱃지",
+    "image_url" : String,
+    "created_at" : "2025-11-01",
+    "badge_count" : 2,
+    "total_badge" : 5,
+    },
+    {
+    "name" : "환경 전사",
+    "wholePoint" : 1800,
+    "currentPoint" : 2000,
+    "description" : "포인트를 2000 모은 친환경 전사를 기념하는 뱃지",
+    "image_url" : String,
+    "created_at" : null,
+    "badge_count" : 3,
+    "total_badge" : 5,
+    },
+]
 
 
 export default function BadgeScreen({onNavigate}) {
@@ -52,45 +52,45 @@ export default function BadgeScreen({onNavigate}) {
 
     
     // 뱃지 정보 가져오기. 
-      const [badgesList, setbadgesList] = React.useState([]);
+      // const [badgesList, setbadgesList] = React.useState([]);
 
 
       const [loading, setLoading] = React.useState(true);
       const [error, setError] = React.useState(null);
 
-      const { auth } = useAuth(); // 로그인 상태에서 멤버 ID와 토큰 가져오기
+      // const { auth } = useAuth(); // 로그인 상태에서 멤버 ID와 토큰 가져오기
 
-        useEffect(() => {
-          const fetchBadges = async () => {
-            if (!auth.memberId || !auth.token) {
-              setError('로그인 정보가 없습니다.');
-              setLoading(false);
-              return;
-            }
-            try {
-              const res = await api.get(`/badge?memberId=${auth.memberId}`, {
-                headers: {
-                  Authorization: `Bearer ${auth.token}`, // 로그인 토큰을 Authorization 헤더에 추가
-                },
-              });
-              console.log(res.data);
-              if (res.data.status === 'SUCCESS') {
-                setbadgesList(res.data.data);
-              } else {
-                setError('뱃지 데이터를 불러오지 못했습니다.');
-              }
-            } catch (err) {
-              console.log('에러 메시지', err);
-              setError('서버 요청 중 오류가 발생했습니다.');
-            } finally {
-              setLoading(false);
-            }
-          };
-          fetchBadges();
-        }, [auth.memberId, auth.token]);
+      //   useEffect(() => {
+      //     const fetchBadges = async () => {
+      //       if (!auth.memberId || !auth.token) {
+      //         setError('로그인 정보가 없습니다.');
+      //         setLoading(false);
+      //         return;
+      //       }
+      //       try {
+      //         const res = await api.get(`/badge?memberId=${auth.memberId}`, {
+      //           headers: {
+      //             Authorization: `Bearer ${auth.token}`, // 로그인 토큰을 Authorization 헤더에 추가
+      //           },
+      //         });
+      //         console.log(res.data);
+      //         if (res.data.status === 'SUCCESS') {
+      //           setbadgesList(res.data.data);
+      //         } else {
+      //           setError('뱃지 데이터를 불러오지 못했습니다.');
+      //         }
+      //       } catch (err) {
+      //         console.log('에러 메시지', err);
+      //         setError('서버 요청 중 오류가 발생했습니다.');
+      //       } finally {
+      //         setLoading(false);
+      //       }
+      //     };
+      //     fetchBadges();
+      //   }, [auth.memberId, auth.token]);
 
-      if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
-      if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
+      // if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
+      // if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
 
 
 

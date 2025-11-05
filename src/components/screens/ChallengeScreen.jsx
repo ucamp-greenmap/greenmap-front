@@ -1,93 +1,10 @@
 import React from 'react';
-import api from '../../api/axios';
-
-// 챌린지 목록
-const sampleChallenges = [
-    {
-        challenge_id: 1,
-        challenge_name: '일주일 동안 따릉이 5회 이용하기',
-        description: '대중교통 대신 따릉이를 이용해보세요',
-        member_count: 150,
-        point_amount: 100,
-        success: 5,
-        deadline: 3,
-        created_at: '2023-10-01',
-        is_active: true,
-    },
-    {
-        challenge_id: 2,
-        challenge_name: '재활용 10회 달성',
-        description: '재활용 센터 자주 방문하기',
-        member_count: 30,
-        point_amount: 80,
-        success: 10,
-        deadline: 0,
-        created_at: '2023-9-12',
-        is_active: false,
-    },
-    {
-        challenge_id: 3,
-        challenge_name: '재활용 5회 달성',
-        descriptio: '전기차 12,000원 충전',
-        description: '재활용 센터 자주 방문하기',
-        member_count: 53,
-        point_amount: 1000,
-        success: 5,
-        deadline: 10,
-        created_at: '2023-9-30',
-        is_active: true,
-    },
-    {
-        challenge_id: 4,
-        challenge_name: '전기차 12,000원 충전',
-        description: '전기차 충전하면서 포인트도 적립하세요',
-        member_count: 74,
-        point_amount: 1000,
-        success: 10,
-        deadline: 10,
-        created_at: '2023-10-05',
-        is_active: true,
-    },
-];
-
- // 참여하는 챌린지 목록
-const followedChallenges = [
-    {
-        member_id: 1001,
-        challenge_id: 1,
-        process: 3,
-        updated_at: '2023-10-10',
-    },
-    {
-        member_id: 1001,
-        challenge_id: 2,
-        process: 10,
-        updated_at: '2023-10-11',
-    },
-    {
-        member_id: 1001,
-        challenge_id: 4,
-        process: 4,
-        updated_at: '2023-10-12',
-    },
-];
-// 데이터 가져오면 삭제
+import axios from 'axios';
 
 
 
 export default function ChallengeScreen() {
     const [filter, setFilter] = React.useState('ongoing');
-    
-    const mergedChallenges = React.useMemo(() => {
-        return sampleChallenges.map(c => {
-            const fc = followedChallenges.find(fc => fc.challenge_id === c.challenge_id);
-            return {
-                ...c,
-                progress: fc ? fc.process : 0,
-                updated_at: fc ? fc.updated_at : ''
-            };
-        });
-    }, []);
     
       const [available, setAvailable] = React.useState([]);
       const [end, setEnd] = React.useState([]);
@@ -97,70 +14,54 @@ export default function ChallengeScreen() {
       const [loading, setLoading] = React.useState(true);
       const [error, setError] = React.useState(null);
 
-      React.useEffect(() => {
-        // 참여가능
-        const fetchAvailable = async () => {
-          try {
-            const res = await api.get('/chal/available');
-            if (res.data.status === 'SUCCESS') {
-              setAvailable([res.data.availableChallenges]); // 받아오는 코드 수정 필요.
-            } else {
-              setError('참여 가능한 데이터를 불러오지 못했습니다.');
-            }
-          } catch (err) {
-            console.log('에러 메시지', err);
-            setError('서버 요청 중 오류가 발생했습니다.');
-          } finally {
-            setLoading(false);
-          }
-        };
 
-        // 완료
-        const fetchEnd = async () => {
-          try {
-            const res = await api.get('/chal/end');
-            if (res.data.status === 'SUCCESS') {
-              setEnd([res.data.challenges]);
-            } else {
-              setError('완료한 챌린지 데이터를 불러오지 못했습니다.');
-            }
-          } catch (err) {
-            console.log('에러 메시지', err);
-            setError('서버 요청 중 오류가 발생했습니다.');
-          } finally {
-            setLoading(false);
-          }
-        };
+    React.useEffect(() => {
+        const token = localStorage.getItem("token");
 
-        // 참여중 
-        const fetchAttend = async () => {
-          try {
-            const res = await api.get('/chal/attend');
-            if (res.data.status === 'SUCCESS') {
-              setAttend([res.data.challenges]);
-            } else {
-              setError('진행중인 챌린지 데이터를 불러오지 못했습니다.');
-            }
-          } catch (err) {
-            console.log('에러 메시지', err);
-            setError('서버 요청 중 오류가 발생했습니다.');
-          } finally {
-            setLoading(false);
-          }
-        };
-        
-        fetchAvailable();
-        fetchEnd();
-        fetchAttend();
-        console.log('참여가능', available); // 데이터 확인.
-        console.log('완료', end);
-        console.log('참여중', attend);
-      }, []);
+        if (!token) return;
 
-      //if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
-      //if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
-  
+        axios.get("http://localhost:8080/chal/attend", {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then((res) => {
+            console.log("정보 응답:", res.data.data.challenges);
+            setAttend(res.data.data.challenges);
 
+        })
+        .catch((err) => {
+            console.error("참여중인 챌린지 정보 조회 실패", err.response || err);
+            setError("회원 정보를 가져오는데 실패했습니다.");
+        });
+
+        axios.get("http://localhost:8080/chal/available", {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then((res) => {
+            console.log("정보 응답:", res.data.data.availableChallenges);
+            setAvailable(res.data.data.availableChallenges);
+
+        })
+        .catch((err) => {
+            console.error("참여가능한 챌린지 정보 조회 실패", err.response || err);
+            setError("회원 정보를 가져오는데 실패했습니다.");
+        });
+
+        axios.get("http://localhost:8080/chal/end", {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        .then((res) => {
+            console.log("정보 응답:", res.data.data.challenges);
+            setEnd(res.data.data.challenges);
+        })
+        .catch((err) => {
+            console.error("완료한 챌린지 정보 조회 실패", err.response || err);
+            setError("회원 정보를 가져오는데 실패했습니다.");
+        });
+
+    }, []);
+
+    // if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
+    // if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
 
 
     return (
@@ -190,21 +91,24 @@ export default function ChallengeScreen() {
 
 
       <div className="w-full max-w-3xl space-y-4">
-        {mergedChallenges
-          .filter(c => {
-            if (filter === 'available') return c.is_active && !followedChallenges.map(fc => fc.challenge_id).includes(c.challenge_id);
-            if (filter === 'ongoing') return !c.completed && followedChallenges.map(fc => fc.challenge_id).includes(c.challenge_id)
-              && !followedChallenges.map(fc => {if(fc.challenge_id===c.challenge_id){if(c.progress===c.success){return fc.challenge_id}} return null}).includes(c.challenge_id);
-            if (filter === 'completed') return followedChallenges.map(fc => {if(fc.challenge_id===c.challenge_id){if(c.progress===c.success){return fc.challenge_id}} return null}).includes(c.challenge_id);
-          })
-          .map(c => (
+        
+        {
+          filter === 'available' && available.map(c => (
+            <ChallengeCard key={c.challenge_id} filter={filter} {...c} />
+          ))
+        }
+                {
+          filter === 'ongoing' && attend.map(c => (
+            <ChallengeCard key={c.challenge_id} filter={filter} {...c} />
+          ))
+        }
+                {
+          filter === 'completed' && end.map(c => (
             <ChallengeCard key={c.challenge_id} filter={filter} {...c} />
           ))
         }
       </div>
     </div>
-
-
     </>
 
 
@@ -216,7 +120,7 @@ export default function ChallengeScreen() {
 
 
 
-function ChallengeCard({ challenge_id, challenge_name, description, point_amount, progress, success, created_at, deadline, image_url, filter }) {
+function ChallengeCard({ challenge_id, challengeName, description, pointAmount, progress, success, createdAt, deadline, image_url, filter }) {
   const ticketHeight = 160; //
 
 
@@ -229,7 +133,7 @@ function ChallengeCard({ challenge_id, challenge_name, description, point_amount
         <div className="w-1/3 relative h-full">
           <img
             src={image_url || "https://th.bing.com/th/id/OIP.SG7Qb8nwstq9qogVhNt7KAHaE8?w=230&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3"}
-            alt={challenge_name}
+            alt={challengeName}
             className="h-full w-full object-cover rounded-l-2xl"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white rounded-l-2xl"></div>
@@ -237,7 +141,7 @@ function ChallengeCard({ challenge_id, challenge_name, description, point_amount
 
 
         <div className="flex-1 p-4 flex flex-col justify-between h-full">
-          <h3 className="text-2xl font-bold text-gray-800 text-center">{challenge_name}</h3>
+          <h3 className="text-2xl font-bold text-gray-800 text-center">{challengeName}</h3>
           <p className="text-sm text-gray-500 mt-1 text-right">{description}</p>
 
 
@@ -257,7 +161,7 @@ function ChallengeCard({ challenge_id, challenge_name, description, point_amount
 
 
           <div className="flex justify-center gap-4 mt-3 text-sm text-gray-600">
-            <span>포인트: {point_amount}</span>
+            <span>포인트: {pointAmount}</span>
             <span>달성: {success}번</span>
             <span>기한: {deadline}일</span>
           </div>
@@ -279,7 +183,7 @@ function ChallengeCard({ challenge_id, challenge_name, description, point_amount
               className="absolute text-xs font-bold"
               style={{ color: '#7B1113' }}
             >
-              {created_at}
+              {createdAt}
             </span>
           </div>
         )}
