@@ -57,7 +57,6 @@ export default function ChallengeScreen({ onNavigate }) {
           console.error("완료한 챌린지 정보 조회 실패", err.response || err);
           setError("회원 정보를 가져오는데 실패했습니다.");
       });
-
   }, []);
 
     
@@ -118,8 +117,6 @@ export default function ChallengeScreen({ onNavigate }) {
     </div>
   </div>
   </>
-
-
   );
 }
 

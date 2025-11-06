@@ -4,6 +4,22 @@ import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchMyBadgeData} from '../../store/slices/userSlice';
 import api from '../../api/axios';
 
+
+// const badgeList = [
+// {
+// 		"name" : String,
+// 		"wholePoint" : Integer, // 누적 포인트
+// 		"currentPoint" : Integer, // 현재 단계 포인트 기준
+// 		"description" : String, // 현재 배지의 설명
+// 		"image_url" : String,
+// 		"created_at" : DateTime, // 얻은날, Null 가능
+// 		// 확장성
+// 		"badge_count" : Integer, // 보유한 뱃지
+// 		"total_badge" : Integer, // 전체 뱃지
+// 	},
+  
+// ]
+
 export default function BadgeScreen({onNavigate}) {
     const dispatch = useDispatch();
     const [filter, setFilter] = useState('all');
