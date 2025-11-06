@@ -204,11 +204,19 @@ export async function getPointRanking() {
 export async function getPointDetail(type = 'All') {
     try {
         const token = localStorage.getItem('token');
+        console.log('🚀 [API] getPointDetail called with type:', type);
+
         const response = await api.get('/point', {
             params: { type },
             headers: {
                 Authorization: `Bearer ${token}`,
             },
+        });
+
+        console.log('📥 [API] getPointDetail response:', {
+            status: response.data.status,
+            data: response.data.data,
+            fullResponse: response.data,
         });
 
         if (response.data.status === 'SUCCESS') {
@@ -217,7 +225,8 @@ export async function getPointDetail(type = 'All') {
             throw new Error(response.data.message || '포인트 상세 조회 실패');
         }
     } catch (error) {
-        console.error('포인트 상세 조회 오류:', error);
+        console.error('❌ [API] 포인트 상세 조회 오류:', error);
+        console.error('Error response:', error.response?.data);
         throw error;
     }
 }
