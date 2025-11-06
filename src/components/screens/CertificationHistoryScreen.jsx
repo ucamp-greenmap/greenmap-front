@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Calendar, TrendingUp, Leaf } from 'lucide-react';
 import { fetchCertificationHistory } from '../../util/certApi';
+import { fetchCarbonData } from '../../util/carbonApi';
 
 export default function CertificationHistoryScreen({ onBack }) {
-    // const memberId = useSelector((s) => s.user?.memberId) || 1;
     const [certifications, setCertifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [filterCategory, setFilterCategory] = useState('all');
+    const [totalCarbonFromApi, setTotalCarbonFromApi] = useState(0);
 
     const getCategoryLabel = (category) => {
         const labels = {
@@ -47,14 +48,17 @@ export default function CertificationHistoryScreen({ onBack }) {
         return `${year}.${month}.${day}`;
     };
 
-    // 인증 내역 불러오기
     const loadCertifications = async () => {
         setIsLoading(true);
         try {
-            const result = await fetchCertificationHistory();
+            const [certResult, carbonResult] = await Promise.all([
+                fetchCertificationHistory(),
+                fetchCarbonData(),
+            ]);
 
-            if (result.success) {
-                const formattedData = result.data.map((item, index) => ({
+            // 1. 인증 내역 처리
+            if (certResult.success) {
+                const formattedData = certResult.data.map((item, index) => ({
                     id: index + 1,
                     type: getCategoryLabel(item.category),
                     date: item.createdAt,
@@ -66,7 +70,20 @@ export default function CertificationHistoryScreen({ onBack }) {
                 }));
                 setCertifications(formattedData);
             } else {
-                alert(result.message || '인증 내역을 불러오는데 실패했습니다.');
+                alert(
+                    certResult.message || '인증 내역을 불러오는데 실패했습니다.'
+                );
+            }
+
+            // 2. 총 탄소 데이터 처리
+            if (carbonResult.success) {
+                const totalCarbonValue = carbonResult.data.carbonSave || 0;
+                setTotalCarbonFromApi(Math.round(totalCarbonValue * 10) / 10);
+            } else {
+                console.warn(
+                    '총 탄소 감축량 API 호출 실패:',
+                    carbonResult.message
+                );
             }
         } catch (error) {
             console.error('내역 조회 오류:', error);
@@ -80,7 +97,7 @@ export default function CertificationHistoryScreen({ onBack }) {
         loadCertifications();
     }, []);
 
-    // 필터링된 데이터
+    // 필터링된 데이터 (기존 로직 유지)
     const filteredCertifications =
         filterCategory === 'all'
             ? certifications
@@ -92,10 +109,11 @@ export default function CertificationHistoryScreen({ onBack }) {
         0
     );
     const totalCount = certifications.length;
-    const totalCarbon = certifications.reduce(
-        (sum, cert) => sum + cert.carbonSave,
-        0
-    );
+
+    const totalCarbon =
+        totalCarbonFromApi > 0
+            ? totalCarbonFromApi
+            : certifications.reduce((sum, cert) => sum + cert.carbonSave, 0);
 
     return (
         <div className='min-h-screen bg-gray-50'>
