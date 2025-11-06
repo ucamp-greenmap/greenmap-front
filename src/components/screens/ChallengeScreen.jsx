@@ -5,16 +5,11 @@ import { certTypes } from '../../util/certConfig';
 
 
 export default function ChallengeScreen({ onNavigate }) {
-
-
-
-
   const [filter, setFilter] = React.useState('ongoing');
-   
+
   const [available, setAvailable] = React.useState([]);
   const [end, setEnd] = React.useState([]);
   const [attend, setAttend] = React.useState([]);
-
 
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -24,54 +19,55 @@ export default function ChallengeScreen({ onNavigate }) {
 
   React.useEffect(() => {
       const token = localStorage.getItem("token");
-
-
       if (!token) return;
 
+      const fetchData = async () => {
+        api.get("/chal/attend", {
+              headers: { Authorization: `Bearer ${token}` }
+        })
+        .then((res) => {
+              console.log("정보 응답:", res.data.data.challenges);
+              console.log("정보 응답:", res.data.data.challenges.memberChallengeId);
 
-      api.get("/chal/attend", {
-            headers: { Authorization: `Bearer ${token}` }
-      })
-      .then((res) => {
+              setAttend(res.data.data.challenges);
+
+
+        })
+        .catch((err) => {
+              console.error("참여중인 챌린지 정보 조회 실패", err.response || err);
+              setError("회원 정보를 가져오는데 실패했습니다.");
+        });
+
+
+        api.get("/chal/available", {
+              headers: { Authorization: `Bearer ${token}` }
+        })
+        .then((res) => {
+              console.log("정보 응답:", res.data.data.availableChallenges);
+              setAvailable(res.data.data.availableChallenges);
+
+
+        })
+        .catch((err) => {
+              console.error("참여가능한 챌린지 정보 조회 실패", err.response || err);
+              setError("회원 정보를 가져오는데 실패했습니다.");
+        });
+
+
+        api.get("/chal/end", {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        .then((res) => {
             console.log("정보 응답:", res.data.data.challenges);
-            setAttend(res.data.data.challenges);
-
-
-      })
-      .catch((err) => {
-            console.error("참여중인 챌린지 정보 조회 실패", err.response || err);
+            setEnd(res.data.data.challenges);
+        })
+        .catch((err) => {
+            console.error("완료한 챌린지 정보 조회 실패", err.response || err);
             setError("회원 정보를 가져오는데 실패했습니다.");
-      });
+        });
+      }
 
-
-      api.get("/chal/available", {
-            headers: { Authorization: `Bearer ${token}` }
-      })
-      .then((res) => {
-            console.log("정보 응답:", res.data.data.availableChallenges);
-            setAvailable(res.data.data.availableChallenges);
-
-
-      })
-      .catch((err) => {
-            console.error("참여가능한 챌린지 정보 조회 실패", err.response || err);
-            setError("회원 정보를 가져오는데 실패했습니다.");
-      });
-
-
-      api.get("/chal/end", {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then((res) => {
-          console.log("정보 응답:", res.data.data.challenges);
-          setEnd(res.data.data.challenges);
-      })
-      .catch((err) => {
-          console.error("완료한 챌린지 정보 조회 실패", err.response || err);
-          setError("회원 정보를 가져오는데 실패했습니다.");
-      });
-
-
+      fetchData();
   }, []);
 
 
@@ -159,7 +155,7 @@ export default function ChallengeScreen({ onNavigate }) {
 
 
 
-function ChallengeCard({ challengeId, challengeName, description, pointAmount, progress, success, createdAt, deadline, image_url, filter, onChall}) {
+function ChallengeCard({ challengeId, memberChallengeId, challengeName, description, pointAmount, progress, success, createdAt, deadline, image_url, filter, onChall}) {
   const ticketHeight = 160; //
 
   const [showModal, setShowModal] = useState(false);
@@ -187,60 +183,61 @@ function ChallengeCard({ challengeId, challengeName, description, pointAmount, p
   };
 
 
-function determineType(challengeName) {
-  const sanitizedChallengeName = challengeName.toLowerCase().replace(/\s+/g, '');
+  function determineType(challengeName) {
+    const sanitizedChallengeName = challengeName.toLowerCase().replace(/\s+/g, '');
 
-  let type = null;
+    let type = null;
 
-  if (sanitizedChallengeName.includes('따릉이')) {
-    type = certTypes.find((type) => type.label === '따릉이 이용 인증');
-  }
-  else if (sanitizedChallengeName.includes('전기차') || sanitizedChallengeName.includes('수소차')) {
-    type = certTypes.find((type) => type.label === '전기차/수소차 충전 영수증');
-  }
-  else if (sanitizedChallengeName.includes('제로')) {
-    type = certTypes.find((type) => type.label === '제로웨이스트 스토어 / 재활용센터 영수증');
-  }
-  else if (sanitizedChallengeName.includes('재활용')) {
-    type = certTypes.find((type) => type.label === '제로웨이스트 스토어 / 재활용센터 영수증');
-  }
-
-  if (!type) {
-    return null;
-  }
-
-  // 인증 타입이 정해지면 추가적인 키워드 설정
-  const result = {
-    id: type.id,
-    keywords: type.keywords || [],
-    zeroKeywords: type.zeroKeywords || [],
-    recycleKeywords: type.recycleKeywords || [],
-  };
-
-  if (sanitizedChallengeName.includes("제로")) {
-    result.zeroKeywords = type.zeroKeywords;
-  }
-  else if (sanitizedChallengeName.includes("재활용")) {
-    result.recycleKeywords = type.recycleKeywords;
-  }
-
-  return result;
-}
-
-
-
-
-
-  // 인증 모달 열기
-function openCertModal() {
-    const type = determineType(challengeName); 
-    if (type) {
-        setSelectedType(type); 
-        setShowModal(true); 
-    } else {
-        alert("해당하는 인증 타입을 찾을 수 없습니다.");
+    if (sanitizedChallengeName.includes('따릉이') || sanitizedChallengeName.includes('bike')) {
+      type = certTypes.find((type) => type.label === '따릉이 이용 인증');
     }
-}
+    else if (sanitizedChallengeName.includes('전기차') || sanitizedChallengeName.includes('수소차')
+    || sanitizedChallengeName.includes('electric') || sanitizedChallengeName.includes('hydrogen')) {
+      type = certTypes.find((type) => type.label === '전기차/수소차 충전 영수증');
+    }
+    else if (sanitizedChallengeName.includes('제로') || sanitizedChallengeName.includes('zero')) {
+      type = certTypes.find((type) => type.label === '제로웨이스트 스토어 / 재활용센터 영수증');
+    }
+    else if (sanitizedChallengeName.includes('재활용') || sanitizedChallengeName.includes('recycle')) {
+      type = certTypes.find((type) => type.label === '제로웨이스트 스토어 / 재활용센터 영수증');
+    }
+
+    if (!type) {
+      return null;
+    }
+
+    // 인증 타입이 정해지면 추가적인 키워드 설정
+    const result = {
+      id: type.id,
+      keywords: type.keywords || [],
+      zeroKeywords: type.zeroKeywords || [],
+      recycleKeywords: type.recycleKeywords || [],
+    };
+
+    if (sanitizedChallengeName.includes("제로")) {
+      result.zeroKeywords = type.zeroKeywords;
+    }
+    else if (sanitizedChallengeName.includes("재활용")) {
+      result.recycleKeywords = type.recycleKeywords;
+    }
+
+    return result;
+  }
+
+
+
+
+
+    // 인증 모달 열기
+  function openCertModal() {
+      const type = determineType(challengeName); 
+      if (type) {
+          setSelectedType(type); 
+          setShowModal(true); 
+      } else {
+          alert("해당하는 인증 타입을 찾을 수 없습니다.");
+      }
+  }
 
   function closeModal() {
     setShowModal(false);
@@ -348,8 +345,6 @@ function openCertModal() {
     </div>
   );
 }
-
-
 
 
 
