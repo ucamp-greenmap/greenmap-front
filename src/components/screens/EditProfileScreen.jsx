@@ -35,7 +35,7 @@ const styles = `
 `;
 
 export default function EditProfileScreen({ onBack }) {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [avatar, setAvatar] = useState(null);
@@ -190,7 +190,10 @@ export default function EditProfileScreen({ onBack }) {
             background: "#fff",
             cursor: "pointer",
           }}
-          onClick={onBack}
+          onClick={() => {
+            if (onBack) onBack(); // 부모에서 전달된 함수가 있으면 실행
+            else navigate(-1); // 없으면 브라우저 뒤로가기
+          }}
         >
           뒤로가기
         </button>
