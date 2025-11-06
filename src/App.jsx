@@ -20,10 +20,9 @@ import MyPageScreen from './components/screens/MyPageScreen';
 import PointHistoryScreen from './components/screens/PointHistoryScreen';
 import PointExchangeScreen from './components/screens/PointExchangeScreen';
 import RankingScreen from './components/screens/RankingScreen';
-import LoginScreen from './components/screens/LoginScreen';
-import LoginSignupScreen from './components/screens/LoginSignupScreen'
+import LoginSignupScreen from './components/screens/LoginSignupScreen';
 import LoginSuccess from './components/screens/LoginSuccess';
-// import BadgeScreen from './components/screens/BadgeScreen';
+import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
@@ -36,6 +35,7 @@ const TAB_TO_PATH = {
     map: '/map',
     cert: '/verification',
     challenge: '/challenge',
+    
     mypage: '/mypage',
     points: '/points',
     'point-exchange': '/point-exchange',

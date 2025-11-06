@@ -4,6 +4,7 @@ import api from '../../api/axios';
 import { useDispatch } from 'react-redux';
 import { updateProfile } from '../../store/slices/userSlice';
 import kakaoBtn from '../../assets/kakao_login_medium_wide.png';
+import HomeScreen from './HomeScreen';
 
 // 테마 컬러
 const themeColor = '#96cb6f';
@@ -79,7 +80,7 @@ export default function LoginSignupScreen() {
                 <style>{styles}</style>
 
                 <div className='card'>
-                    <div className='title'>GreenMap Auth</div>
+                    <div className='title'>GreenMap</div>
                     <div className='subtitle'>그린맵</div>
 
                     {!userInfo && (
@@ -105,7 +106,7 @@ export default function LoginSignupScreen() {
                             <SignupForm setPage={setPage} />
                         )
                     ) : (
-                        <div></div>
+                        setPage('HomeScreen')
                     )}
 
                     {!userInfo && (
@@ -224,8 +225,8 @@ function SignupForm({ setPage }) {
         pwValid &&
         confirmValid &&
         nicknameValid &&
-        emailAvailable === false &&
-        nickAvailable === false;
+        emailAvailable === true &&
+        nickAvailable === true;
 
     // 이메일 중복 검사 (debounce)
     useEffect(() => {
@@ -262,7 +263,7 @@ function SignupForm({ setPage }) {
                 const state = res.data.data.state;
                 setNickAvailable(!state);
             } catch {
-                setNickAvailable(false);
+                setNickAvailable(true);
             }
         }, 400);
         return () => clearTimeout(timer);
@@ -293,10 +294,10 @@ function SignupForm({ setPage }) {
                 isValid={emailValid}
                 touched={email.length > 0}
             />
-            {emailValid && emailAvailable === false && (
+            {emailValid && emailAvailable === true && (
                 <span style={{ color: 'green' }}>사용 가능한 이메일입니다</span>
             )}
-            {emailValid && emailAvailable === true && (
+            {emailValid && emailAvailable === false && (
                 <span style={{ color: 'red' }}>이미 등록된 이메일입니다</span>
             )}
 
@@ -329,10 +330,10 @@ function SignupForm({ setPage }) {
                 isValid={nicknameValid}
                 touched={nickname.length > 0}
             />
-            {nicknameValid && nickAvailable === false && (
+            {nicknameValid && nickAvailable === true && (
                 <span style={{ color: 'green' }}>사용 가능한 닉네임입니다</span>
             )}
-            {nicknameValid && nickAvailable === true && (
+            {nicknameValid && nickAvailable === false && (
                 <span style={{ color: 'red' }}>이미 존재하는 닉네임입니다</span>
             )}
 
