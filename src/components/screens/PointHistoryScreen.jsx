@@ -85,7 +85,7 @@ export default function PointHistoryScreen({ onNavigate }) {
             <div className='flex items-center gap-3 mb-6'>
                 <button
                     onClick={handleGoBack}
-                    style={{ backgroundColor: 'white' }} // 기본 배경색
+                    style={{ backgroundColor: '#f9fafb' }} // 기본 배경색
                 >
                     <ArrowLeft className="w-5 h-5 text-black" />
                 </button>
