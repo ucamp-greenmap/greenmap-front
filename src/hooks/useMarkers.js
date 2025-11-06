@@ -31,24 +31,21 @@ export const useMarkers = (
     }, []);
 
     // MarkerImage 캐싱 - 카테고리별로 한 번만 생성
-    const getMarkerImage = useCallback(
-        (category, isSelected = false) => {
-            if (!window.kakao) return null;
+    const getMarkerImage = useCallback((category, isSelected = false) => {
+        if (!window.kakao) return null;
 
-            const cacheKey = `${category}-${isSelected ? 'selected' : 'normal'}`;
+        const cacheKey = `${category}-${isSelected ? 'selected' : 'normal'}`;
 
-            if (!markerImageCacheRef.current[cacheKey]) {
-                markerImageCacheRef.current[cacheKey] = createMarkerImage(
-                    window.kakao,
-                    category,
-                    isSelected
-                );
-            }
+        if (!markerImageCacheRef.current[cacheKey]) {
+            markerImageCacheRef.current[cacheKey] = createMarkerImage(
+                window.kakao,
+                category,
+                isSelected
+            );
+        }
 
-            return markerImageCacheRef.current[cacheKey];
-        },
-        []
-    );
+        return markerImageCacheRef.current[cacheKey];
+    }, []);
 
     // 선택된 마커 업데이트 (애니메이션 효과)
     const updateSelectedMarker = useCallback(

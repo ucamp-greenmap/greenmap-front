@@ -72,7 +72,9 @@ export const createMarkerImage = (kakao, category, isSelected = false) => {
     const svg = `
         <svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' viewBox='0 0 ${size} ${size}'>
             <defs>
-                <filter id='shadow-${category}-${isSelected ? 'selected' : 'normal'}' x='-50%' y='-50%' width='200%' height='200%'>
+                <filter id='shadow-${category}-${
+        isSelected ? 'selected' : 'normal'
+    }' x='-50%' y='-50%' width='200%' height='200%'>
                     <feGaussianBlur in='SourceAlpha' stdDeviation='2'/>
                     <feOffset dx='0' dy='2' result='offsetblur'/>
                     <feComponentTransfer>
@@ -89,20 +91,30 @@ export const createMarkerImage = (kakao, category, isSelected = false) => {
                     ? `
             <!-- 반짝이는 외부 링 -->
             <circle cx='${size / 2}' cy='${size / 2}' r='${radius + 4}' 
-                fill='none' stroke='${config.color}' stroke-width='2' opacity='0.6'>
-                <animate attributeName='r' values='${radius + 4};${radius + 8};${radius + 4}' dur='1.5s' repeatCount='indefinite'/>
+                fill='none' stroke='${
+                    config.color
+                }' stroke-width='2' opacity='0.6'>
+                <animate attributeName='r' values='${radius + 4};${
+                          radius + 8
+                      };${radius + 4}' dur='1.5s' repeatCount='indefinite'/>
                 <animate attributeName='opacity' values='0.6;0.2;0.6' dur='1.5s' repeatCount='indefinite'/>
             </circle>
             `
                     : ''
             }
-            <g filter='url(#shadow-${category}-${isSelected ? 'selected' : 'normal'})'>
+            <g filter='url(#shadow-${category}-${
+        isSelected ? 'selected' : 'normal'
+    })'>
                 <circle cx='${size / 2}' cy='${size / 2}' r='${radius}' 
-                    fill='${config.color}' stroke='white' stroke-width='${strokeWidth}'>
+                    fill='${
+                        config.color
+                    }' stroke='white' stroke-width='${strokeWidth}'>
                     ${animation}
                 </circle>
             </g>
-            <g transform='translate(${size / 2 - 8.5}, ${size / 2 - 8.5}) scale(0.7)'>
+            <g transform='translate(${size / 2 - 8.5}, ${
+        size / 2 - 8.5
+    }) scale(0.7)'>
                 <path 
                     d='${config.iconPath}' 
                     stroke='white' 
