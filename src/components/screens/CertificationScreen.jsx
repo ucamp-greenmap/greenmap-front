@@ -125,14 +125,14 @@ export default function CertificationScreen() {
                 style={{ paddingBottom: 'var(--bottom-nav-inset)' }}
             >
                 {/* Header */}
-                <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
-                    <h1 className='text-3xl font-bold text-white mb-2'>
-                        인증하기
-                    </h1>
-                    <p className='text-white text-opacity-90 text-sm'>
-                        친환경 활동을 인증하고 포인트를 받으세요
+                <div className="w-full bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] py-10 text-center text-white mb-8 shadow-md">
+                    <h1 className="text-3xl font-bold text-white mb-2">인증하기</h1>
+                    <p className="text-white text-opacity-90 text-sm">
+                    친환경 활동을 인증하고 포인트를 받으세요 🌱
                     </p>
                 </div>
+
+                
 
                 <div className='px-6 py-6 space-y-6'>
                     {/* 인증 타입 선택 */}
