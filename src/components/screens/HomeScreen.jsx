@@ -36,6 +36,12 @@ const ECO_TIPS = [
 export default function HomeScreen({ onNavigate }) {
     const dispatch = useDispatch();
 
+    useEffect(() => {
+        const onFocus = () => dispatch(fetchPointInfo());
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
+    }, [dispatch]);
+
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
     useEffect(() => {
