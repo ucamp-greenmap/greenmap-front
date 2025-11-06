@@ -222,6 +222,94 @@ export function clearAllPlacesCache() {
 }
 
 /**
+ * 로컬스토리지의 모든 캐시된 장소 데이터를 가져옵니다.
+ * @returns {Array} 모든 캐시된 장소 목록
+ */
+export function getAllCachedPlaces() {
+    try {
+        const keys = Object.keys(localStorage);
+        const cacheKeys = keys.filter((key) =>
+            key.startsWith(CACHE_KEY_PREFIX)
+        );
+
+        const allPlaces = [];
+        const now = Date.now();
+
+        cacheKeys.forEach((key) => {
+            try {
+                const cached = JSON.parse(localStorage.getItem(key));
+                // 만료되지 않은 캐시만 사용
+                if (cached && now - cached.timestamp <= CACHE_EXPIRY_MS) {
+                    allPlaces.push(...cached.data);
+                }
+            } catch (error) {
+                console.error(`캐시 파싱 오류 (${key}):`, error);
+            }
+        });
+
+        // 중복 제거 (placeId 기준)
+        const uniquePlaces = Array.from(
+            new Map(allPlaces.map((place) => [place.placeId, place])).values()
+        );
+
+        return uniquePlaces;
+    } catch (error) {
+        console.error('캐시된 장소 데이터 가져오기 오류:', error);
+        return [];
+    }
+}
+
+/**
+ * 캐시된 장소 데이터에서 키워드로 검색합니다.
+ * @param {string} keyword - 검색 키워드
+ * @returns {Array} 검색 결과 장소 목록
+ */
+export function searchCachedPlaces(keyword) {
+    if (!keyword || keyword.trim().length === 0) {
+        return [];
+    }
+
+    const normalizedKeyword = keyword.trim().toLowerCase();
+    const cachedPlaces = getAllCachedPlaces();
+
+    // 검색: 장소명, 주소에서 키워드 매칭
+    const results = cachedPlaces.filter((place) => {
+        const placeName = (place.placeName || '').toLowerCase();
+        const address = (place.address || '').toLowerCase();
+
+        return (
+            placeName.includes(normalizedKeyword) ||
+            address.includes(normalizedKeyword)
+        );
+    });
+
+    // 관련도 점수 계산 및 정렬
+    return results
+        .map((place) => {
+            let score = 0;
+            const placeName = (place.placeName || '').toLowerCase();
+            const address = (place.address || '').toLowerCase();
+
+            // 장소명에서 정확히 시작하는 경우 높은 점수
+            if (placeName.startsWith(normalizedKeyword)) {
+                score += 100;
+            }
+            // 장소명에 포함된 경우
+            else if (placeName.includes(normalizedKeyword)) {
+                score += 50;
+            }
+            // 주소에 포함된 경우
+            if (address.includes(normalizedKeyword)) {
+                score += 10;
+            }
+
+            return { ...place, score };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20); // 상위 20개만 반환
+}
+
+/**
  * API 응답 장소 데이터를 앱에서 사용하는 형식으로 변환합니다.
  * @param {Object} place - API 응답 장소 객체
  * @returns {Object} 변환된 장소 객체
