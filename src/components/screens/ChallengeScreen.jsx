@@ -1,5 +1,7 @@
-import React from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
+import api from '../../api/axios';
+import CertModal from '../cert/CertModal';
+import { certTypes } from '../../util/certConfig';
 
 
 export default function ChallengeScreen({ onNavigate }) {
@@ -12,8 +14,6 @@ export default function ChallengeScreen({ onNavigate }) {
   const [available, setAvailable] = React.useState([]);
   const [end, setEnd] = React.useState([]);
   const [attend, setAttend] = React.useState([]);
-
-
 
 
   const [loading, setLoading] = React.useState(true);
@@ -29,7 +29,7 @@ export default function ChallengeScreen({ onNavigate }) {
       if (!token) return;
 
 
-      axios.get("http://localhost:8080/chal/attend", {
+      api.get("/chal/attend", {
             headers: { Authorization: `Bearer ${token}` }
       })
       .then((res) => {
@@ -44,7 +44,7 @@ export default function ChallengeScreen({ onNavigate }) {
       });
 
 
-      axios.get("http://localhost:8080/chal/available", {
+      api.get("/chal/available", {
             headers: { Authorization: `Bearer ${token}` }
       })
       .then((res) => {
@@ -59,7 +59,7 @@ export default function ChallengeScreen({ onNavigate }) {
       });
 
 
-      axios.get("http://localhost:8080/chal/end", {
+      api.get("/chal/end", {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then((res) => {
@@ -159,15 +159,18 @@ export default function ChallengeScreen({ onNavigate }) {
 
 
 
-function ChallengeCard({ challengeId, challengeName, description, pointAmount, progress, success, createdAt, deadline, image_url, filter, onChall, onNavigate }) {
+function ChallengeCard({ challengeId, challengeName, description, pointAmount, progress, success, createdAt, deadline, image_url, filter, onChall}) {
   const ticketHeight = 160; //
 
+  const [showModal, setShowModal] = useState(false);
+  const [selectedType, setSelectedType] = useState(null);
+  
 
   const handleChallenge = () => {
     const token = localStorage.getItem("token");
 
 
-    axios.post("http://localhost:8080/chal",
+    api.post("/chal",
       {
         challengeId: challengeId,
       },
@@ -182,6 +185,68 @@ function ChallengeCard({ challengeId, challengeName, description, pointAmount, p
           console.error("챌린지 참여 실패", err.response || err);
     });
   };
+
+
+function determineType(challengeName) {
+  const sanitizedChallengeName = challengeName.toLowerCase().replace(/\s+/g, '');
+
+  let type = null;
+
+  if (sanitizedChallengeName.includes('따릉이')) {
+    type = certTypes.find((type) => type.label === '따릉이 이용 인증');
+  }
+  else if (sanitizedChallengeName.includes('전기차') || sanitizedChallengeName.includes('수소차')) {
+    type = certTypes.find((type) => type.label === '전기차/수소차 충전 영수증');
+  }
+  else if (sanitizedChallengeName.includes('제로')) {
+    type = certTypes.find((type) => type.label === '제로웨이스트 스토어 / 재활용센터 영수증');
+  }
+  else if (sanitizedChallengeName.includes('재활용')) {
+    type = certTypes.find((type) => type.label === '제로웨이스트 스토어 / 재활용센터 영수증');
+  }
+
+  if (!type) {
+    return null;
+  }
+
+  // 인증 타입이 정해지면 추가적인 키워드 설정
+  const result = {
+    id: type.id,
+    keywords: type.keywords || [],
+    zeroKeywords: type.zeroKeywords || [],
+    recycleKeywords: type.recycleKeywords || [],
+  };
+
+  if (sanitizedChallengeName.includes("제로")) {
+    result.zeroKeywords = type.zeroKeywords;
+  }
+  else if (sanitizedChallengeName.includes("재활용")) {
+    result.recycleKeywords = type.recycleKeywords;
+  }
+
+  return result;
+}
+
+
+
+
+
+  // 인증 모달 열기
+function openCertModal() {
+    const type = determineType(challengeName); 
+    if (type) {
+        setSelectedType(type); 
+        setShowModal(true); 
+    } else {
+        alert("해당하는 인증 타입을 찾을 수 없습니다.");
+    }
+}
+
+  function closeModal() {
+    setShowModal(false);
+    setSelectedType(null);
+  }
+
 
 
 
@@ -263,7 +328,7 @@ function ChallengeCard({ challengeId, challengeName, description, pointAmount, p
 
         {filter !== 'completed' && (
           <button
-            onClick={filter === 'available' ? handleChallenge : () => onNavigate('cert')}
+            onClick={filter === 'available' ? handleChallenge : () => openCertModal(selectedType)}
             className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#8BC34A] to-[#4CAF50] text-white rounded-l-2xl h-full w-full px-0"
           >
             <div hidden id={challengeId}></div>
@@ -273,9 +338,17 @@ function ChallengeCard({ challengeId, challengeName, description, pointAmount, p
           </button>
         )}
       </div>
+
+
+      {showModal && selectedType && (
+          <CertModal type={selectedType} onClose={closeModal} />
+      )}
+
+      
     </div>
   );
 }
+
 
 
 
