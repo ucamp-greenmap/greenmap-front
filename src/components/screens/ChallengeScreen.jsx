@@ -198,9 +198,9 @@ export default function ChallengeScreen({ onNavigate }) {
                 aria-label='챌린지 추가'
             >
                 <Plus className='w-8 h-8 group-hover:scale-110 transition-transform' />
-                <div className='absolute -top-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap'>
+                <div className='absolute -bottom-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap'>
                     챌린지 추가
-                    <div className='absolute bottom-0 right-6 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900'></div>
+                    <div className='absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900'></div>
                 </div>
             </button>
         </div>
