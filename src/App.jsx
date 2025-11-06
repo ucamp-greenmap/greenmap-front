@@ -22,7 +22,7 @@ import PointExchangeScreen from './components/screens/PointExchangeScreen';
 import RankingScreen from './components/screens/RankingScreen';
 import LoginSignupScreen from './components/screens/LoginSignupScreen';
 import LoginSuccess from './components/screens/LoginSuccess';
-import BadgeScreen from './components/screens/BadgeScreen';
+// import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
