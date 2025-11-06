@@ -97,7 +97,9 @@ export const getDummyImage = (category, facilityId) => {
 
     // facilityId를 기반으로 일관된 이미지 선택 (같은 시설은 항상 같은 이미지)
     const hash = facilityId
-        ? facilityId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+        ? facilityId
+              .split('')
+              .reduce((acc, char) => acc + char.charCodeAt(0), 0)
         : 0;
     const index = hash % config.dummyImages.length;
 
