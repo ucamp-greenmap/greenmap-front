@@ -34,10 +34,25 @@ export default function FacilityDetail({
 
             <h3 className='text-xl font-bold mb-4 pr-10'>{facility.name}</h3>
 
-            {/* Image placeholder */}
-            <div className='w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-4'>
-                <span className='text-gray-500'>이미지 없음</span>
-            </div>
+            {/* Facility Image */}
+            {facility.imageUrl ? (
+                <div className='w-full h-48 bg-gray-100 rounded-lg overflow-hidden mb-4'>
+                    <img
+                        src={facility.imageUrl}
+                        alt={facility.name}
+                        className='w-full h-full object-cover'
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                                'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80';
+                        }}
+                    />
+                </div>
+            ) : (
+                <div className='w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-4'>
+                    <span className='text-gray-500'>이미지 없음</span>
+                </div>
+            )}
 
             {/* Category */}
             <div className='mb-4'>

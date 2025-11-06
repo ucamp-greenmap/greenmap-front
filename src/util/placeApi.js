@@ -1,4 +1,5 @@
 import api from '../api/axios';
+import { getDummyImage } from './mapHelpers';
 
 /**
  * 카테고리 ID 매핑
@@ -315,8 +316,11 @@ export function searchCachedPlaces(keyword) {
  * @returns {Object} 변환된 장소 객체
  */
 export function convertPlaceToFacility(place) {
+    const category = categoryIdToFilter[place.categoryId] || 'store';
+    const facilityId = `place-${place.placeId}`;
+
     return {
-        id: `place-${place.placeId}`,
+        id: facilityId,
         placeId: place.placeId,
         name: place.placeName,
         address: place.address,
@@ -325,9 +329,10 @@ export function convertPlaceToFacility(place) {
         telNum: place.telNum,
         lat: place.latitude,
         lng: place.longitude,
-        imageUrl: place.imageUrl,
+        // 백엔드 이미지 무시하고 카테고리별 더미 이미지 사용
+        imageUrl: getDummyImage(category, facilityId),
         isBookMarked: place.isBookMarked,
-        category: categoryIdToFilter[place.categoryId] || 'store',
+        category: category,
         categoryId: place.categoryId,
     };
 }

@@ -74,8 +74,22 @@ export default function FacilityList({
                             key={facility.id}
                             role='listitem'
                             onClick={() => onFacilityClick(facility)}
-                            className='flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer'
+                            className='flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer'
                         >
+                            {/* 시설 이미지 썸네일 */}
+                            {facility.imageUrl && (
+                                <div className='w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-200'>
+                                    <img
+                                        src={facility.imageUrl}
+                                        alt={facility.name}
+                                        className='w-full h-full object-cover'
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                        }}
+                                    />
+                                </div>
+                            )}
+
                             <div className='flex-1 min-w-0'>
                                 <div className='font-semibold text-gray-800 truncate'>
                                     {facility.name}
@@ -99,7 +113,7 @@ export default function FacilityList({
                                     )}
                                 </div>
                             </div>
-                            <div className='flex items-center gap-2 flex-shrink-0 ml-3'>
+                            <div className='flex items-center gap-2 flex-shrink-0'>
                                 <button
                                     className={`text-2xl transition-colors ${
                                         isBookmarked
