@@ -126,7 +126,7 @@ export default function MyPageScreen({ onNavigate }) {
                 </div>
 
                 <div className='bg-white rounded-3xl p-6 shadow-lg'>
-                    <div className='flex items-center gap-4 mb-6'>
+                    <div className='flex items-center gap-7 mb-6'>
                         <div className='w-20 h-20 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
                             {profile.avatar ? (
                                 <img
@@ -138,7 +138,7 @@ export default function MyPageScreen({ onNavigate }) {
                                 <span className='text-4xl'>👤</span>
                             )}
                         </div>
-                        <div className='flex-1'>
+                        <div className='flex-1 text-left'>
                             <h2 className='text-gray-900 font-bold text-xl'>
                                 {profile.nickname || profile.name || '사용자'}
                             </h2>
