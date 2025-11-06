@@ -679,7 +679,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                                                         {item.description ||
                                                             '포인트 사용'}
                                                     </div>
-                                                    <div className='text-xs text-gray-500'>
+                                                    <div className='text-xs text-gray-500 text-left'>
                                                         {formatDate(item.date)}
                                                         {item.category &&
                                                             ` · ${item.category}`}
