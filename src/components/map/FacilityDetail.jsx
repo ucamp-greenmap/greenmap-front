@@ -1,5 +1,6 @@
 import React from 'react';
 import { getCategoryLabel } from '../../util/mapHelpers';
+import { formatDistance } from '../../util/location';
 
 export default function FacilityDetail({
     facility,
@@ -33,10 +34,25 @@ export default function FacilityDetail({
 
             <h3 className='text-xl font-bold mb-4 pr-10'>{facility.name}</h3>
 
-            {/* Image placeholder */}
-            <div className='w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-4'>
-                <span className='text-gray-500'>이미지 없음</span>
-            </div>
+            {/* Facility Image */}
+            {facility.imageUrl ? (
+                <div className='w-full h-48 bg-gray-100 rounded-lg overflow-hidden mb-4'>
+                    <img
+                        src={facility.imageUrl}
+                        alt={facility.name}
+                        className='w-full h-full object-cover'
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                                'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80';
+                        }}
+                    />
+                </div>
+            ) : (
+                <div className='w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-4'>
+                    <span className='text-gray-500'>이미지 없음</span>
+                </div>
+            )}
 
             {/* Category */}
             <div className='mb-4'>
@@ -61,8 +77,9 @@ export default function FacilityDetail({
                     <h4 className='text-sm font-semibold text-gray-600 mb-1'>
                         거리
                     </h4>
-                    <p className='text-gray-800'>
-                        약 {(facility.distance / 1000).toFixed(1)}km
+                    <p className='text-gray-800 flex items-center gap-1'>
+                        <span className='text-blue-600'>📍</span>
+                        <span>약 {formatDistance(facility.distance)}</span>
                     </p>
                 </div>
             )}
