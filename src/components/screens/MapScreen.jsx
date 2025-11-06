@@ -33,6 +33,7 @@ export default function MapScreen() {
 
     // Map refs
     const mapRef = useRef(null);
+    const bottomSheetRef = useRef(null);
     const currentInfoWindowRef = useRef(null);
     const currentLocationOverlayRef = useRef(null);
     const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_KEY || '';
@@ -65,6 +66,12 @@ export default function MapScreen() {
     // Close detail view
     const closeDetail = useCallback(() => {
         setSelectedFacility(null);
+
+        // BottomSheet 축소
+        if (bottomSheetRef.current) {
+            bottomSheetRef.current.collapse();
+        }
+
         // Close infowindow
         if (currentInfoWindowRef.current) {
             currentInfoWindowRef.current.close();
@@ -106,38 +113,35 @@ export default function MapScreen() {
         loadPlaces();
     }, [currentLocation]);
 
-    // Manage markers - showDetail보다 먼저 호출되어야 함
-    const { markersRef, visibleFacilities } = useMarkers(
+    // showDetail 콜백 - useMarkers보다 먼저 정의
+    const showDetail = useCallback(
+        (facility) => {
+            setSelectedFacility(facility);
+
+            // BottomSheet 확장
+            if (bottomSheetRef.current) {
+                bottomSheetRef.current.expand();
+            }
+
+            // Focus on map marker
+            if (mapInstance) {
+                mapInstance.setCenter(
+                    new window.kakao.maps.LatLng(facility.lat, facility.lng)
+                );
+            }
+        },
+        [mapInstance]
+    );
+
+    // Manage markers
+    const { visibleFacilities, updateSelectedMarker } = useMarkers(
         mapInstance,
         mapLoaded,
         allFacilities,
         currentInfoWindowRef,
         selectedFilter,
-        bookmarkedIds
-    );
-
-    const showDetail = useCallback(
-        (facility) => {
-            setSelectedFacility(facility);
-
-            // Focus on map marker
-            const entry = markersRef.current.find((m) => m.id === facility.id);
-            if (entry && mapInstance) {
-                const { marker, infowindow, data } = entry;
-
-                // Close previously open infowindow
-                if (currentInfoWindowRef.current) {
-                    currentInfoWindowRef.current.close();
-                }
-
-                mapInstance.setCenter(
-                    new window.kakao.maps.LatLng(data.lat, data.lng)
-                );
-                infowindow.open(mapInstance, marker);
-                currentInfoWindowRef.current = infowindow;
-            }
-        },
-        [mapInstance, markersRef]
+        bookmarkedIds,
+        showDetail // 마커 클릭 콜백 전달
     );
 
     // 검색에서 선택된 시설로 자동 포커스
@@ -170,6 +174,11 @@ export default function MapScreen() {
                             );
                             mapInstance.setLevel(3); // 줌인
 
+                            // 마커 애니메이션 적용
+                            if (updateSelectedMarker) {
+                                updateSelectedMarker(targetFacility.id);
+                            }
+
                             // 시설 상세 표시
                             showDetail(targetFacility);
                         }
@@ -179,7 +188,7 @@ export default function MapScreen() {
         } catch (error) {
             console.error('선택된 시설 로드 오류:', error);
         }
-    }, [mapInstance, allFacilities, showDetail]);
+    }, [mapInstance, allFacilities, showDetail, updateSelectedMarker]);
 
     // Relayout map on resize
     useEffect(() => {
@@ -336,7 +345,7 @@ export default function MapScreen() {
                         isLoading={isLocationLoading}
                     />
 
-                    <BottomSheet>
+                    <BottomSheet ref={bottomSheetRef}>
                         {selectedFacility ? (
                             <FacilityDetail
                                 facility={selectedFacility}

@@ -55,16 +55,24 @@ export const getCategoryLabel = (category) => {
 /**
  * Create a custom marker image for Kakao Map with Lucide React icon
  */
-export const createMarkerImage = (kakao, category) => {
+export const createMarkerImage = (kakao, category, isSelected = false) => {
     const config = CATEGORY_CONFIG[category] || {
         color: '#666666',
         iconPath: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
     };
 
+    // 선택된 마커는 더 크고 반짝이는 효과
+    const size = isSelected ? 48 : 40;
+    const radius = isSelected ? 20 : 16;
+    const strokeWidth = isSelected ? 3 : 2.5;
+    const animation = isSelected
+        ? `<animate attributeName='opacity' values='1;0.6;1' dur='1s' repeatCount='indefinite'/>`
+        : '';
+
     const svg = `
-        <svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'>
+        <svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' viewBox='0 0 ${size} ${size}'>
             <defs>
-                <filter id='shadow-${category}' x='-50%' y='-50%' width='200%' height='200%'>
+                <filter id='shadow-${category}-${isSelected ? 'selected' : 'normal'}' x='-50%' y='-50%' width='200%' height='200%'>
                     <feGaussianBlur in='SourceAlpha' stdDeviation='2'/>
                     <feOffset dx='0' dy='2' result='offsetblur'/>
                     <feComponentTransfer>
@@ -76,10 +84,25 @@ export const createMarkerImage = (kakao, category) => {
                     </feMerge>
                 </filter>
             </defs>
-            <g filter='url(#shadow-${category})'>
-                <circle cx='20' cy='20' r='16' fill='${config.color}' stroke='white' stroke-width='2.5'/>
+            ${
+                isSelected
+                    ? `
+            <!-- 반짝이는 외부 링 -->
+            <circle cx='${size / 2}' cy='${size / 2}' r='${radius + 4}' 
+                fill='none' stroke='${config.color}' stroke-width='2' opacity='0.6'>
+                <animate attributeName='r' values='${radius + 4};${radius + 8};${radius + 4}' dur='1.5s' repeatCount='indefinite'/>
+                <animate attributeName='opacity' values='0.6;0.2;0.6' dur='1.5s' repeatCount='indefinite'/>
+            </circle>
+            `
+                    : ''
+            }
+            <g filter='url(#shadow-${category}-${isSelected ? 'selected' : 'normal'})'>
+                <circle cx='${size / 2}' cy='${size / 2}' r='${radius}' 
+                    fill='${config.color}' stroke='white' stroke-width='${strokeWidth}'>
+                    ${animation}
+                </circle>
             </g>
-            <g transform='translate(11.5, 11.5) scale(0.7)'>
+            <g transform='translate(${size / 2 - 8.5}, ${size / 2 - 8.5}) scale(0.7)'>
                 <path 
                     d='${config.iconPath}' 
                     stroke='white' 
@@ -96,7 +119,7 @@ export const createMarkerImage = (kakao, category) => {
 
     return new kakao.maps.MarkerImage(
         url,
-        new kakao.maps.Size(40, 40),
-        new kakao.maps.Point(20, 20)
+        new kakao.maps.Size(size, size),
+        new kakao.maps.Point(size / 2, size / 2)
     );
 };
