@@ -4,7 +4,7 @@ import { ChevronLeft, Calendar, TrendingUp, Leaf } from 'lucide-react';
 import { fetchCertificationHistory } from '../../util/certApi';
 import { fetchPointInfo } from '../../store/slices/userSlice';
 
-export default function CertificationHistoryScreen({ onBack }) {
+export default function CertificationHistoryScreen({ onBack, navigation }) {
     const dispatch = useDispatch();
     const { stats } = useSelector((s) => s.user);
 
@@ -40,7 +40,7 @@ export default function CertificationHistoryScreen({ onBack }) {
             CAR: 'from-[#2196F3] to-[#1976D2]',
             ZERO_WASTE: 'from-[#8BC34A] to-[#7cb342]',
             RECYCLING_CENTER: 'from-[#FF9800] to-[#F57C00]',
-             HCAR: 'from-[#00BCD4] to-[#0097A7]',
+            HCAR: 'from-[#00BCD4] to-[#0097A7]',
         };
         return colors[category] || 'from-gray-400 to-gray-600';
     };
@@ -113,7 +113,15 @@ export default function CertificationHistoryScreen({ onBack }) {
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-6 sticky top-0 z-10'>
                 <div className='flex items-center gap-3 mb-4'>
                     <button
-                        onClick={onBack}
+                        onClick={() => {
+                            if (onBack) {
+                                onBack();
+                            } else if (navigation) {
+                                navigation.goBack();
+                            } else if (window.history.length > 1) {
+                                window.history.back();
+                            }
+                        }}
                         className='text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition'
                     >
                         <ChevronLeft className='w-6 h-6' />
@@ -213,15 +221,15 @@ export default function CertificationHistoryScreen({ onBack }) {
                         🔄 재활용
                     </button>
                     <button
-    onClick={() => setFilterCategory('HCAR')}
-    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
-        filterCategory === 'HCAR'
-            ? 'bg-[#00BCD4] text-white'
-            : 'bg-white text-gray-700 border border-gray-200'
-    }`}
->
-    💧 수소차
-</button>
+                        onClick={() => setFilterCategory('HCAR')}
+                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
+                            filterCategory === 'HCAR'
+                                ? 'bg-[#00BCD4] text-white'
+                                : 'bg-white text-gray-700 border border-gray-200'
+                        }`}
+                    >
+                        💧 수소차
+                    </button>
                 </div>
 
                 {/* 인증 내역 리스트 */}
