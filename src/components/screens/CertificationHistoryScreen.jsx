@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { ChevronLeft, Calendar, TrendingUp, Leaf } from 'lucide-react';
 import { fetchCertificationHistory } from '../../util/certApi';
+import { fetchPointInfo } from '../../store/slices/userSlice';
 
 export default function CertificationHistoryScreen({ onBack }) {
-    const memberId = useSelector((s) => s.user?.memberId) || 1;
+    const dispatch = useDispatch();
+    const { stats } = useSelector((s) => s.user);
+
     const [certifications, setCertifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [filterCategory, setFilterCategory] = useState('all');
@@ -13,6 +16,7 @@ export default function CertificationHistoryScreen({ onBack }) {
         const labels = {
             BIKE: '따릉이',
             CAR: '전기차 충전',
+            HCAR: '수소차 충전',
             ZERO_WASTE: '제로웨이스트',
             RECYCLING_CENTER: '재활용',
         };
@@ -23,6 +27,7 @@ export default function CertificationHistoryScreen({ onBack }) {
         const icons = {
             BIKE: '🚴',
             CAR: '⚡',
+            HCAR: '💧',
             ZERO_WASTE: '♻️',
             RECYCLING_CENTER: '🔄',
         };
@@ -35,6 +40,7 @@ export default function CertificationHistoryScreen({ onBack }) {
             CAR: 'from-[#2196F3] to-[#1976D2]',
             ZERO_WASTE: 'from-[#8BC34A] to-[#7cb342]',
             RECYCLING_CENTER: 'from-[#FF9800] to-[#F57C00]',
+             HCAR: 'from-[#00BCD4] to-[#0097A7]',
         };
         return colors[category] || 'from-gray-400 to-gray-600';
     };
@@ -48,26 +54,30 @@ export default function CertificationHistoryScreen({ onBack }) {
         return `${year}.${month}.${day}`;
     };
 
-    // 인증 내역 불러오기
     const loadCertifications = async () => {
         setIsLoading(true);
         try {
-            const result = await fetchCertificationHistory(memberId);
+            // Redux에서 포인트/탄소 정보 갱신
+            dispatch(fetchPointInfo());
 
-            if (result.success) {
-                const formattedData = result.data.map((item, index) => ({
+            // 인증 내역만 별도로 가져오기
+            const certResult = await fetchCertificationHistory();
+
+            if (certResult.success) {
+                const formattedData = certResult.data.map((item, index) => ({
                     id: index + 1,
                     type: getCategoryLabel(item.category),
                     date: item.createdAt,
                     points: item.point,
-                    carbonSave: item.carbonSave || 0,
                     category: item.category,
                     icon: getCategoryIcon(item.category),
                     color: getCategoryColor(item.category),
                 }));
                 setCertifications(formattedData);
             } else {
-                alert(result.message || '인증 내역을 불러오는데 실패했습니다.');
+                alert(
+                    certResult.message || '인증 내역을 불러오는데 실패했습니다.'
+                );
             }
         } catch (error) {
             console.error('내역 조회 오류:', error);
@@ -79,7 +89,7 @@ export default function CertificationHistoryScreen({ onBack }) {
 
     useEffect(() => {
         loadCertifications();
-    }, [memberId]);
+    }, []);
 
     // 필터링된 데이터
     const filteredCertifications =
@@ -93,10 +103,9 @@ export default function CertificationHistoryScreen({ onBack }) {
         0
     );
     const totalCount = certifications.length;
-    const totalCarbon = certifications.reduce(
-        (sum, cert) => sum + cert.carbonSave,
-        0
-    );
+
+    // Redux에서 가져온 탄소 감축량 사용
+    const totalCarbon = stats.carbonReduction || 0;
 
     return (
         <div className='min-h-screen bg-gray-50'>
@@ -174,7 +183,7 @@ export default function CertificationHistoryScreen({ onBack }) {
                         🚴 따릉이
                     </button>
                     <button
-                        onClick={() => setFilterCategory('CAR')}
+                        onClick={() => setFilterCategory('EVCAR')}
                         className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
                             filterCategory === 'CAR'
                                 ? 'bg-[#2196F3] text-white'
@@ -203,6 +212,16 @@ export default function CertificationHistoryScreen({ onBack }) {
                     >
                         🔄 재활용
                     </button>
+                    <button
+    onClick={() => setFilterCategory('HCAR')}
+    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
+        filterCategory === 'HCAR'
+            ? 'bg-[#00BCD4] text-white'
+            : 'bg-white text-gray-700 border border-gray-200'
+    }`}
+>
+    💧 수소차
+</button>
                 </div>
 
                 {/* 인증 내역 리스트 */}
@@ -236,12 +255,6 @@ export default function CertificationHistoryScreen({ onBack }) {
                                         <p className='text-gray-500 text-sm mt-1'>
                                             {formatDate(cert.date)}
                                         </p>
-                                        <div className='flex items-center gap-1 mt-1'>
-                                            <Leaf className='w-3 h-3 text-green-600' />
-                                            <p className='text-green-600 text-xs font-medium'>
-                                                {cert.carbonSave}kg CO₂ 감축
-                                            </p>
-                                        </div>
                                     </div>
 
                                     {/* 포인트 */}

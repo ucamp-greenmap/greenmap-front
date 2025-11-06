@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft,
@@ -12,15 +13,28 @@ import {
 } from 'lucide-react';
 
 // 데이터 import
+import { CATEGORIES, SORT_OPTIONS } from './PointExchangeScreen.data';
+
+// Redux hooks import
 import {
-    GIFTICONS,
-    CATEGORIES,
-    SORT_OPTIONS,
-    EXCHANGE_HISTORY,
-} from './PointExchangeScreen.data';
+    usePointShop,
+    useSpendPoint,
+    useUsedPointLogs,
+} from '../../hooks/usePointApi';
+import {
+    fetchPointShop,
+    fetchUsedPointLogs,
+} from '../../store/slices/pointSlice';
+import { convertVoucherToGifticon, formatDate } from '../../util/pointApi';
 
 export default function PointExchangeScreen({ onNavigate }) {
-    const [currentPoints] = useState(25000); // 보유 포인트
+    const dispatch = useDispatch();
+
+    // Redux로 포인트샵 데이터 가져오기
+    const { data: shopData, loading: isLoading, error } = usePointShop();
+    const { spendPoint, loading: isSpending } = useSpendPoint();
+    const { usedLogs, loading: isLoadingLogs } = useUsedPointLogs(true); // 자동 로드
+
     const [activeTab, setActiveTab] = useState('gifticon'); // gifticon or transfer
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -41,6 +55,12 @@ export default function PointExchangeScreen({ onNavigate }) {
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [savedAccounts, setSavedAccounts] = useState([]);
 
+    // 컴포넌트 마운트 시 포인트샵 데이터 가져오기
+    useEffect(() => {
+        dispatch(fetchPointShop());
+        dispatch(fetchUsedPointLogs()); // 사용 내역도 가져오기
+    }, [dispatch]);
+
     // 저장된 계좌 불러오기 (localStorage)
     useEffect(() => {
         const saved = localStorage.getItem('savedAccounts');
@@ -53,9 +73,15 @@ export default function PointExchangeScreen({ onNavigate }) {
         }
     }, []);
 
+    // 포인트와 기프티콘 목록 추출
+    const currentPoints = shopData?.point || 0;
+    const gifticons = useMemo(() => {
+        return shopData?.voucherList?.map(convertVoucherToGifticon) || [];
+    }, [shopData]);
+
     // 필터링 및 정렬된 기프티콘 목록
     const filteredGifticons = useMemo(() => {
-        let result = GIFTICONS;
+        let result = gifticons;
 
         // 카테고리 필터
         if (selectedCategory !== 'all') {
@@ -84,7 +110,7 @@ export default function PointExchangeScreen({ onNavigate }) {
         });
 
         return result;
-    }, [selectedCategory, searchQuery, sortBy]);
+    }, [gifticons, selectedCategory, searchQuery, sortBy]);
 
     // 기프티콘 구매 확인
     const handleGifticonPurchase = (gifticon) => {
@@ -94,27 +120,57 @@ export default function PointExchangeScreen({ onNavigate }) {
     };
 
     // 구매 확정
-    const confirmPurchase = () => {
+    const confirmPurchase = async () => {
         setShowConfirmModal(false);
-        setShowSuccessModal(true);
-        // 실제로는 여기서 API 호출
+        try {
+            // VOUCHER 타입일 때는 voucher_id를 전달
+            await spendPoint({
+                point: selectedGifticon.voucherId, // voucher_id 전달
+                type: 'VOUCHER',
+            });
+            setShowSuccessModal(true);
+            // 성공 후 데이터 새로고침
+            dispatch(fetchPointShop());
+            dispatch(fetchUsedPointLogs());
+        } catch (error) {
+            console.error('포인트 사용 실패:', error);
+            alert(
+                '구매에 실패했습니다: ' + (error.message || '알 수 없는 오류')
+            );
+        }
     };
 
     // 계좌이체 신청
-    const handleTransferSubmit = () => {
+    const handleTransferSubmit = async () => {
         setShowTransferModal(false);
-        setShowSuccessModal(true);
-        // 실제로는 여기서 API 호출
-        // 계좌 정보 저장 (localStorage)
-        const newAccount = { bankName, accountNumber, accountHolder };
-        const updated = [
-            newAccount,
-            ...savedAccounts.filter(
-                (acc) => acc.accountNumber !== accountNumber
-            ),
-        ].slice(0, 3);
-        setSavedAccounts(updated);
-        localStorage.setItem('savedAccounts', JSON.stringify(updated));
+        try {
+            await spendPoint({
+                point: parseInt(transferAmount),
+                type: 'CASH',
+            });
+            setShowSuccessModal(true);
+
+            // 계좌 정보 저장 (localStorage)
+            const newAccount = { bankName, accountNumber, accountHolder };
+            const updated = [
+                newAccount,
+                ...savedAccounts.filter(
+                    (acc) => acc.accountNumber !== accountNumber
+                ),
+            ].slice(0, 3);
+            setSavedAccounts(updated);
+            localStorage.setItem('savedAccounts', JSON.stringify(updated));
+
+            // 성공 후 데이터 새로고침
+            dispatch(fetchPointShop());
+            dispatch(fetchUsedPointLogs());
+        } catch (error) {
+            console.error('계좌이체 실패:', error);
+            alert(
+                '계좌이체 신청에 실패했습니다: ' +
+                    (error.message || '알 수 없는 오류')
+            );
+        }
     };
 
     // 저장된 계좌 불러오기
@@ -192,408 +248,470 @@ export default function PointExchangeScreen({ onNavigate }) {
                 </button>
             </div>
 
+            {/* 로딩 상태 */}
+            {isLoading && (
+                <div className='flex items-center justify-center py-20'>
+                    <div className='text-center'>
+                        <div className='w-12 h-12 border-4 border-[#4CAF50] border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
+                        <p className='text-gray-600'>데이터를 불러오는 중...</p>
+                    </div>
+                </div>
+            )}
+
             {/* 컨텐츠 */}
-            <AnimatePresence mode='wait'>
-                {activeTab === 'gifticon' ? (
-                    <motion.div
-                        key='gifticon'
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        {/* 카테고리 필터 */}
-                        <div className='mx-4 mb-4'>
-                            <div className='flex gap-2 overflow-x-auto pb-2 scrollbar-hide'>
-                                {CATEGORIES.map((cat) => (
-                                    <button
-                                        key={cat.id}
-                                        onClick={() =>
-                                            setSelectedCategory(cat.id)
-                                        }
-                                        className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-all flex items-center gap-1 ${
-                                            selectedCategory === cat.id
-                                                ? 'bg-[#4CAF50] text-white shadow-md'
-                                                : 'bg-white text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <span>{cat.icon}</span>
-                                        <span>{cat.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* 검색 및 정렬 */}
-                        <div className='mx-4 mb-4 flex gap-2'>
-                            <div className='flex-1 relative'>
-                                <Search className='w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
-                                <input
-                                    type='text'
-                                    placeholder='제품명 또는 브랜드 검색...'
-                                    value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
-                                    className='w-full pl-10 pr-4 py-3 rounded-xl bg-white border-none shadow-sm focus:ring-2 focus:ring-[#4CAF50] transition-all'
-                                />
-                            </div>
-                            <div className='relative'>
-                                <button
-                                    onClick={() =>
-                                        setShowSortDropdown(!showSortDropdown)
-                                    }
-                                    className='px-4 py-3 rounded-xl bg-white shadow-sm flex items-center gap-2 hover:bg-gray-50 transition-colors'
-                                >
-                                    <span className='font-medium'>
-                                        {
-                                            SORT_OPTIONS.find(
-                                                (s) => s.id === sortBy
-                                            ).label
-                                        }
-                                    </span>
-                                    <ChevronDown className='w-4 h-4' />
-                                </button>
-                                {showSortDropdown && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className='absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg overflow-hidden z-10'
-                                    >
-                                        {SORT_OPTIONS.map((opt) => (
-                                            <button
-                                                key={opt.id}
-                                                onClick={() => {
-                                                    setSortBy(opt.id);
-                                                    setShowSortDropdown(false);
-                                                }}
-                                                className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                                                    sortBy === opt.id
-                                                        ? 'bg-green-50 text-[#4CAF50] font-medium'
-                                                        : ''
-                                                }`}
-                                            >
-                                                {opt.label}
-                                            </button>
-                                        ))}
-                                    </motion.div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* 기프티콘 그리드 */}
-                        <div className='mx-4 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8'>
-                            {filteredGifticons.map((product, index) => {
-                                const canAfford =
-                                    product.price <= currentPoints;
-                                return (
-                                    <motion.div
-                                        key={product.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.05 }}
-                                        whileHover={{
-                                            y: -5,
-                                            transition: { duration: 0.2 },
-                                        }}
-                                        className='bg-white rounded-2xl shadow-md overflow-hidden'
-                                    >
-                                        <div className='relative'>
-                                            <img
-                                                src={product.image}
-                                                alt={product.name}
-                                                className='w-full h-32 object-cover'
-                                            />
-                                            {product.popular && (
-                                                <div className='absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1'>
-                                                    <TrendingUp className='w-3 h-3' />
-                                                    HOT
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className='p-3'>
-                                            <div className='text-xs text-gray-500 mb-1'>
-                                                {product.brand}
-                                            </div>
-                                            <h3 className='font-bold text-gray-800 mb-3 text-sm line-clamp-2 min-h-[2.5rem]'>
-                                                {product.name}
-                                            </h3>
-                                            <div className='flex items-center justify-between mb-2'>
-                                                <span className='text-lg font-bold text-[#4CAF50]'>
-                                                    {product.price.toLocaleString()}
-                                                    P
-                                                </span>
-                                            </div>
-                                            <button
-                                                onClick={() =>
-                                                    canAfford &&
-                                                    handleGifticonPurchase(
-                                                        product
-                                                    )
-                                                }
-                                                disabled={!canAfford}
-                                                className={`w-full py-2.5 px-3 rounded-lg text-sm font-bold transition-all ${
-                                                    canAfford
-                                                        ? 'bg-[#4CAF50] text-white hover:bg-[#45a049] shadow-sm'
-                                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                }`}
-                                            >
-                                                {canAfford
-                                                    ? '구매하기'
-                                                    : '포인트 부족'}
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key='transfer'
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.2 }}
-                        className='mx-4'
-                    >
-                        {/* 저장된 계좌 불러오기 */}
-                        {savedAccounts.length > 0 && (
-                            <div className='mb-4 bg-white rounded-2xl p-4 shadow-sm'>
-                                <h3 className='font-bold text-gray-800 mb-3'>
-                                    최근 사용 계좌
-                                </h3>
-                                <div className='space-y-2'>
-                                    {savedAccounts.map((acc, idx) => (
+            {!isLoading && (
+                <AnimatePresence mode='wait'>
+                    {activeTab === 'gifticon' ? (
+                        <motion.div
+                            key='gifticon'
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            {/* 카테고리 필터 */}
+                            <div className='mx-4 mb-4'>
+                                <div className='flex gap-2 overflow-x-auto pb-2 scrollbar-hide'>
+                                    {CATEGORIES.map((cat) => (
                                         <button
-                                            key={idx}
+                                            key={cat.id}
                                             onClick={() =>
-                                                loadSavedAccount(acc)
+                                                setSelectedCategory(cat.id)
                                             }
-                                            className='w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 transition-colors'
+                                            className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-all flex items-center gap-1 ${
+                                                selectedCategory === cat.id
+                                                    ? 'bg-[#4CAF50] text-white shadow-md'
+                                                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                                            }`}
                                         >
-                                            <div className='font-medium'>
-                                                {acc.bankName}
-                                            </div>
-                                            <div className='text-sm text-gray-600'>
-                                                {acc.accountNumber} (
-                                                {acc.accountHolder})
-                                            </div>
+                                            <span>{cat.icon}</span>
+                                            <span>{cat.label}</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
-                        )}
 
-                        {/* 계좌이체 폼 */}
-                        <div className='bg-white rounded-2xl p-6 shadow-sm mb-4'>
-                            <h3 className='font-bold text-lg mb-4'>
-                                계좌이체 신청
-                            </h3>
-
-                            {/* 금액 빠른 선택 */}
-                            <div className='mb-4'>
-                                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                    금액 선택
-                                </label>
-                                <div className='grid grid-cols-4 gap-2'>
-                                    {[1000, 5000, 10000, currentPoints].map(
-                                        (amount) => (
-                                            <button
-                                                key={amount}
-                                                onClick={() =>
-                                                    setTransferAmount(
-                                                        amount === currentPoints
-                                                            ? currentPoints.toString()
-                                                            : amount.toString()
-                                                    )
-                                                }
-                                                className='py-2 px-3 bg-gray-50 hover:bg-[#4CAF50] hover:text-white rounded-lg text-sm font-medium transition-all'
-                                            >
-                                                {amount === currentPoints
-                                                    ? '전액'
-                                                    : `${amount.toLocaleString()}P`}
-                                            </button>
-                                        )
+                            {/* 검색 및 정렬 */}
+                            <div className='mx-4 mb-4 flex gap-2'>
+                                <div className='flex-1 relative'>
+                                    <Search className='w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+                                    <input
+                                        type='text'
+                                        placeholder='제품명 또는 브랜드 검색...'
+                                        value={searchQuery}
+                                        onChange={(e) =>
+                                            setSearchQuery(e.target.value)
+                                        }
+                                        className='w-full pl-10 pr-4 py-3 rounded-xl bg-white border-none shadow-sm focus:ring-2 focus:ring-[#4CAF50] transition-all'
+                                    />
+                                </div>
+                                <div className='relative'>
+                                    <button
+                                        onClick={() =>
+                                            setShowSortDropdown(
+                                                !showSortDropdown
+                                            )
+                                        }
+                                        className='px-4 py-3 rounded-xl bg-white shadow-sm flex items-center gap-2 hover:bg-gray-50 transition-colors'
+                                    >
+                                        <span className='font-medium'>
+                                            {
+                                                SORT_OPTIONS.find(
+                                                    (s) => s.id === sortBy
+                                                ).label
+                                            }
+                                        </span>
+                                        <ChevronDown className='w-4 h-4' />
+                                    </button>
+                                    {showSortDropdown && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className='absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg overflow-hidden z-10'
+                                        >
+                                            {SORT_OPTIONS.map((opt) => (
+                                                <button
+                                                    key={opt.id}
+                                                    onClick={() => {
+                                                        setSortBy(opt.id);
+                                                        setShowSortDropdown(
+                                                            false
+                                                        );
+                                                    }}
+                                                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
+                                                        sortBy === opt.id
+                                                            ? 'bg-green-50 text-[#4CAF50] font-medium'
+                                                            : ''
+                                                    }`}
+                                                >
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </motion.div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* 금액 입력 */}
-                            <div className='mb-4'>
-                                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                    전환 포인트
-                                </label>
-                                <input
-                                    type='number'
-                                    value={transferAmount}
-                                    onChange={(e) =>
-                                        setTransferAmount(e.target.value)
-                                    }
-                                    placeholder='포인트 입력'
-                                    className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
-                                />
-                                <div className='mt-2 text-sm text-gray-500'>
-                                    실제 입금액:{' '}
-                                    <span className='font-semibold text-gray-800'>
-                                        {(
-                                            parseInt(transferAmount || 0) * 0.95
-                                        ).toLocaleString()}
-                                        원
-                                    </span>
-                                    <span className='text-xs ml-2'>
-                                        (수수료 5% 제외)
-                                    </span>
-                                </div>
+                            {/* 기프티콘 그리드 */}
+                            <div className='mx-4 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8'>
+                                {filteredGifticons.map((product, index) => {
+                                    const canAfford =
+                                        product.price <= currentPoints;
+                                    return (
+                                        <motion.div
+                                            key={product.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            whileHover={{
+                                                y: -5,
+                                                transition: { duration: 0.2 },
+                                            }}
+                                            className='bg-white rounded-2xl shadow-md overflow-hidden'
+                                        >
+                                            <div className='relative'>
+                                                <img
+                                                    src={product.image}
+                                                    alt={product.name}
+                                                    className='w-full h-32 object-cover'
+                                                />
+                                                {product.popular && (
+                                                    <div className='absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1'>
+                                                        <TrendingUp className='w-3 h-3' />
+                                                        HOT
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className='p-3'>
+                                                <div className='text-xs text-gray-500 mb-1'>
+                                                    {product.brand}
+                                                </div>
+                                                <h3 className='font-bold text-gray-800 mb-3 text-sm line-clamp-2 min-h-[2.5rem]'>
+                                                    {product.name}
+                                                </h3>
+                                                <div className='flex items-center justify-between mb-2'>
+                                                    <span className='text-lg font-bold text-[#4CAF50]'>
+                                                        {product.price.toLocaleString()}
+                                                        P
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    onClick={() =>
+                                                        canAfford &&
+                                                        handleGifticonPurchase(
+                                                            product
+                                                        )
+                                                    }
+                                                    disabled={!canAfford}
+                                                    className={`w-full py-2.5 px-3 rounded-lg text-sm font-bold transition-all ${
+                                                        canAfford
+                                                            ? 'bg-[#4CAF50] text-white hover:bg-[#45a049] shadow-sm'
+                                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    }`}
+                                                >
+                                                    {canAfford
+                                                        ? '구매하기'
+                                                        : '포인트 부족'}
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
                             </div>
-
-                            {/* 은행명 */}
-                            <div className='mb-4'>
-                                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                    은행명
-                                </label>
-                                <input
-                                    type='text'
-                                    value={bankName}
-                                    onChange={(e) =>
-                                        setBankName(e.target.value)
-                                    }
-                                    placeholder='예: 국민은행'
-                                    className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
-                                />
-                            </div>
-
-                            {/* 계좌번호 */}
-                            <div className='mb-4'>
-                                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                    계좌번호
-                                </label>
-                                <input
-                                    type='text'
-                                    value={accountNumber}
-                                    onChange={(e) =>
-                                        setAccountNumber(e.target.value)
-                                    }
-                                    placeholder="'-' 없이 입력"
-                                    className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
-                                />
-                            </div>
-
-                            {/* 예금주 */}
-                            <div className='mb-6'>
-                                <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                    예금주
-                                </label>
-                                <input
-                                    type='text'
-                                    value={accountHolder}
-                                    onChange={(e) =>
-                                        setAccountHolder(e.target.value)
-                                    }
-                                    placeholder='예금주명'
-                                    className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
-                                />
-                            </div>
-
-                            {/* 신청 버튼 */}
-                            <button
-                                onClick={() => setShowTransferModal(true)}
-                                disabled={
-                                    !transferAmount ||
-                                    !bankName ||
-                                    !accountNumber ||
-                                    !accountHolder ||
-                                    parseInt(transferAmount) > currentPoints
-                                }
-                                className='w-full py-4 bg-[#4CAF50] text-white rounded-xl font-bold text-lg hover:bg-[#45a049] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-md'
-                            >
-                                계좌이체 신청
-                            </button>
-
-                            {/* 안내사항 */}
-                            <div className='mt-4 p-4 bg-blue-50 rounded-xl'>
-                                <div className='flex items-start gap-2'>
-                                    <AlertCircle className='w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0' />
-                                    <div className='text-sm text-blue-800'>
-                                        <p className='font-medium mb-1'>
-                                            계좌이체 안내
-                                        </p>
-                                        <ul className='space-y-1 text-xs'>
-                                            <li>
-                                                • 수수료 5%가 차감되어
-                                                입금됩니다
-                                            </li>
-                                            <li>
-                                                • 영업일 기준 1~3일 내 입금
-                                                처리됩니다
-                                            </li>
-                                            <li>
-                                                • 최소 신청 금액은 1,000P입니다
-                                            </li>
-                                        </ul>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key='transfer'
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.2 }}
+                            className='mx-4'
+                        >
+                            {/* 저장된 계좌 불러오기 */}
+                            {savedAccounts.length > 0 && (
+                                <div className='mb-4 bg-white rounded-2xl p-4 shadow-sm'>
+                                    <h3 className='font-bold text-gray-800 mb-3'>
+                                        최근 사용 계좌
+                                    </h3>
+                                    <div className='space-y-2'>
+                                        {savedAccounts.map((acc, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() =>
+                                                    loadSavedAccount(acc)
+                                                }
+                                                className='w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 transition-colors'
+                                            >
+                                                <div className='font-medium'>
+                                                    {acc.bankName}
+                                                </div>
+                                                <div className='text-sm text-gray-600'>
+                                                    {acc.accountNumber} (
+                                                    {acc.accountHolder})
+                                                </div>
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            )}
 
-            {/* 교환 내역 */}
-            <div className='mx-4 mb-8'>
-                <div className='flex items-center justify-between mb-4'>
-                    <h2 className='text-lg font-bold'>최근 교환 내역</h2>
-                    <button className='text-sm text-[#4CAF50] font-medium hover:underline'>
-                        더보기
-                    </button>
-                </div>
-                <div className='space-y-3'>
-                    {EXCHANGE_HISTORY.map((item) => (
-                        <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className='bg-white rounded-xl p-4 shadow-sm'
-                        >
-                            <div className='flex items-center justify-between'>
-                                <div className='flex items-center gap-3'>
-                                    <div
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                            item.type === 'gifticon'
-                                                ? 'bg-purple-100'
-                                                : 'bg-blue-100'
-                                        }`}
-                                    >
-                                        {item.type === 'gifticon' ? (
-                                            <Gift
-                                                className={`w-5 h-5 ${
-                                                    item.type === 'gifticon'
-                                                        ? 'text-purple-600'
-                                                        : 'text-blue-600'
-                                                }`}
-                                            />
-                                        ) : (
-                                            <Wallet className='w-5 h-5 text-blue-600' />
+                            {/* 계좌이체 폼 */}
+                            <div className='bg-white rounded-2xl p-6 shadow-sm mb-4'>
+                                <h3 className='font-bold text-lg mb-4'>
+                                    계좌이체 신청
+                                </h3>
+
+                                {/* 금액 빠른 선택 */}
+                                <div className='mb-4'>
+                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                        금액 선택
+                                    </label>
+                                    <div className='grid grid-cols-4 gap-2'>
+                                        {[1000, 5000, 10000, currentPoints].map(
+                                            (amount) => (
+                                                <button
+                                                    key={amount}
+                                                    onClick={() =>
+                                                        setTransferAmount(
+                                                            amount ===
+                                                                currentPoints
+                                                                ? currentPoints.toString()
+                                                                : amount.toString()
+                                                        )
+                                                    }
+                                                    className='py-2 px-3 bg-gray-50 hover:bg-[#4CAF50] hover:text-white rounded-lg text-sm font-medium transition-all'
+                                                >
+                                                    {amount === currentPoints
+                                                        ? '전액'
+                                                        : `${amount.toLocaleString()}P`}
+                                                </button>
+                                            )
                                         )}
                                     </div>
-                                    <div>
-                                        <div className='font-semibold text-gray-800'>
-                                            {item.name}
-                                        </div>
-                                        <div className='text-xs text-gray-500'>
-                                            {item.brand} · {item.date}
-                                        </div>
+                                </div>
+
+                                {/* 금액 입력 */}
+                                <div className='mb-4'>
+                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                        전환 포인트
+                                    </label>
+                                    <input
+                                        type='number'
+                                        value={transferAmount}
+                                        onChange={(e) =>
+                                            setTransferAmount(e.target.value)
+                                        }
+                                        placeholder='포인트 입력'
+                                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
+                                    />
+                                    <div className='mt-2 text-sm text-gray-500'>
+                                        실제 입금액:{' '}
+                                        <span className='font-semibold text-gray-800'>
+                                            {(
+                                                parseInt(transferAmount || 0) *
+                                                0.95
+                                            ).toLocaleString()}
+                                            원
+                                        </span>
+                                        <span className='text-xs ml-2'>
+                                            (수수료 5% 제외)
+                                        </span>
                                     </div>
                                 </div>
-                                <div className='text-right'>
-                                    <div className='font-bold text-gray-800'>
-                                        -{item.points.toLocaleString()}P
+
+                                {/* 은행명 */}
+                                <div className='mb-4'>
+                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                        은행명
+                                    </label>
+                                    <input
+                                        type='text'
+                                        value={bankName}
+                                        onChange={(e) =>
+                                            setBankName(e.target.value)
+                                        }
+                                        placeholder='예: 국민은행'
+                                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
+                                    />
+                                </div>
+
+                                {/* 계좌번호 */}
+                                <div className='mb-4'>
+                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                        계좌번호
+                                    </label>
+                                    <input
+                                        type='text'
+                                        value={accountNumber}
+                                        onChange={(e) =>
+                                            setAccountNumber(e.target.value)
+                                        }
+                                        placeholder="'-' 없이 입력"
+                                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
+                                    />
+                                </div>
+
+                                {/* 예금주 */}
+                                <div className='mb-6'>
+                                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                                        예금주
+                                    </label>
+                                    <input
+                                        type='text'
+                                        value={accountHolder}
+                                        onChange={(e) =>
+                                            setAccountHolder(e.target.value)
+                                        }
+                                        placeholder='예금주명'
+                                        className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
+                                    />
+                                </div>
+
+                                {/* 신청 버튼 */}
+                                <button
+                                    onClick={() => setShowTransferModal(true)}
+                                    disabled={
+                                        !transferAmount ||
+                                        !bankName ||
+                                        !accountNumber ||
+                                        !accountHolder ||
+                                        parseInt(transferAmount) > currentPoints
+                                    }
+                                    className='w-full py-4 bg-[#4CAF50] text-white rounded-xl font-bold text-lg hover:bg-[#45a049] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-md'
+                                >
+                                    계좌이체 신청
+                                </button>
+
+                                {/* 안내사항 */}
+                                <div className='mt-4 p-4 bg-blue-50 rounded-xl'>
+                                    <div className='flex items-start gap-2'>
+                                        <AlertCircle className='w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0' />
+                                        <div className='text-sm text-blue-800'>
+                                            <p className='font-medium mb-1'>
+                                                계좌이체 안내
+                                            </p>
+                                            <ul className='space-y-1 text-xs'>
+                                                <li>
+                                                    • 수수료 5%가 차감되어
+                                                    입금됩니다
+                                                </li>
+                                                <li>
+                                                    • 영업일 기준 1~3일 내 입금
+                                                    처리됩니다
+                                                </li>
+                                                <li>
+                                                    • 최소 신청 금액은
+                                                    1,000P입니다
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </motion.div>
-                    ))}
+                    )}
+                </AnimatePresence>
+            )}
+
+            {/* 교환 내역 */}
+            <div className='mx-4 mb-8'>
+                <div className='flex items-center justify-between mb-4'>
+                    <h2 className='text-lg font-bold'>최근 사용 내역</h2>
+                    <button
+                        onClick={() => dispatch(fetchUsedPointLogs())}
+                        className='text-sm text-[#4CAF50] font-medium hover:underline'
+                    >
+                        새로고침
+                    </button>
                 </div>
+
+                {isLoadingLogs ? (
+                    <div className='bg-white rounded-xl p-8 text-center'>
+                        <div className='w-8 h-8 border-4 border-[#4CAF50] border-t-transparent rounded-full animate-spin mx-auto mb-2'></div>
+                        <p className='text-gray-500 text-sm'>
+                            내역을 불러오는 중...
+                        </p>
+                    </div>
+                ) : usedLogs &&
+                  usedLogs.filter((item) => item.pointAmount < 0).length > 0 ? (
+                    <div className='space-y-3'>
+                        {usedLogs
+                            .filter((item) => item.pointAmount < 0) // 사용(음수)만 필터링
+                            .slice(0, 5)
+                            .map((item, index) => {
+                                // 포인트 사용 타입 판단
+                                const isVoucher =
+                                    item.description?.includes('기프티콘') ||
+                                    item.description?.includes('쿠폰');
+                                const isCash =
+                                    item.description?.includes('계좌') ||
+                                    item.description?.includes('입금');
+
+                                return (
+                                    <motion.div
+                                        key={index}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className='bg-white rounded-xl p-4 shadow-sm'
+                                    >
+                                        <div className='flex items-center justify-between'>
+                                            <div className='flex items-center gap-3'>
+                                                <div
+                                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                                        isVoucher
+                                                            ? 'bg-purple-100'
+                                                            : isCash
+                                                            ? 'bg-blue-100'
+                                                            : 'bg-red-100'
+                                                    }`}
+                                                >
+                                                    {isVoucher ? (
+                                                        <Gift className='w-5 h-5 text-purple-600' />
+                                                    ) : isCash ? (
+                                                        <Wallet className='w-5 h-5 text-blue-600' />
+                                                    ) : (
+                                                        <TrendingUp className='w-5 h-5 text-red-600' />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div className='font-semibold text-gray-800'>
+                                                        {item.description ||
+                                                            '포인트 사용'}
+                                                    </div>
+                                                    <div className='text-xs text-gray-500'>
+                                                        {formatDate(item.date)}
+                                                        {item.category &&
+                                                            ` · ${item.category}`}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className='text-right'>
+                                                <div className='font-bold text-red-600'>
+                                                    {Math.abs(
+                                                        item.pointAmount || 0
+                                                    ).toLocaleString()}
+                                                    P
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                    </div>
+                ) : (
+                    <div className='bg-white rounded-xl p-8 text-center'>
+                        <div className='w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3'>
+                            <Gift className='w-6 h-6 text-gray-400' />
+                        </div>
+                        <p className='text-gray-500'>
+                            아직 사용 내역이 없습니다
+                        </p>
+                        <p className='text-sm text-gray-400 mt-1'>
+                            기프티콘을 구매하거나 계좌이체를 신청해보세요
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* 기프티콘 구매 확인 모달 */}

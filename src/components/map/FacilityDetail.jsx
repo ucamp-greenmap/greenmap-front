@@ -51,19 +51,46 @@ export default function FacilityDetail({
                     주소
                 </h4>
                 <p className='text-gray-800'>
-                    {facility.address || '서울시 중구 을지로 123'}
+                    {facility.address || '주소 정보 없음'}
                 </p>
             </div>
 
-            {/* Coordinates */}
-            <div className='mb-4'>
-                <h4 className='text-sm font-semibold text-gray-600 mb-1'>
-                    위치
-                </h4>
-                <p className='text-gray-800 text-sm'>
-                    위도: {facility.lat}, 경도: {facility.lng}
-                </p>
-            </div>
+            {/* Distance */}
+            {facility.distance && (
+                <div className='mb-4'>
+                    <h4 className='text-sm font-semibold text-gray-600 mb-1'>
+                        거리
+                    </h4>
+                    <p className='text-gray-800'>
+                        약 {(facility.distance / 1000).toFixed(1)}km
+                    </p>
+                </div>
+            )}
+
+            {/* Opening Hours */}
+            {facility.openingHours && (
+                <div className='mb-4'>
+                    <h4 className='text-sm font-semibold text-gray-600 mb-1'>
+                        운영 시간
+                    </h4>
+                    <p className='text-gray-800'>{facility.openingHours}</p>
+                </div>
+            )}
+
+            {/* Phone Number */}
+            {facility.telNum && (
+                <div className='mb-4'>
+                    <h4 className='text-sm font-semibold text-gray-600 mb-1'>
+                        전화번호
+                    </h4>
+                    <a
+                        href={`tel:${facility.telNum}`}
+                        className='text-blue-600 hover:underline'
+                    >
+                        {facility.telNum}
+                    </a>
+                </div>
+            )}
 
             {/* Bookmark button */}
             <button

@@ -1,22 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { addPoints } from '../../store/slices/pointSlice';
+import news1 from '../../assets/news1.png';
+import news2 from '../../assets/news2.png';
+import news3 from '../../assets/news3.png';
+import news4 from '../../assets/news4.png';
+import api from '../../api/axios';
 
 /**
  * @param {object} props
  * @param {string} props.placeholder
  */
-export default function EcoNewsList({ placeholder }) {
+export default function EcoNewsList() {
     const dispatch = useDispatch();
-    // 1. 서버에서 가져온 뉴스 목록을 저장할 상태
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const newsImages = [
-        '/src/assets/news1.png',
-        '/src/assets/news2.png',
-        '/src/assets/news3.png',
-        '/src/assets/news4.png',
-    ];
+    const newsImages = [news1, news2, news3, news4];
 
     const [newsList, setNewsList] = useState([]);
 
@@ -24,11 +23,7 @@ export default function EcoNewsList({ placeholder }) {
     const [readArticles, setReadArticles] = useState([]);
     const [toast, setToast] = useState(null);
 
-    // 백엔드 API 기본 URL
-    const API_BASE_URL =
-        'https://greenmap-api-1096735261131.asia-northeast3.run.app';
-
-    // 현재는 memberId를 1로 하드코딩
+    // 로그인되면 바꾸기
     const CURRENT_MEMBER_ID = 1;
 
     // ------------------------------------
@@ -38,90 +33,39 @@ export default function EcoNewsList({ placeholder }) {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/news`);
+            const response = await api.get('/news');
 
-            // 1. HTTP 상태 코드 체크 (404, 500 등)
-            if (!response.ok) {
-                throw new Error(
-                    `HTTP 요청 실패: ${response.status} ${response.statusText}`
-                );
-            }
+            const result = response.data;
 
-            const result = await response.json();
-
-            // 2. 서버 응답의 status 필드 확인g
+            // 1. 서버 응답의 status 필드 확인
             if (result.status !== 'SUCCESS') {
                 throw new Error(
                     result.message || '서버 내부 오류로 뉴스 로드 실패.'
                 );
             }
 
-            // 3. 성공 시 데이터 저장
+            // 2. 성공 시 데이터 저장
             if (result.data?.items && Array.isArray(result.data.items)) {
                 setNewsList(result.data.items);
             } else {
                 setNewsList([]);
             }
         } catch (err) {
+            const message =
+                err.response?.data?.message ||
+                err.message ||
+                '뉴스 목록을 불러오지 못했습니다.';
             console.error('뉴스 fetch 오류:', err);
-            setError(
-                '뉴스 목록을 불러오지 못했습니다. 서버 상태를 확인하세요.'
-            );
+            setError(message);
         } finally {
             setIsLoading(false);
         }
-    }, [API_BASE_URL]);
+    }, []);
 
     // ------------------------------------
     // 뉴스 읽기 처리 및 포인트 적립 (POST /news)
     // ------------------------------------
-    // const handleReadArticle = async (articleTitle, points) => {
-    //     // 로컬에서 읽음 한도 확인 (3개)
-    //     if (readArticles.length >= 3) {
-    //         setToast('오늘의 뉴스 보상 한도에 도달했습니다');
-    //         setTimeout(() => setToast(null), 2000);
-    //         return;
-    //     }
 
-    //     try {
-    //         // 1. 서버에 뉴스 조회 기록 전송 (POST 요청)
-    //         const response = await fetch(`${API_BASE_URL}/news`, {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify({
-    //                 memberId: CURRENT_MEMBER_ID,
-    //                 title: articleTitle,
-    //             }),
-    //         });
-
-    //         const result = await response.json();
-
-    //         if (result.status === 'ERROR') {
-    //             // 서버에서 DB 문제 등으로 "실패" 응답이 온 경우
-    //             throw new Error(
-    //                 result.message || '뉴스 조회 처리 중 서버 오류'
-    //             );
-    //         }
-
-    //         // 2. 서버에서 성공 응답 시 로컬 상태 업데이트 및 포인트 지급
-    //         setReadArticles((prev) => [...prev, articleTitle]);
-    //         dispatch(
-    //             addPoints({
-    //                 points,
-    //                 type: `뉴스 읽기: ${articleTitle.substring(0, 10)}...`,
-    //                 category: '뉴스',
-    //             })
-    //         );
-    //         setToast(`+${points}P 획득!`);
-    //     } catch (err) {
-    //         console.error('뉴스 조회/포인트 처리 오류:', err);
-    //         setToast(`처리 실패: ${err.message}`);
-    //     } finally {
-    //         setTimeout(() => setToast(null), 2000);
-    //     }
-    // };
     const handleReadArticle = async (articleTitle) => {
         if (readArticles.length >= 3) {
             setToast('오늘의 뉴스 보상 한도에 도달했습니다');
@@ -130,19 +74,12 @@ export default function EcoNewsList({ placeholder }) {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/news`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    memberId: CURRENT_MEMBER_ID,
-                    title: articleTitle,
-                    // point 필드 제거 (백엔드가 5로 고정 처리)
-                }),
+            const response = await api.post('/news', {
+                memberId: CURRENT_MEMBER_ID,
+                title: articleTitle,
             });
 
-            const result = await response.json();
+            const result = response.data;
 
             if (result.status === 'FAIL') {
                 setToast(result.message);
@@ -162,8 +99,10 @@ export default function EcoNewsList({ placeholder }) {
                 setToast('+5P 획득');
             }
         } catch (err) {
+            const message =
+                err.response?.data?.message || '처리 실패: 네트워크 오류';
             console.error('뉴스 조회/포인트 처리 오류:', err);
-            setToast('처리 실패: 네트워크 오류');
+            setToast(message);
         } finally {
             setTimeout(() => setToast(null), 2000);
         }
@@ -174,9 +113,6 @@ export default function EcoNewsList({ placeholder }) {
         fetchNews();
     }, [fetchNews]);
 
-    // ------------------------------------
-    // 렌더링 로직
-    // ------------------------------------
     const todayReadsRemaining = Math.max(0, 3 - readArticles.length);
 
     if (isLoading) {
@@ -212,7 +148,7 @@ export default function EcoNewsList({ placeholder }) {
 
             {/* 리스트 */}
             <div className='space-y-3'>
-                {newsList.map((article) => {
+                {newsList.map((article, index) => {
                     const isRead =
                         article.read || readArticles.includes(article.title);
                     const canRead = !isRead && readArticles.length < 3;
@@ -242,7 +178,7 @@ export default function EcoNewsList({ placeholder }) {
                             }`}
                         >
                             <img
-                                src={newsImages[article.id % 4] || placeholder}
+                                src={newsImages[index % 4]}
                                 alt={cleanTitle}
                                 loading='lazy'
                                 className='w-20 h-20 object-cover rounded-xl flex-shrink-0 mr-3'

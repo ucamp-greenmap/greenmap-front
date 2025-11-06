@@ -1,16 +1,23 @@
 import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setAppState } from '../../store/slices/appSlice';
 
 export function SplashScreen() {
     const dispatch = useDispatch();
+    const onboardingCompleted = useSelector(
+        (state) => state.app.onboardingCompleted
+    );
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            dispatch(setAppState('onboarding'));
+            if (onboardingCompleted) {
+                dispatch(setAppState('main'));
+            } else {
+                dispatch(setAppState('onboarding'));
+            }
         }, 3000);
         return () => clearTimeout(timer);
-    }, [dispatch]);
+    }, [dispatch, onboardingCompleted]);
 
     return (
         <div className='w-full h-screen flex items-center justify-center bg-gradient-to-b from-[#4CAF50] to-[#8BC34A]'>
@@ -31,4 +38,3 @@ export function SplashScreen() {
 }
 
 export default SplashScreen;
-

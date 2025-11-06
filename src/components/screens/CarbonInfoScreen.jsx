@@ -7,10 +7,12 @@ import {
     Zap,
     Recycle,
 } from 'lucide-react';
+import { fetchCarbonData } from '../../util/carbonApi';
 
 const Card = ({ children, className }) => {
     return <div className={className}>{children}</div>;
 };
+
 const Progress = ({ value, className }) => {
     return (
         <div
@@ -29,57 +31,27 @@ export default function CarbonInfoScreen({ onBack }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // API 호출
-    // useEffect(() => {
-    //     const fetchCarbonData = async () => {
-    //         try {
-    //             const response = await fetch(
-    //                 'https://greenmap-api-1096735261131.asia-northeast3.run.app/point/carbon',
-    //                 {
-    //                     headers: {
-    //                         Authorization: 'YOUR_TOKEN_HERE',
-    //                     },
-    //                 }
-    //             );
-
-    //             const result = await response.json();
-
-    //             if (result.status === 'SUCCESS') {
-    //                 setCarbonData(result.data);
-    //             } else {
-    //                 setError(result.data.message);
-    //             }
-    //         } catch (err) {
-    //             setError('데이터를 불러오는데 실패했습니다.');
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-
-    //     fetchCarbonData();
-    // }, []);
     useEffect(() => {
-        const fetchCarbonData = async () => {
+        const loadCarbonData = async () => {
             try {
-                const response = await fetch(
-                    'https://greenmap-api-1096735261131.asia-northeast3.run.app/point/carbon'
-                );
-                const result = await response.json();
+                const result = await fetchCarbonData();
 
-                if (result.status === 'SUCCESS') {
+                if (result.success) {
                     setCarbonData(result.data);
                 } else {
-                    setError(result.data.message);
+                    setError(result.message);
                 }
             } catch (err) {
+                console.error('탄소 데이터 로드 오류:', err);
                 setError('데이터를 불러오는데 실패했습니다.');
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchCarbonData();
+        loadCarbonData();
     }, []);
+
     // 로딩중
     if (loading) {
         return (
@@ -90,10 +62,18 @@ export default function CarbonInfoScreen({ onBack }) {
     }
 
     // 에러
-    if (error) {
+    if (error || !carbonData) {
         return (
-            <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-                <div className='text-red-600'>{error}</div>
+            <div className='min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6'>
+                <div className='text-red-600 text-center mb-4'>
+                    {error || '데이터를 찾을 수 없습니다.'}
+                </div>
+                <button
+                    onClick={onBack}
+                    className='px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors'
+                >
+                    <ArrowLeft className='w-4 h-4 inline mr-2' /> 뒤로 돌아가기
+                </button>
             </div>
         );
     }
@@ -286,29 +266,26 @@ export default function CarbonInfoScreen({ onBack }) {
 
                 {/* What is Carbon Neutral */}
                 <Card className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-2xl p-6 text-white shadow-lg'>
-                    <div className='flex items-start gap-3 mb-4'>
-                        <Leaf className='w-8 h-8 flex-shrink-0' />
+                    <Leaf className='w-8 h-8 flex-shrink-0' />
+                    <div className='flex flex-col items-center justify-center gap-3 mb-4 text-center'>
                         <div>
-                            <h3 className='text-white text-lg font-bold mb-2'>
-                                탄소 중립이란?
+                            <h3 className='text-white text-lg font-bold mb-2 text-center'>
+                                탄소 중립이란? 탄소 중립(Carbon Neutral)은
+                                온실가스 배출량과 흡수량이 균형을 이루어
+                                순배출량이 '0'이 되는 상태를 의미합니다.
                             </h3>
-                            <p className='text-white/90 text-sm leading-relaxed'>
-                                탄소 중립(Carbon Neutral)은 온실가스 배출량과
-                                흡수량이 균형을 이루어 순배출량이 '0'이 되는
-                                상태를 의미합니다.
-                            </p>
                         </div>
                     </div>
 
-                    <div className='bg-white/20 rounded-xl p-4 backdrop-blur-sm space-y-2'>
-                        <h4 className='text-white font-semibold'>
+                    <div className='bg-white/20 rounded-xl p-4 backdrop-blur-sm space-y-2 **text-center**'>
+                        <h4 className='text-white text-lg font-bold text-center'>
                             💡 탄소 감축 실천 방법
                         </h4>
-                        <ul className='space-y-1 text-white/90 text-sm'>
-                            <li>• 대중교통 및 친환경 이동수단 이용</li>
-                            <li>• 전기차 충전 및 에너지 효율적 사용</li>
-                            <li>• 재활용 및 분리배출 실천</li>
-                            <li>• 제로웨이스트 생활 습관</li>
+                        <ul className='space-y-1 text-white/90 text-base **list-none p-0** '>
+                            <li> 대중교통 및 친환경 이동수단 이용 </li>
+                            <li> 전기차 충전 및 에너지 효율적 사용 </li>
+                            <li> 재활용 및 분리배출 실천 </li>
+                            <li> 제로웨이스트 생활 습관 </li>
                         </ul>
                     </div>
                 </Card>

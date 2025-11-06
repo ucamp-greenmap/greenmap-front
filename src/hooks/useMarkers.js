@@ -16,6 +16,7 @@ export const useMarkers = (
     const markerImageCacheRef = useRef({}); // MarkerImage 캐시
     const _isMountedRef = useRef(true); // 마운트 상태 추적 (언더스코어로 unused 허용)
     const _abortControllerRef = useRef(null); // 마커 생성 중단용 (언더스코어로 unused 허용)
+    const isCreatingMarkersRef = useRef(false); // 마커 생성 중인지 추적
 
     // 현재 화면에 표시되는 시설 목록 (BottomSheet용)
     const [visibleFacilities, setVisibleFacilities] = useState([]);
@@ -46,15 +47,21 @@ export const useMarkers = (
         if (!mapInstance || !window.kakao) return;
 
         const bounds = mapInstance.getBounds();
-        const currentLevel = mapInstance.getLevel(); // 현재 줌 레벨 가져오기
+        const currentLevel = mapInstance.getLevel();
         const bookmarkSet = new Set(bookmarkedIds || []);
 
-        // 줌 레벨 6 이하(더 확대)일 때만 마커 표시
+        // 줌 레벨 5 이하(더 확대)일 때만 마커 표시
         const shouldShowMarkers = currentLevel <= 5;
 
         // 현재 화면에 표시되는 시설들을 추적
         const currentlyVisible = [];
 
+        // 1단계: 모든 마커를 먼저 숨김
+        markersRef.current.forEach(({ marker }) => {
+            marker.setMap(null);
+        });
+
+        // 2단계: 조건에 맞는 마커만 표시
         markersRef.current.forEach(({ id, category, marker, data }) => {
             const isVisible = isMarkerInBounds(marker, bounds);
 
@@ -69,9 +76,7 @@ export const useMarkers = (
             // 줌 레벨, 필터 조건, 영역 모두 만족해야 표시
             if (shouldShowMarkers && isVisible && shouldShow) {
                 marker.setMap(mapInstance);
-                currentlyVisible.push(data); // 표시되는 시설 데이터 추가
-            } else {
-                marker.setMap(null);
+                currentlyVisible.push(data);
             }
         });
 
@@ -82,6 +87,8 @@ export const useMarkers = (
     // Create/update markers based on facilities
     useEffect(() => {
         if (!mapInstance || !window.kakao || !window.kakao.maps) return;
+
+        isCreatingMarkersRef.current = true;
 
         // 이전 마커 생성 중단
         if (_abortControllerRef.current) {
@@ -102,7 +109,7 @@ export const useMarkers = (
                 });
 
                 const newMarkers = [];
-                const chunkSize = 200; // 100개 → 200개로 증가 (초기 로딩 시간 단축, 여전히 빠른 중단 가능)
+                const chunkSize = 200;
 
                 for (let i = 0; i < facilities.length; i += chunkSize) {
                     // 중단 신호 확인
@@ -117,7 +124,7 @@ export const useMarkers = (
                             f.lat,
                             f.lng
                         );
-                        const markerImage = getMarkerImage(f.category); // 캐시된 이미지 사용
+                        const markerImage = getMarkerImage(f.category);
                         const marker = new window.kakao.maps.Marker({
                             position,
                             image: markerImage,
@@ -142,7 +149,7 @@ export const useMarkers = (
 
                         return {
                             id: f.id,
-                            category: f.category, // 카테고리 직접 저장
+                            category: f.category,
                             marker,
                             infowindow,
                             data: f,
@@ -160,12 +167,14 @@ export const useMarkers = (
                 // 중단되지 않았을 때만 마커 업데이트
                 if (!abortController.signal.aborted) {
                     markersRef.current = newMarkers;
+                    isCreatingMarkersRef.current = false;
                     updateVisibleMarkers();
                 }
             } catch (error) {
                 if (error.name !== 'AbortError') {
-                    console.error('❌ [useMarkers] 마커 생성 오류:', error);
+                    console.error('[useMarkers] 마커 생성 오류:', error);
                 }
+                isCreatingMarkersRef.current = false;
             }
         };
 
@@ -215,6 +224,20 @@ export const useMarkers = (
             }
         };
     }, [mapInstance, updateVisibleMarkers]);
+
+    // 필터나 북마크 변경 시 마커 업데이트
+    useEffect(() => {
+        // 마커가 생성 중이거나 아직 생성되지 않았으면 스킵
+        if (
+            isCreatingMarkersRef.current ||
+            !mapInstance ||
+            markersRef.current.length === 0
+        ) {
+            return;
+        }
+        updateVisibleMarkers();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedFilter, bookmarkedIds]);
 
     // Cleanup markers on unmount - 최소한의 작업만 수행
     useEffect(() => {

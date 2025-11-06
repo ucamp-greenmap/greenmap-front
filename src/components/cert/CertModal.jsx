@@ -6,21 +6,23 @@ import {
     extractAmounts,
     extractApiData,
 } from '../../util/ocrUtils';
-import { verifyBike, verifyCar, verifyShop } from '../../util/certApi';
-import { useSelector } from 'react-redux';
+import {
+    verifyBike,
+    verifyEVCar,
+    verifyHCar,
+    verifyShop,
+} from '../../util/certApi';
 
 export default function CertModal({ type, onClose }) {
-    const memberId = useSelector((s) => s.user?.memberId) || 1;
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [ocrResult, setOcrResult] = useState('');
 
-    // 추출된 값 상태
     const [extractedPrice, setExtractedPrice] = useState(0);
     const [extractedCharge, setExtractedCharge] = useState(0);
     const [extractedDistance, setExtractedDistance] = useState(0);
-    const [detectedCategory, setDetectedCategory] = useState('');
+    const [detectedCategory, setDetectedCategory] = useState(''); // 제로웨이스트/재활용 구분용
     const [extraData, setExtraData] = useState({
         approveNum: '',
         bike_number: '',
@@ -28,6 +30,8 @@ export default function CertModal({ type, onClose }) {
         endTime: '',
         name: '',
     });
+
+    const isHydrogenCar = type.carType === 'H';
 
     // OCR 실행 및 데이터 추출
     async function processImageWithOCR(file) {
@@ -121,7 +125,6 @@ export default function CertModal({ type, onClose }) {
         }
     }
 
-    // API 전송 (실제 호출)
     const handleCertification = async () => {
         let isValid = false;
 
@@ -147,14 +150,14 @@ export default function CertModal({ type, onClose }) {
 
             if (type.id === 'bike') {
                 const body = {
-                    category: 'bike',
                     bike_number: parseInt(extraData.bike_number) || 0,
                     distance: Math.round(extractedDistance * 100) / 100,
                     start_time: extraData.startTime,
                     end_time: extraData.endTime,
                 };
-                result = await verifyBike(memberId, body);
+                result = await verifyBike(body);
             } else if (type.id === 'ev') {
+                // 전기차/수소차 분리 및 호출
                 let finalChargeAmount = 0;
                 let finalChargeFee = 0;
 
@@ -166,14 +169,18 @@ export default function CertModal({ type, onClose }) {
                     finalChargeFee = extractedPrice;
                 }
 
-                const body = {
-                    category: 'car',
+                const carBody = {
                     chargeAmount: finalChargeAmount,
                     chargeFee: finalChargeFee,
                     start_time: extraData.startTime,
                     end_time: extraData.endTime,
                 };
-                result = await verifyCar(memberId, body);
+
+                if (isHydrogenCar) {
+                    result = await verifyHCar(carBody);
+                } else {
+                    result = await verifyEVCar(carBody);
+                }
             } else if (type.id === 'z') {
                 const finalCategory = detectedCategory || 'zero';
                 const body = {
@@ -182,15 +189,16 @@ export default function CertModal({ type, onClose }) {
                     price: extractedPrice,
                     approveNum: parseInt(extraData.approveNum) || 0,
                 };
-                result = await verifyShop(memberId, body);
+                result = await verifyShop(body);
             }
 
-            // 결과 처리
             if (result.success) {
+                const carbonAmount =
+                    result.data.carbon_save || result.data.carbonSave || 0;
                 alert(
                     `✅ ${result.message}\n\n` +
                         ` 획득 포인트: ${result.data.point}P\n` +
-                        ` 탄소 감소량: ${result.data.carbonSave}kg`
+                        ` 탄소 감소량: ${carbonAmount}kg`
                 );
                 onClose();
             } else {
@@ -204,6 +212,7 @@ export default function CertModal({ type, onClose }) {
             setIsSubmitting(false);
         }
     };
+
     return (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto'>
             <div
@@ -232,19 +241,22 @@ export default function CertModal({ type, onClose }) {
 
                 {/* 모달 내용 - 스크롤 가능 */}
                 <div
-                    className='overflow-y-auto flex-1 p-6 pb-0 space-y-4'
-                    style={{ overscrollBehavior: 'contain' }}
+                    className='overflow-y-auto p-6 space-y-4'
+                    style={{
+                        overscrollBehavior: 'contain',
+                        maxHeight: 'calc(100vh - 400px)',
+                    }}
                 >
                     {/* 업로드 버튼 */}
                     <label
                         className={`
-        block w-full rounded-2xl p-6 text-center cursor-pointer transition-all flex-shrink-0
-        ${
-            isProcessing
-                ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-white border-2 border-green-500 hover:bg-green-50'
-        }
-    `}
+            block w-full rounded-2xl p-6 text-center cursor-pointer transition-all flex-shrink-0
+            ${
+                isProcessing
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : 'bg-white border-2 border-green-500 hover:bg-green-50'
+            }
+        `}
                     >
                         <Upload className='w-12 h-12 mx-auto mb-3 text-green-500' />
                         <div className='text-green-600 font-semibold'>
@@ -368,36 +380,35 @@ export default function CertModal({ type, onClose }) {
                                         인식된 텍스트
                                     </p>
                                 </div>
-                                <div className='bg-white rounded-xl p-3 max-h-40 overflow-y-auto text-sm text-gray-700 whitespace-pre-wrap'>
+                                <div className='bg-white rounded-xl p-3 max-h-20 overflow-y-auto text-sm text-gray-700 whitespace-pre-wrap'>
                                     {ocrResult}
                                 </div>
                             </div>
                         </div>
                     )}
+                </div>
 
-                    {/* 인증 요청 버튼 */}
-                    <div className='pt-2 pb-2'>
-                        <button
-                            onClick={handleCertification}
-                            disabled={
-                                isSubmitting ||
-                                isProcessing ||
-                                (type.id === 'bike' &&
-                                    extractedDistance <= 0) ||
-                                (type.id !== 'bike' &&
-                                    extractedCharge <= 0 &&
-                                    extractedPrice <= 0)
-                            }
-                            className={`w-full py-4 rounded-xl font-bold transition-all 
+                {/* 인증 요청 버튼 - 하단 고정 */}
+                <div className='p-6 pt-4 border-t border-gray-200 flex-shrink-0 bg-white rounded-b-3xl'>
+                    <button
+                        onClick={handleCertification}
+                        disabled={
+                            isSubmitting ||
+                            isProcessing ||
+                            (type.id === 'bike' && extractedDistance <= 0) ||
+                            (type.id !== 'bike' &&
+                                extractedCharge <= 0 &&
+                                extractedPrice <= 0)
+                        }
+                        className={`w-full py-4 rounded-xl font-bold transition-all
     ${
         isSubmitting || isProcessing
             ? 'bg-gray-400 text-white cursor-not-allowed'
             : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
     }`}
-                        >
-                            {isSubmitting ? '인증 처리 중...' : '인증 요청하기'}
-                        </button>
-                    </div>
+                    >
+                        {isSubmitting ? '인증 처리 중...' : '인증 요청하기'}
+                    </button>
                 </div>
             </div>
         </div>

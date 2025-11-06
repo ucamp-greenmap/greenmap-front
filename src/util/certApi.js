@@ -1,24 +1,20 @@
-const BASE_URL = 'https://greenmap-api-1096735261131.asia-northeast3.run.app';
+import api from '../api/axios';
 
 // 인증 요청 (공통)
-async function sendVerification(url, memberId, body) {
+async function sendVerification(url, body) {
+    const token = localStorage.getItem('token');
+
     try {
-        console.log(`📤 API 요청: ${BASE_URL}${url}`);
+        console.log(`📤 API 요청: ${url}`);
         console.log('📦 body:', body);
 
-        const response = await fetch(`${BASE_URL}${url}`, {
-            method: 'POST',
+        const response = await api.post(url, body, {
             headers: {
-                'Content-Type': 'application/json',
-                memberId: memberId.toString(),
+                Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(body),
         });
 
-        console.log('📥 Response Status:', response.status);
-
-        const result = await response.json();
-        console.log('📥 Response Data:', result);
+        const result = response.data;
 
         if (result.status === 'SUCCESS') {
             return {
@@ -33,41 +29,66 @@ async function sendVerification(url, memberId, body) {
             };
         }
     } catch (error) {
-        console.error('❌ API 요청 오류:', error);
+        const errorDetails = error.response?.data
+            ? JSON.stringify(error.response.data)
+            : error.message;
+
+        console.error('❌ API 요청 오류:', errorDetails);
+
+        let message = '네트워크 오류가 발생했습니다.';
+        if (error.response?.data?.message) {
+            message = error.response.data.message;
+        } else if (error.response?.status) {
+            message = `서버 오류 (${error.response.status})가 발생했습니다.`;
+        }
+
         return {
             success: false,
-            message: '네트워크 오류가 발생했습니다.',
+            message: message,
         };
     }
 }
 
 // 따릉이 인증
-export async function verifyBike(memberId, data) {
-    return sendVerification('/verification/bike', memberId, data);
+export async function verifyBike(data) {
+    return sendVerification('/verification/bike', data);
 }
 
 // 전기차 인증
-export async function verifyCar(memberId, data) {
-    return sendVerification('/verification/car', memberId, data);
+export async function verifyEVCar(data) {
+    const evCarBody = {
+        ...data,
+        category: 'EVCAR',
+    };
+    return sendVerification('/verification/car', evCarBody);
+}
+
+// 수소차 인증 (HCAR)
+export async function verifyHCar(data) {
+    const hCarBody = {
+        ...data,
+        category: 'HCAR',
+    };
+    return sendVerification('/verification/car', hCarBody);
 }
 
 // 상점 인증
-export async function verifyShop(memberId, data) {
-    return sendVerification('/verification/shop', memberId, data);
+export async function verifyShop(data) {
+    return sendVerification('/verification/shop', data);
 }
 
 // 이번 달 인증 통계 조회
-export async function fetchMonthlyStats(memberId) {
+export async function fetchMonthlyStats() {
+    const token = localStorage.getItem('token');
+
     try {
-        const response = await fetch(`${BASE_URL}/verification/monthly`, {
-            method: 'GET',
+        const response = await api.get('/verification/month', {
             headers: {
-                'Content-Type': 'application/json',
-                memberId: memberId.toString(),
+                Authorization: `Bearer ${token}`,
             },
         });
 
-        const result = await response.json();
+        const result = response.data;
 
         if (result.status === 'SUCCESS') {
             return {
@@ -83,7 +104,7 @@ export async function fetchMonthlyStats(memberId) {
             };
         }
     } catch (error) {
-        console.error('API 요청 오류:', error);
+        console.error('API 요청 오류:', error.response?.data || error.message);
         return {
             success: false,
             data: { verifyTimes: 0, pointSum: 0 },
@@ -93,17 +114,17 @@ export async function fetchMonthlyStats(memberId) {
 }
 
 // 최근 인증 내역 조회
-export async function fetchCertificationHistory(memberId) {
+export async function fetchCertificationHistory() {
+    const token = localStorage.getItem('token');
+
     try {
-        const response = await fetch(`${BASE_URL}/verification/history`, {
-            method: 'GET',
+        const response = await api.get('/verification/history', {
             headers: {
-                'Content-Type': 'application/json',
-                memberId: memberId.toString(),
+                Authorization: `Bearer ${token}`,
             },
         });
 
-        const result = await response.json();
+        const result = response.data;
 
         if (result.status === 'SUCCESS') {
             return {
@@ -119,7 +140,7 @@ export async function fetchCertificationHistory(memberId) {
             };
         }
     } catch (error) {
-        console.error('API 요청 오류:', error);
+        console.error('API 요청 오류:', error.response?.data || error.message);
         return {
             success: false,
             data: [],

@@ -27,12 +27,23 @@ export function BottomNavigation({ active = 'home', onChange = () => {} }) {
                 return (
                     <button
                         key={t.id}
-                        onClick={() => onChange(t.id)}
+            
+                        onClick={() => {
+                        if (t.id === 'mypage') {
+                            const token = localStorage.getItem("token");
+                            if (!token) {
+                            // 로그인 페이지로 보내기
+                             return onChange('login');
+                            }
+                        }
+                        onChange(t.id);
+                        }}
                         aria-current={isActive ? 'page' : undefined}
                         aria-label={t.label}
                         className={`flex-1 flex flex-col items-center gap-1 py-2 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] ${
                             isActive ? 'text-[#4CAF50]' : 'text-gray-400'
                         }`}
+                        
                     >
                         <Icon className='w-6 h-6' aria-hidden='true' />
                         <span className='text-xs'>{t.label}</span>
