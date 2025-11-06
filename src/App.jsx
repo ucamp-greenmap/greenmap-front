@@ -22,6 +22,7 @@ import PointExchangeScreen from './components/screens/PointExchangeScreen';
 import RankingScreen from './components/screens/RankingScreen';
 import LoginSignupScreen from './components/screens/LoginSignupScreen';
 import LoginSuccess from './components/screens/LoginSuccess';
+import EditProfile from './components/screens/EditProfileScreen'
 // import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
@@ -35,7 +36,7 @@ const TAB_TO_PATH = {
     map: '/map',
     cert: '/verification',
     challenge: '/challenge',
-    
+    'edit-profile': '/edit-profile',
     mypage: '/mypage',
     points: '/points',
     'point-exchange': '/point-exchange',
@@ -118,6 +119,11 @@ export default function App() {
                     <Route
                         path='/login'
                         element={<LoginSignupScreen onNavigate={navigate} />}
+                    />
+                    <Route
+                        path='/edit-profile'
+                        element={<EditProfile onNavigate={navigate}/>}
+                    
                     />
                     <Route path='/login/success' element={<LoginSuccess />} />
                     {/* <Route

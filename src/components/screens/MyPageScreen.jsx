@@ -71,32 +71,49 @@ export default function MyPageScreen({ onNavigate }) {
     return (
         <div className='min-h-screen bg-gray-50 pb-24'>
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 pt-8 pb-12'>
-                <div className='flex items-center justify-between mb-6'>
+                <div className='flex items-center justify-between mb-8'>
                     <h1 className='text-2xl font-bold text-white'>
                         마이페이지
                     </h1>
-                    <button
-                        className='p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors'
-                        aria-label='설정 열기/닫기'
-                        onClick={() => setShowSetting((prev) => !prev)}
-                    >
-                        <img
-                            src='https://img.icons8.com/ios-filled/50/FFFFFF/settings.png'
-                            alt='설정'
-                            className='w-6 h-6'
-                        />
-                    </button>
+                    <div className="relative">
+  <button
+    className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+    onClick={() => setShowSetting((prev) => !prev)}
+  >
+    <img
+      src="https://img.icons8.com/ios-filled/50/FFFFFF/settings.png"
+      alt="설정"
+      className="w-6 h-6"
+    />
+  </button>
+
+  {showSetting && (
+    <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg overflow-hidden z-50 animate-fadeIn">
+      <button
+        onClick={() => {
+          navigate('edit-profile');
+          setShowSetting(false);
+        }}
+        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+      >
+        회원정보 수정
+      </button>
+    </div>
+  )}
+</div>
+
+
                 </div>
-                {showSetting && (
+                {/* {showSetting && (
                     <div className='bg-white/10 backdrop-blur-sm rounded-2xl p-4 space-y-2 mb-6'>
                         <button
-                            onClick={() => navigate('login')}
+                            onClick={() => navigate('edit-profile')}
                             className='w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/20 transition-colors text-white'
                         >
                             👤 회원 계정
                         </button>
                     </div>
-                )}
+                )} */}
 
                 <div className='bg-white rounded-3xl p-6 shadow-lg'>
                     <div className='flex items-center gap-4 mb-6'>
