@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { getCategoryLabel } from '../../util/mapHelpers';
+import { formatDistance, sortByDistance } from '../../util/location';
 
 export default function FacilityList({
     facilities,
@@ -10,6 +11,11 @@ export default function FacilityList({
 }) {
     // 북마크 조회 최적화를 위한 Set 생성
     const bookmarkSet = useMemo(() => new Set(bookmarkedIds), [bookmarkedIds]);
+
+    // 거리순으로 정렬된 시설 목록
+    const sortedFacilities = useMemo(() => {
+        return sortByDistance(facilities);
+    }, [facilities]);
 
     // 로딩 중일 때 로딩 메시지 표시
     if (isLoading) {
@@ -27,7 +33,7 @@ export default function FacilityList({
     }
 
     // 시설이 없을 때 메시지 표시
-    if (facilities.length === 0) {
+    if (sortedFacilities.length === 0) {
         return (
             <div className='flex flex-col items-center justify-center py-8 text-gray-500'>
                 <svg
@@ -56,11 +62,11 @@ export default function FacilityList({
             <div className='flex items-center justify-between mb-3 px-1'>
                 <h3 className='text-base font-bold'>시설 목록</h3>
                 <span className='text-sm text-gray-500'>
-                    {facilities.length}개
+                    {sortedFacilities.length}개
                 </span>
             </div>
             <ul className='space-y-2' role='list' aria-label='시설 목록'>
-                {facilities.map((facility) => {
+                {sortedFacilities.map((facility) => {
                     const isBookmarked = bookmarkSet.has(facility.id);
 
                     return (
@@ -74,8 +80,23 @@ export default function FacilityList({
                                 <div className='font-semibold text-gray-800 truncate'>
                                     {facility.name}
                                 </div>
-                                <div className='text-sm text-gray-500'>
-                                    {getCategoryLabel(facility.category)}
+                                <div className='flex items-center gap-2 text-sm text-gray-500'>
+                                    <span>
+                                        {getCategoryLabel(facility.category)}
+                                    </span>
+                                    {facility.distance && (
+                                        <>
+                                            <span className='text-gray-300'>
+                                                •
+                                            </span>
+                                            <span className='text-blue-600 font-medium'>
+                                                📍{' '}
+                                                {formatDistance(
+                                                    facility.distance
+                                                )}
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                             <div className='flex items-center gap-2 flex-shrink-0 ml-3'>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { getCategoryLabel } from '../../util/mapHelpers';
+import { formatDistance } from '../../util/location';
 
 export default function FacilityDetail({
     facility,
@@ -61,8 +62,9 @@ export default function FacilityDetail({
                     <h4 className='text-sm font-semibold text-gray-600 mb-1'>
                         거리
                     </h4>
-                    <p className='text-gray-800'>
-                        약 {(facility.distance / 1000).toFixed(1)}km
+                    <p className='text-gray-800 flex items-center gap-1'>
+                        <span className='text-blue-600'>📍</span>
+                        <span>약 {formatDistance(facility.distance)}</span>
                     </p>
                 </div>
             )}

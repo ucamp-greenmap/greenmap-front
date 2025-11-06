@@ -9,6 +9,8 @@ import {
     searchCachedPlaces,
     convertPlaceToFacility,
 } from '../../util/placeApi';
+import { formatDistance, calculateDistance } from '../../util/location';
+import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 
 const ECO_TIPS = [
     {
@@ -46,6 +48,22 @@ export default function HomeScreen({ onNavigate }) {
     const [showSearchResults, setShowSearchResults] = useState(false);
     const searchInputRef = useRef(null);
     const searchResultsRef = useRef(null);
+
+    // 현재 위치 가져오기
+    const {
+        currentLocation,
+        isLoading: isLocationLoading,
+        fetchCurrentLocation,
+    } = useCurrentLocation();
+
+    // 컴포넌트 마운트 시 현재 위치 가져오기
+    useEffect(() => {
+        if (!currentLocation && !isLocationLoading) {
+            fetchCurrentLocation().catch(() => {
+                // 위치 가져오기 실패 시 기본 위치 사용 (handleSearchChange에서 처리)
+            });
+        }
+    }, [currentLocation, isLocationLoading, fetchCurrentLocation]);
 
     useEffect(() => {
         const onFocus = () => dispatch(fetchPointInfo());
@@ -86,7 +104,29 @@ export default function HomeScreen({ onNavigate }) {
         if (query.trim().length >= 1) {
             // 최소 1글자 이상 입력 시 검색
             const results = searchCachedPlaces(query);
-            setSearchResults(results);
+
+            // 기본 위치 (마곡 - LG사이언스파크 근처)
+            const defaultLocation = {
+                lat: 37.56182106449056,
+                lng: 126.83556624636658,
+            };
+
+            // 현재 위치 또는 기본 위치 사용
+            const locationToUse = currentLocation || defaultLocation;
+
+            // 항상 위치 기반으로 거리 재계산 (백엔드 distance는 km 단위라서 무시)
+            const resultsWithDistance = results.map((place) => {
+                const distance = calculateDistance(
+                    locationToUse.lat,
+                    locationToUse.lng,
+                    place.latitude,
+                    place.longitude
+                );
+
+                return { ...place, distance };
+            });
+
+            setSearchResults(resultsWithDistance);
             setShowSearchResults(true);
         } else {
             setSearchResults([]);
@@ -151,7 +191,7 @@ export default function HomeScreen({ onNavigate }) {
                     <input
                         ref={searchInputRef}
                         type='text'
-                        placeholder='지도 검색... (예: 카페, 재활용센터)'
+                        placeholder='지도 검색... (예: LG사이언스파크 E13, 서울식물원 )'
                         value={searchQuery}
                         onChange={handleSearchChange}
                         onFocus={() =>
@@ -175,9 +215,6 @@ export default function HomeScreen({ onNavigate }) {
                                 <div className='text-xs text-gray-500 px-3 py-2 flex items-center justify-between'>
                                     <span>
                                         검색 결과 {searchResults.length}개
-                                    </span>
-                                    <span className='text-[#4CAF50]'>
-                                        💾 캐시 데이터
                                     </span>
                                 </div>
                                 {searchResults.map((place, index) => (
@@ -206,7 +243,10 @@ export default function HomeScreen({ onNavigate }) {
                                             </div>
                                             {place.distance && (
                                                 <div className='text-xs text-[#4CAF50] mt-1'>
-                                                    📍 {place.distance}m
+                                                    📍{' '}
+                                                    {formatDistance(
+                                                        place.distance
+                                                    )}
                                                 </div>
                                             )}
                                         </div>

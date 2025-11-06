@@ -10,7 +10,10 @@ import { toggleBookmark as toggleBookmarkAction } from '../../store/slices/facil
 import { useKakaoMap } from '../../hooks/useKakaoMap';
 import { useMarkers } from '../../hooks/useMarkers';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
-import { createCurrentLocationOverlay } from '../../util/location';
+import {
+    createCurrentLocationOverlay,
+    calculateDistancesForFacilities,
+} from '../../util/location';
 import { getPlaces, convertPlaceToFacility } from '../../util/placeApi';
 import FilterBar from '../map/FilterBar';
 import CurrentLocationButton from '../map/CurrentLocationButton';
@@ -25,18 +28,6 @@ export default function MapScreen() {
     // 장소 데이터 상태
     const [places, setPlaces] = useState([]);
     const [placesLoading, setPlacesLoading] = useState(false);
-
-    // 장소 시설 데이터 메모이제이션
-    const placeFacilities = useMemo(() => {
-        if (places.length === 0) return [];
-        return places.map(convertPlaceToFacility);
-    }, [places]);
-
-    // 모든 시설 데이터
-    const allFacilities = useMemo(() => {
-        return placeFacilities;
-    }, [placeFacilities]);
-
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [selectedFacility, setSelectedFacility] = useState(null);
 
@@ -46,12 +37,30 @@ export default function MapScreen() {
     const currentLocationOverlayRef = useRef(null);
     const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_KEY || '';
 
-    // Current location hook
+    // Current location hook - useMemo보다 먼저 호출
     const {
         currentLocation,
         isLoading: isLocationLoading,
         fetchCurrentLocation,
     } = useCurrentLocation();
+
+    // 장소 시설 데이터 메모이제이션 (거리 계산 포함)
+    const placeFacilities = useMemo(() => {
+        if (places.length === 0) return [];
+        const facilities = places.map(convertPlaceToFacility);
+
+        // 현재 위치가 있으면 거리 계산
+        if (currentLocation) {
+            return calculateDistancesForFacilities(facilities, currentLocation);
+        }
+
+        return facilities;
+    }, [places, currentLocation]);
+
+    // 모든 시설 데이터
+    const allFacilities = useMemo(() => {
+        return placeFacilities;
+    }, [placeFacilities]);
 
     // Close detail view
     const closeDetail = useCallback(() => {
@@ -127,10 +136,8 @@ export default function MapScreen() {
                 infowindow.open(mapInstance, marker);
                 currentInfoWindowRef.current = infowindow;
             }
-            // markersRef는 ref이므로 의존성 배열에 추가하지 않음
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         },
-        [mapInstance]
+        [mapInstance, markersRef]
     );
 
     // 검색에서 선택된 시설로 자동 포커스
