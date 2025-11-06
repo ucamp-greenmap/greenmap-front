@@ -23,11 +23,12 @@ import RankingScreen from './components/screens/RankingScreen';
 import LoginScreen from './components/screens/LoginScreen';
 import LoginSignupScreen from './components/screens/LoginSignupScreen'
 import LoginSuccess from './components/screens/LoginSuccess';
-// import BadgeScreen from './components/screens/BadgeScreen';
+import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
+import AddCallengScreen from './components/screens/AddCallengScreen';
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -45,6 +46,7 @@ const TAB_TO_PATH = {
     FAQ: '/FAQ',
     'cert-history': '/cert-history',
     'carbon-info': '/carbon-info',
+    addChal: '/addChallenge',
 };
 
 export default function App() {
@@ -120,10 +122,10 @@ export default function App() {
                         element={<LoginSignupScreen onNavigate={navigate} />}
                     />
                     <Route path='/login/success' element={<LoginSuccess />} />
-                    {/* <Route
+                    <Route
                         path='/badge'
                         element={<BadgeScreen onNavigate={navigate} />}
-                    /> */}
+                    />
                     <Route
                         path='/carbon-info'
                         element={<CarbonInfoScreen onNavigate={navigate} />}
@@ -139,7 +141,16 @@ export default function App() {
                         element={<FaqScreen onNavigate={navigate} />}
                     />
                     {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
-                    <Route path='*' element={<Navigate to='/' replace />} />
+                    <Route 
+                        path='*' 
+                        element={<Navigate to='/' replace />} 
+                    />
+                    <Route
+                        path='/addChallenge'
+                        element={
+                            <AddCallengScreen onNavigate={navigate} />
+                        }
+                    />
                 </Routes>
 
                 <BottomNavigation

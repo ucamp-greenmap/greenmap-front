@@ -2,9 +2,19 @@ import React, { useState } from 'react';
 import api from '../../api/axios';
 import CertModal from '../cert/CertModal';
 import { certTypes } from '../../util/certConfig';
+import { useDispatch } from 'react-redux';
+import { setActiveTab } from '../../store/slices/appSlice';
 
 
 export default function ChallengeScreen({ onNavigate }) {
+    const dispatch = useDispatch();
+
+    const navigate = (tab) => {
+      if (typeof onNavigate === 'function') return onNavigate(tab);
+      dispatch(setActiveTab(tab));
+    };
+
+
   const [filter, setFilter] = React.useState('ongoing');
 
   const [available, setAvailable] = React.useState([]);
@@ -135,6 +145,17 @@ export default function ChallengeScreen({ onNavigate }) {
         ))
       }
     </div>
+
+    <button
+      aria-label="quick-action"
+      className="fixed top-10 left-10 z-50 w-16 h-16 bg-gradient-to-br from-[#6AA431] to-[#2E7D32] rounded-lg shadow-2xl flex items-center justify-center text-white text-3xl font-extrabold select-none transform transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+      onClick={() => navigate('addChal')}
+      // 어드민 일때만 보이기
+      // 로그인 어드민 확인 
+      // 토큰확인 -> 로봇인가요?
+    >
+      +
+    </button>
   </div>
   </>
 
@@ -338,7 +359,10 @@ function ChallengeCard({ challengeId, memberChallengeId, challengeName, descript
 
 
       {showModal && selectedType && (
-          <CertModal type={selectedType} onClose={closeModal} />
+          <CertModal 
+            type={selectedType} 
+            onClose={closeModal} 
+            memberChallengeId={memberChallengeId} />
       )}
 
       
