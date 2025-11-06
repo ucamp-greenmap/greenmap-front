@@ -18,13 +18,11 @@ export default function EcoNewsList() {
     const newsImages = [news1, news2, news3, news4];
 
     const [newsList, setNewsList] = useState([]);
-
-    // 기존의 읽은 기사 상태 및 토스트 상태
-    const [readArticles, setReadArticles] = useState([]);
+    const [leftTimes, setLeftTimes] = useState(3); // 서버에서 받은 남은 횟수
     const [toast, setToast] = useState(null);
 
     // 로그인되면 바꾸기
-    const CURRENT_MEMBER_ID = 1;
+    // const CURRENT_MEMBER_ID = 1;
 
     // ------------------------------------
     // 서버에서 뉴스 목록을 불러오는 함수 (GET /news)
@@ -34,8 +32,15 @@ export default function EcoNewsList() {
         setError(null);
         try {
             const response = await api.get('/news');
-
             const result = response.data;
+
+            console.log('=== API 전체 응답 ===', result);
+            console.log('=== data 객체 ===', result.data);
+            console.log('=== items 배열 ===', result.data?.items);
+            console.log(
+                '=== items[0] (첫번째 뉴스) ===',
+                result.data?.items?.[0]
+            );
 
             // 1. 서버 응답의 status 필드 확인
             if (result.status !== 'SUCCESS') {
@@ -45,8 +50,18 @@ export default function EcoNewsList() {
             }
 
             // 2. 성공 시 데이터 저장
-            if (result.data?.items && Array.isArray(result.data.items)) {
-                setNewsList(result.data.items);
+            if (result.data) {
+                // leftTimes 추출 (있으면)
+                if (typeof result.data.leftTimes === 'number') {
+                    setLeftTimes(result.data.leftTimes);
+                }
+
+                // items 배열에서 뉴스 목록 추출
+                if (result.data.items && Array.isArray(result.data.items)) {
+                    setNewsList(result.data.items);
+                } else {
+                    setNewsList([]);
+                }
             } else {
                 setNewsList([]);
             }
@@ -65,9 +80,8 @@ export default function EcoNewsList() {
     // ------------------------------------
     // 뉴스 읽기 처리 및 포인트 적립 (POST /news)
     // ------------------------------------
-
     const handleReadArticle = async (articleTitle) => {
-        if (readArticles.length >= 3) {
+        if (leftTimes <= 0) {
             setToast('오늘의 뉴스 보상 한도에 도달했습니다');
             setTimeout(() => setToast(null), 2000);
             return;
@@ -75,7 +89,6 @@ export default function EcoNewsList() {
 
         try {
             const response = await api.post('/news', {
-                memberId: CURRENT_MEMBER_ID,
                 title: articleTitle,
             });
 
@@ -88,7 +101,16 @@ export default function EcoNewsList() {
             }
 
             if (result.status === 'SUCCESS') {
-                setReadArticles((prev) => [...prev, articleTitle]);
+                setLeftTimes((prev) => Math.max(0, prev - 1));
+
+                setNewsList((prev) =>
+                    prev.map((article) =>
+                        article.title === articleTitle
+                            ? { ...article, isRead: true }
+                            : article
+                    )
+                );
+
                 dispatch(
                     addPoints({
                         points: 5,
@@ -96,6 +118,7 @@ export default function EcoNewsList() {
                         category: '뉴스',
                     })
                 );
+
                 setToast('+5P 획득');
             }
         } catch (err) {
@@ -112,8 +135,6 @@ export default function EcoNewsList() {
     useEffect(() => {
         fetchNews();
     }, [fetchNews]);
-
-    const todayReadsRemaining = Math.max(0, 3 - readArticles.length);
 
     if (isLoading) {
         return (
@@ -140,77 +161,85 @@ export default function EcoNewsList() {
                     <h2 className='text-gray-900 font-semibold'>환경 뉴스</h2>
                 </div>
                 <div className='text-[#4CAF50] text-sm'>
-                    {todayReadsRemaining > 0
-                        ? `기사당 +5P (오늘 ${todayReadsRemaining}개 남음)`
+                    {leftTimes > 0
+                        ? `기사당 +5P (오늘 ${leftTimes}개 남음)`
                         : '오늘 한도 달성'}
                 </div>
             </div>
 
             {/* 리스트 */}
             <div className='space-y-3'>
-                {newsList.map((article, index) => {
-                    const isRead =
-                        article.read || readArticles.includes(article.title);
-                    const canRead = !isRead && readArticles.length < 3;
-                    const cleanTitle = article.title.replace(/<[^>]*>/g, '');
+                {newsList.length === 0 ? (
+                    <div className='text-center py-8 text-gray-500'>
+                        불러온 뉴스가 없습니다.
+                    </div>
+                ) : (
+                    newsList.map((article, index) => {
+                        const isRead = article.isRead === true;
+                        // 포인트 적립 가능 여부
+                        const canEarnPoints = !isRead && leftTimes > 0;
+                        const cleanTitle = article.title.replace(
+                            /<[^>]*>/g,
+                            ''
+                        );
 
-                    return (
-                        <a
-                            key={article.link}
-                            href={article.link}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            onClick={(e) => {
-                                if (!canRead) {
-                                    e.preventDefault();
-                                    return;
-                                }
-                                handleReadArticle(cleanTitle, 5);
-                            }}
-                            className={`flex items-start w-full bg-white rounded-2xl overflow-hidden p-3 shadow-sm hover:shadow-md transition-all border-2 ${
-                                isRead
-                                    ? 'border-[#4CAF50] opacity-90'
-                                    : 'border-gray-100'
-                            } ${
-                                !canRead
-                                    ? 'cursor-not-allowed'
-                                    : 'cursor-pointer'
-                            }`}
-                        >
-                            <img
-                                src={newsImages[index % 4]}
-                                alt={cleanTitle}
-                                loading='lazy'
-                                className='w-20 h-20 object-cover rounded-xl flex-shrink-0 mr-3'
-                            />
-                            <div className='flex-1 text-left'>
-                                <div className='flex items-start justify-between mb-1'>
-                                    <span className='bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-2 py-0.5 rounded-full text-xs'>
-                                        뉴스
-                                    </span>
-                                    {isRead && (
-                                        <div className='flex items-center gap-1 text-[#4CAF50] text-sm font-semibold'>
-                                            <span>+5P</span>
-                                        </div>
-                                    )}
+                        return (
+                            <a
+                                key={article.link}
+                                href={article.link}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                onClick={() => {
+                                    if (canEarnPoints) {
+                                        handleReadArticle(cleanTitle);
+                                    } else if (leftTimes <= 0 && !isRead) {
+                                        setToast(
+                                            '오늘의 뉴스 보상 한도에 도달했습니다. '
+                                        );
+                                        setTimeout(() => setToast(null), 2500);
+                                    }
+                                }}
+                                className={`flex items-start w-full bg-white rounded-2xl overflow-hidden p-3 shadow-sm hover:shadow-md transition-all border-2 ${
+                                    isRead
+                                        ? 'border-[#4CAF50] opacity-90'
+                                        : 'border-gray-100'
+                                } ${'cursor-pointer'}`}
+                            >
+                                <img
+                                    src={newsImages[index % 4]}
+                                    alt={cleanTitle}
+                                    loading='lazy'
+                                    className='w-20 h-20 object-cover rounded-xl flex-shrink-0 mr-3'
+                                />
+                                <div className='flex-1 text-left'>
+                                    <div className='flex items-start justify-between mb-1'>
+                                        <span className='bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-2 py-0.5 rounded-full text-xs'>
+                                            뉴스
+                                        </span>
+                                        {isRead && (
+                                            <div className='flex items-center gap-1 text-[#4CAF50] text-sm font-semibold'>
+                                                <span>+5P</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <h3 className='text-gray-900 text-sm mb-1 line-clamp-2'>
+                                        {cleanTitle}
+                                    </h3>
+                                    <p className='text-gray-500 text-xs mb-2 line-clamp-1'>
+                                        {article.description.replace(
+                                            /<[^>]*>/g,
+                                            ''
+                                        )}
+                                    </p>
+                                    <div className='flex items-center justify-between text-gray-400 text-xs'>
+                                        <span>출처: 네이버 뉴스</span>
+                                        <span>›</span>
+                                    </div>
                                 </div>
-                                <h3 className='text-gray-900 text-sm mb-1 line-clamp-2'>
-                                    {cleanTitle}
-                                </h3>
-                                <p className='text-gray-500 text-xs mb-2 line-clamp-1'>
-                                    {article.description.replace(
-                                        /<[^>]*>/g,
-                                        ''
-                                    )}
-                                </p>
-                                <div className='flex items-center justify-between text-gray-400 text-xs'>
-                                    <span>출처: 네이버 뉴스</span>
-                                    <span>›</span>
-                                </div>
-                            </div>
-                        </a>
-                    );
-                })}
+                            </a>
+                        );
+                    })
+                )}
             </div>
 
             {/** Toast 알림 */}
