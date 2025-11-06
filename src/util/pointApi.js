@@ -28,7 +28,6 @@ import api from '../api/axios';
  * @property {string} type - 포인트 타입 (USED, GET 등)
  * @property {number} point - 포인트 양
  * @property {string} createdAt - 생성 날짜
- * @property {string} [reason] - 사유 (선택)
  */
 
 /**
@@ -67,7 +66,6 @@ import api from '../api/axios';
  * await spendPoint(5000, 'CASH');
  */
 export async function spendPoint(point, type) {
-    console.log('포인트 사용 함수 호출:', point, type);
     try {
         const token = localStorage.getItem('token');
         const response = await api.post(
@@ -156,6 +154,7 @@ export async function getPointShop() {
 export async function getUsedPointLogs() {
     try {
         const token = localStorage.getItem('token');
+
         const response = await api.get('/point/used', {
             headers: {
                 Authorization: `Bearer ${token}`,
