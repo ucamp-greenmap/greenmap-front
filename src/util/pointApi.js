@@ -28,7 +28,6 @@ import api from '../api/axios';
  * @property {string} type - 포인트 타입 (USED, GET 등)
  * @property {number} point - 포인트 양
  * @property {string} createdAt - 생성 날짜
- * @property {string} [reason] - 사유 (선택)
  */
 
 /**
@@ -67,7 +66,6 @@ import api from '../api/axios';
  * await spendPoint(5000, 'CASH');
  */
 export async function spendPoint(point, type) {
-    console.log('포인트 사용 함수 호출:', point, type);
     try {
         const token = localStorage.getItem('token');
         const response = await api.post(
@@ -156,6 +154,7 @@ export async function getPointShop() {
 export async function getUsedPointLogs() {
     try {
         const token = localStorage.getItem('token');
+
         const response = await api.get('/point/used', {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -205,11 +204,19 @@ export async function getPointRanking() {
 export async function getPointDetail(type = 'All') {
     try {
         const token = localStorage.getItem('token');
+        console.log('🚀 [API] getPointDetail called with type:', type);
+
         const response = await api.get('/point', {
             params: { type },
             headers: {
                 Authorization: `Bearer ${token}`,
             },
+        });
+
+        console.log('📥 [API] getPointDetail response:', {
+            status: response.data.status,
+            data: response.data.data,
+            fullResponse: response.data,
         });
 
         if (response.data.status === 'SUCCESS') {
@@ -218,7 +225,8 @@ export async function getPointDetail(type = 'All') {
             throw new Error(response.data.message || '포인트 상세 조회 실패');
         }
     } catch (error) {
-        console.error('포인트 상세 조회 오류:', error);
+        console.error('❌ [API] 포인트 상세 조회 오류:', error);
+        console.error('Error response:', error.response?.data);
         throw error;
     }
 }

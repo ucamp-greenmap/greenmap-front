@@ -1,14 +1,17 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+const initialOnboardingCompleted =
+    sessionStorage.getItem('onboardingCompleted') === 'true';
+
 const appSlice = createSlice({
     name: 'app',
     initialState: {
-        appState: 'splash', // 'splash' | 'onboarding' | 'main'
+        appState: initialOnboardingCompleted ? 'main' : 'splash', // 'splash' | 'onboarding' | 'main'
+
         activeTab: 'home',
         isOnline: true,
         lastSyncTime: null,
-        onboardingCompleted:
-            sessionStorage.getItem('onboardingCompleted') === 'true',
+        onboardingCompleted: initialOnboardingCompleted,
     },
     reducers: {
         setAppState: (state, action) => {
@@ -40,3 +43,4 @@ export const {
 } = appSlice.actions;
 
 export default appSlice.reducer;
+

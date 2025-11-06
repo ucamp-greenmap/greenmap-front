@@ -36,10 +36,14 @@ const ECO_TIPS = [
 export default function HomeScreen({ onNavigate }) {
     const dispatch = useDispatch();
 
-    // Redux에서 상태 가져오기
+    useEffect(() => {
+        const onFocus = () => dispatch(fetchPointInfo());
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
+    }, [dispatch]);
+
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
-    // 🔄 처음 화면 열릴 때 사용자 정보 가져오기
     useEffect(() => {
         dispatch(fetchPointInfo());
     }, [dispatch]);
@@ -148,14 +152,19 @@ export default function HomeScreen({ onNavigate }) {
                                     </p>
                                     <div className='flex items-baseline gap-2'>
                                         <span className='text-4xl font-bold'>
-                                            {stats.point}
+                                            {Number(
+                                                stats.point
+                                            ).toLocaleString()}
                                         </span>
                                         <span className='text-lg'>P</span>
                                     </div>
                                 </div>
-                                <div className='bg-white/20 p-3 rounded-2xl backdrop-blur-sm'>
+                                <button
+                                    onClick={() => navigate('badge')}
+                                    className='bg-white/20 p-3 rounded-2xl backdrop-blur-sm hover:bg-white/30 transition-colors'
+                                >
                                     <TrophyIcon className='w-6 h-6 text-white' />
-                                </div>
+                                </button>
                             </div>
 
                             <div className='bg-white/20 rounded-2xl p-3 backdrop-blur-sm mb-4'>

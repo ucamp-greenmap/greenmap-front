@@ -1,21 +1,45 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchMyPageData } from '../../store/slices/userSlice';
 import { logout } from '../../store/slices/userSlice';
+import { calculateEarnedBadges } from '../../store/slices/badgeSlice';
 
 export default function MyPageScreen({ onNavigate }) {
     const dispatch = useDispatch();
     const { isLoggedIn, profile, stats, ranking, loading, error } = useSelector(
         (s) => s.user
     );
+    const { allBadges, earnedIds } = useSelector((state) => state.badge);
 
     const [showSetting, setShowSetting] = React.useState(true);
 
+    // 현재 획득한 최고 레벨 뱃지 찾기
+    const myBadge = useMemo(() => {
+        const earnedBadges = allBadges.filter((badge) =>
+            earnedIds.includes(badge.id)
+        );
+
+        if (earnedBadges.length === 0) {
+            return allBadges[0] || { name: '첫 발자국' };
+        }
+
+        return earnedBadges.reduce((highest, current) => {
+            return current.requiredPoint > highest.requiredPoint
+                ? current
+                : highest;
+        }, earnedBadges[0]);
+    }, [allBadges, earnedIds]);
 
     useEffect(() => {
         dispatch(fetchMyPageData());
     }, [dispatch]);
+
+    useEffect(() => {
+        if (stats.totalPoint !== undefined && stats.totalPoint !== null) {
+            dispatch(calculateEarnedBadges(stats.totalPoint));
+        }
+    }, [dispatch, stats.totalPoint]);
 
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
@@ -25,10 +49,9 @@ export default function MyPageScreen({ onNavigate }) {
     const handleLogout = () => {
         if (window.confirm('로그아웃 하시겠습니까?')) {
             dispatch(logout());
-            navigate('home'); 
+            navigate('home');
         }
     };
-
 
     if (loading) {
         return (
@@ -40,7 +63,6 @@ export default function MyPageScreen({ onNavigate }) {
             </div>
         );
     }
-
 
     if (!isLoggedIn) {
         return (
@@ -71,35 +93,40 @@ export default function MyPageScreen({ onNavigate }) {
     return (
         <div className='min-h-screen bg-gray-50 pb-24'>
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 pt-8 pb-12'>
-                <div className='flex items-center justify-between mb-6'>
+                <div className='flex items-center justify-between mb-8'>
                     <h1 className='text-2xl font-bold text-white'>
                         마이페이지
                     </h1>
-                    <button
-                        className='p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors'
-                        aria-label='설정 열기/닫기'
-                        onClick={() => setShowSetting((prev) => !prev)}
-                    >
-                        <img
-                            src='https://img.icons8.com/ios-filled/50/FFFFFF/settings.png'
-                            alt='설정'
-                            className='w-6 h-6'
-                        />
-                    </button>
-                </div>
-                {showSetting && (
-                    <div className='bg-white/10 backdrop-blur-sm rounded-2xl p-4 space-y-2 mb-6'>
+                    <div className='relative'>
                         <button
-                            onClick={() => navigate('login')}
-                            className='w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/20 transition-colors text-white'
+                            className='p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors'
+                            onClick={() => setShowSetting((prev) => !prev)}
                         >
-                            👤 회원 계정
+                            <img
+                                src='https://img.icons8.com/ios-filled/50/FFFFFF/settings.png'
+                                alt='설정'
+                                className='w-6 h-6'
+                            />
                         </button>
+
+                        {showSetting && (
+                            <div className='absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg overflow-hidden z-50 animate-fadeIn'>
+                                <button
+                                    onClick={() => {
+                                        navigate('edit-profile');
+                                        setShowSetting(false);
+                                    }}
+                                    className='w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors'
+                                >
+                                    회원정보 수정
+                                </button>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
 
                 <div className='bg-white rounded-3xl p-6 shadow-lg'>
-                    <div className='flex items-center gap-4 mb-6'>
+                    <div className='flex items-center gap-7 mb-6'>
                         <div className='w-20 h-20 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
                             {profile.avatar ? (
                                 <img
@@ -111,7 +138,7 @@ export default function MyPageScreen({ onNavigate }) {
                                 <span className='text-4xl'>👤</span>
                             )}
                         </div>
-                        <div className='flex-1'>
+                        <div className='flex-1 text-left'>
                             <h2 className='text-gray-900 font-bold text-xl'>
                                 {profile.nickname || profile.name || '사용자'}
                             </h2>
@@ -122,7 +149,7 @@ export default function MyPageScreen({ onNavigate }) {
                                 onClick={() => navigate('badge')}
                                 className='flex items-center gap-2 mt-2 bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-3 py-1 rounded-full text-sm hover:bg-opacity-20 transition-colors'
                             >
-                                <span>🌱 첫걸음</span>
+                                <span>🌱 {myBadge.name}</span>
                                 <span>→</span>
                             </button>
                         </div>

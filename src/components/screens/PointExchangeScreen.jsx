@@ -13,19 +13,19 @@ import {
 } from 'lucide-react';
 
 // 데이터 import
-import {
-    CATEGORIES,
-    SORT_OPTIONS,
-    EXCHANGE_HISTORY,
-} from './PointExchangeScreen.data';
+import { CATEGORIES, SORT_OPTIONS } from './PointExchangeScreen.data';
 
 // Redux hooks import
-import { usePointShop, useSpendPoint } from '../../hooks/usePointApi';
+import {
+    usePointShop,
+    useSpendPoint,
+    useUsedPointLogs,
+} from '../../hooks/usePointApi';
 import {
     fetchPointShop,
     fetchUsedPointLogs,
 } from '../../store/slices/pointSlice';
-import { convertVoucherToGifticon } from '../../util/pointApi';
+import { convertVoucherToGifticon, formatDate } from '../../util/pointApi';
 
 export default function PointExchangeScreen({ onNavigate }) {
     const dispatch = useDispatch();
@@ -33,6 +33,7 @@ export default function PointExchangeScreen({ onNavigate }) {
     // Redux로 포인트샵 데이터 가져오기
     const { data: shopData, loading: isLoading, error } = usePointShop();
     const { spendPoint, loading: isSpending } = useSpendPoint();
+    const { usedLogs, loading: isLoadingLogs } = useUsedPointLogs(true); // 자동 로드
 
     const [activeTab, setActiveTab] = useState('gifticon'); // gifticon or transfer
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -57,6 +58,7 @@ export default function PointExchangeScreen({ onNavigate }) {
     // 컴포넌트 마운트 시 포인트샵 데이터 가져오기
     useEffect(() => {
         dispatch(fetchPointShop());
+        dispatch(fetchUsedPointLogs()); // 사용 내역도 가져오기
     }, [dispatch]);
 
     // 저장된 계좌 불러오기 (localStorage)
@@ -127,6 +129,9 @@ export default function PointExchangeScreen({ onNavigate }) {
                 type: 'VOUCHER',
             });
             setShowSuccessModal(true);
+            // 성공 후 데이터 새로고침
+            dispatch(fetchPointShop());
+            dispatch(fetchUsedPointLogs());
         } catch (error) {
             console.error('포인트 사용 실패:', error);
             alert(
@@ -155,6 +160,10 @@ export default function PointExchangeScreen({ onNavigate }) {
             ].slice(0, 3);
             setSavedAccounts(updated);
             localStorage.setItem('savedAccounts', JSON.stringify(updated));
+
+            // 성공 후 데이터 새로고침
+            dispatch(fetchPointShop());
+            dispatch(fetchUsedPointLogs());
         } catch (error) {
             console.error('계좌이체 실패:', error);
             alert(
@@ -608,58 +617,101 @@ export default function PointExchangeScreen({ onNavigate }) {
             {/* 교환 내역 */}
             <div className='mx-4 mb-8'>
                 <div className='flex items-center justify-between mb-4'>
-                    <h2 className='text-lg font-bold'>최근 교환 내역</h2>
-                    <button className='text-sm text-[#4CAF50] font-medium hover:underline'>
-                        더보기
+                    <h2 className='text-lg font-bold'>최근 사용 내역</h2>
+                    <button
+                        onClick={() => dispatch(fetchUsedPointLogs())}
+                        className='text-sm text-[#4CAF50] font-medium hover:underline'
+                    >
+                        새로고침
                     </button>
                 </div>
-                <div className='space-y-3'>
-                    {EXCHANGE_HISTORY.map((item) => (
-                        <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className='bg-white rounded-xl p-4 shadow-sm'
-                        >
-                            <div className='flex items-center justify-between'>
-                                <div className='flex items-center gap-3'>
-                                    <div
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                            item.type === 'gifticon'
-                                                ? 'bg-purple-100'
-                                                : 'bg-blue-100'
-                                        }`}
+
+                {isLoadingLogs ? (
+                    <div className='bg-white rounded-xl p-8 text-center'>
+                        <div className='w-8 h-8 border-4 border-[#4CAF50] border-t-transparent rounded-full animate-spin mx-auto mb-2'></div>
+                        <p className='text-gray-500 text-sm'>
+                            내역을 불러오는 중...
+                        </p>
+                    </div>
+                ) : usedLogs &&
+                  usedLogs.filter((item) => item.pointAmount < 0).length > 0 ? (
+                    <div className='space-y-3'>
+                        {usedLogs
+                            .filter((item) => item.pointAmount < 0) // 사용(음수)만 필터링
+                            .slice(0, 5)
+                            .map((item, index) => {
+                                // 포인트 사용 타입 판단
+                                const isVoucher =
+                                    item.description?.includes('기프티콘') ||
+                                    item.description?.includes('쿠폰');
+                                const isCash =
+                                    item.description?.includes('계좌') ||
+                                    item.description?.includes('입금');
+
+                                return (
+                                    <motion.div
+                                        key={index}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className='bg-white rounded-xl p-4 shadow-sm'
                                     >
-                                        {item.type === 'gifticon' ? (
-                                            <Gift
-                                                className={`w-5 h-5 ${
-                                                    item.type === 'gifticon'
-                                                        ? 'text-purple-600'
-                                                        : 'text-blue-600'
-                                                }`}
-                                            />
-                                        ) : (
-                                            <Wallet className='w-5 h-5 text-blue-600' />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <div className='font-semibold text-gray-800'>
-                                            {item.name}
+                                        <div className='flex items-center justify-between'>
+                                            <div className='flex items-center gap-3'>
+                                                <div
+                                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                                        isVoucher
+                                                            ? 'bg-purple-100'
+                                                            : isCash
+                                                            ? 'bg-blue-100'
+                                                            : 'bg-red-100'
+                                                    }`}
+                                                >
+                                                    {isVoucher ? (
+                                                        <Gift className='w-5 h-5 text-purple-600' />
+                                                    ) : isCash ? (
+                                                        <Wallet className='w-5 h-5 text-blue-600' />
+                                                    ) : (
+                                                        <TrendingUp className='w-5 h-5 text-red-600' />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div className='font-semibold text-gray-800'>
+                                                        {item.description ||
+                                                            '포인트 사용'}
+                                                    </div>
+                                                    <div className='text-xs text-gray-500 text-left'>
+                                                        {formatDate(item.date)}
+                                                        {item.category &&
+                                                            ` · ${item.category}`}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className='text-right'>
+                                                <div className='font-bold text-red-600'>
+                                                    {Math.abs(
+                                                        item.pointAmount || 0
+                                                    ).toLocaleString()}
+                                                    P
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className='text-xs text-gray-500'>
-                                            {item.brand} · {item.date}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='text-right'>
-                                    <div className='font-bold text-gray-800'>
-                                        -{item.points.toLocaleString()}P
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
+                                    </motion.div>
+                                );
+                            })}
+                    </div>
+                ) : (
+                    <div className='bg-white rounded-xl p-8 text-center'>
+                        <div className='w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3'>
+                            <Gift className='w-6 h-6 text-gray-400' />
+                        </div>
+                        <p className='text-gray-500'>
+                            아직 사용 내역이 없습니다
+                        </p>
+                        <p className='text-sm text-gray-400 mt-1'>
+                            기프티콘을 구매하거나 계좌이체를 신청해보세요
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* 기프티콘 구매 확인 모달 */}

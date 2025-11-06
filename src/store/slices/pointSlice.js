@@ -329,17 +329,31 @@ const pointSlice = createSlice({
         // ============================================
         builder
             .addCase(fetchPointDetail.pending, (state) => {
+                console.log('⏳ [Redux] fetchPointDetail.pending');
                 state.loading.detail = true;
                 state.error.detail = null;
             })
             .addCase(fetchPointDetail.fulfilled, (state, action) => {
+                console.log(
+                    '✅ [Redux] fetchPointDetail.fulfilled - Payload:',
+                    action.payload
+                );
                 state.loading.detail = false;
                 state.getPoint = action.payload.getPoint;
                 state.usedPoint = action.payload.usedPoint;
                 state.logs = action.payload.logs;
                 state.lastUpdated.detail = new Date().toISOString();
+                console.log('📦 [Redux] Updated state:', {
+                    getPoint: state.getPoint,
+                    usedPoint: state.usedPoint,
+                    logsCount: state.logs?.length,
+                });
             })
             .addCase(fetchPointDetail.rejected, (state, action) => {
+                console.error(
+                    '❌ [Redux] fetchPointDetail.rejected - Error:',
+                    action.payload
+                );
                 state.loading.detail = false;
                 state.error.detail = action.payload;
             });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import CertTypeCard from '../cert/CertTypeCard';
 import CertModal from '../cert/CertModal';
 import { certTypes } from '../../util/certConfig';
@@ -8,6 +9,7 @@ import {
 } from '../../util/certApi';
 
 export default function CertificationScreen() {
+    const { isLoggedIn } = useSelector((state) => state.user);
     const [selectedType, setSelectedType] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [recentCertifications, setRecentCertifications] = useState([]);
@@ -37,6 +39,12 @@ export default function CertificationScreen() {
 
     // 최근 인증 내역 불러오기
     const loadCertificationHistory = useCallback(async () => {
+        if (!isLoggedIn) {
+            setRecentCertifications([]);
+            setMonthlyStats({ count: 0, totalPoints: 0 });
+            return;
+        }
+
         console.log('내역 조회 시작');
         setIsLoading(true);
         setError(null);
@@ -56,16 +64,21 @@ export default function CertificationScreen() {
 
                 const statsResult = await fetchMonthlyStats();
                 if (statsResult.success) {
+                    const certOnlyData = result.data.filter(
+                        (item) => item.category !== 'NEWS'
+                    );
                     setMonthlyStats({
-                        count: statsResult.data.verifyTimes || 0, // 안전한 접근
-                        totalPoints: statsResult.data.pointSum || 0, // 안전한 접근
+                        count: certOnlyData.length,
+                        totalPoints: certOnlyData.reduce(
+                            (sum, item) => sum + item.point,
+                            0
+                        ),
                     });
                 } else {
                     console.error('❌ 통계 API 실패:', statsResult.message);
                     setMonthlyStats({ count: 0, totalPoints: 0 });
                 }
             } else {
-                // ❌ API 실패 (success: false) 처리
                 console.error('❌ API 실패:', result.message);
                 setError(
                     result.message || '인증 내역을 불러오는데 실패했습니다.'
@@ -79,11 +92,20 @@ export default function CertificationScreen() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [isLoggedIn]);
 
     useEffect(() => {
         loadCertificationHistory();
     }, [loadCertificationHistory]);
+
+    // 로그아웃 시 상태 초기화
+    useEffect(() => {
+        if (!isLoggedIn) {
+            setRecentCertifications([]);
+            setMonthlyStats({ count: 0, totalPoints: 0 });
+            setError(null);
+        }
+    }, [isLoggedIn]);
 
     function openCertModal(type) {
         setSelectedType(type);
@@ -103,14 +125,14 @@ export default function CertificationScreen() {
                 style={{ paddingBottom: 'var(--bottom-nav-inset)' }}
             >
                 {/* Header */}
-                <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
-                    <h1 className='text-3xl font-bold text-white mb-2'>
-                        인증하기
-                    </h1>
-                    <p className='text-white text-opacity-90 text-sm'>
-                        친환경 활동을 인증하고 포인트를 받으세요
+                <div className="w-full bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] py-10 text-center text-white mb-8 shadow-md">
+                    <h1 className="text-3xl font-bold text-white mb-2">인증하기</h1>
+                    <p className="text-white text-opacity-90 text-sm">
+                    친환경 활동을 인증하고 포인트를 받으세요 🌱
                     </p>
                 </div>
+
+                
 
                 <div className='px-6 py-6 space-y-6'>
                     {/* 인증 타입 선택 */}
@@ -187,8 +209,8 @@ export default function CertificationScreen() {
                                         }`}
                                     >
                                         <div>
-                                            <p className='font-medium text-gray-900'>
-                                                {cert.type}
+                                            <p className='font-medium text-gray-900 text-center'>
+                                                {cert.type === 'EVCAR' ? '전기차 충전' : cert.type === 'HCAR' ? '수소차 충전' : cert.type}
                                             </p>
                                             <p className='text-gray-500 text-sm mt-1'>
                                                 {cert.date}
@@ -215,29 +237,40 @@ export default function CertificationScreen() {
                     </div>
 
                     {/* 이번 달 진행상황 */}
-                    <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-2xl p-6 text-white shadow-lg'>
-                        <h3 className='text-white text-opacity-90 mb-4 font-semibold'>
-                            이번 달 진행상황
-                        </h3>
-                        <div className='grid grid-cols-2 gap-6'>
-                            <div>
-                                <p className='text-white text-opacity-80 text-sm mb-1'>
-                                    인증 횟수
-                                </p>
-                                <p className='text-2xl font-bold'>
-                                    {monthlyStats.count}회
-                                </p>
-                            </div>
-                            <div>
-                                <p className='text-white text-opacity-80 text-sm mb-1'>
-                                    획득 포인트
-                                </p>
-                                <p className='text-2xl font-bold'>
-                                    {monthlyStats.totalPoints}P
-                                </p>
+                    {isLoggedIn ? (
+                        <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-2xl p-6 text-white shadow-lg'>
+                            <h3 className='text-white text-opacity-90 mb-4 font-semibold'>
+                                이번 달 진행상황
+                            </h3>
+                            <div className='grid grid-cols-2 gap-6'>
+                                <div>
+                                    <p className='text-white text-opacity-80 text-sm mb-1'>
+                                        인증 횟수
+                                    </p>
+                                    <p className='text-2xl font-bold'>
+                                        {monthlyStats.count}회
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className='text-white text-opacity-80 text-sm mb-1'>
+                                        획득 포인트
+                                    </p>
+                                    <p className='text-2xl font-bold'>
+                                        {monthlyStats.totalPoints}P
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className='bg-gray-100 rounded-2xl p-6 text-center border border-gray-200'>
+                            <p className='text-gray-600 mb-2'>
+                                로그인하고 이번 달 진행상황을 확인하세요
+                            </p>
+                            <p className='text-gray-500 text-sm'>
+                                인증 활동을 기록하고 포인트를 받아보세요!
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 
