@@ -3,6 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import api from "../../api/axios";
 
 const themeColor = "#96cb6f";
+function Modal({ message, type = 'info', onClose, redirectPath = '/mypage' }) {
+  const handleClick = () => {
+    if (type === 'success') {
+      window.location.href = redirectPath; // ✅ 저장 성공 시 /mypage로 이동
+    } else {
+      onClose();
+    }
+  };
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+      <div className="bg-white rounded-2xl shadow-xl w-80 h-100 p-6 text-center">
+        <div className={`text-4xl mb-3 ${type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+          {type === 'success' ? '🌳' : '🍂'}
+        </div>
+
+        <p className="text-gray-800 font-semibold mb-4 mt-4">{message}</p>
+
+        <button
+          onClick={handleClick}
+          className="w-full py-2 rounded-xl font-bold text-white"
+          style={{ background: type === 'success' ? '#96cb6f' : '#e63e3eff' }}
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  );
+}
+
 
 const styles = `
   :root { --brand: ${themeColor}; }
@@ -35,16 +64,20 @@ const styles = `
 `;
 
 export default function EditProfileScreen({ onBack }) {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [avatar, setAvatar] = useState(null);
   const [nickAvailable, setNickAvailable] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ 추가: 모달 상태
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState('info'); // 'success' | 'error' | 'info'
+  const [modalMsg, setModalMsg] = useState('');
+
   const token = localStorage.getItem("token");
 
-  //  1. 기존 회원정보 불러오기
   useEffect(() => {
     const fetchMyInfo = async () => {
       try {
@@ -54,40 +87,48 @@ export default function EditProfileScreen({ onBack }) {
         const data = res.data.data;
         setNickname(data.nickname);
         setEmail(data.email);
-        setAvatar(data.image.imageUrl || data.avatarUrl || null); //  이미지 필드명 대응
+        setAvatar(data.image?.imageUrl || data.avatarUrl || null);
       } catch {
-        alert("로그인이 필요합니다.");
+        // alert("로그인이 필요합니다.");
+        setModalType('error');
+        setModalMsg('로그인이 필요합니다.');
+        setModalOpen(true);
       }
     };
     fetchMyInfo();
   }, []);
 
-  //  2. 닉네임 중복 검사 (debounce)
   useEffect(() => {
     if (!nickname || nickname.length < 2) {
       setNickAvailable(null);
       return;
     }
-
     const timer = setTimeout(async () => {
       try {
-        const res = await api.get("/member/check-nickname", {
-          params: { nickname },
-        });
+        const res = await api.get("/member/check-nickname", { params: { nickname } });
         const isDuplicate = res.data.data.state;
         setNickAvailable(!isDuplicate);
       } catch {
         setNickAvailable(null);
       }
     }, 400);
-
     return () => clearTimeout(timer);
   }, [nickname]);
 
-  //  3. 닉네임 변경
+  // ✅ 저장 시 모달로 성공/실패 표시
   const handleSubmit = async () => {
-    if (!nickname || nickname.length < 2) return alert("닉네임을 입력해주세요.");
-    if (nickAvailable === false) return alert("이미 사용 중인 닉네임입니다.");
+    if (!nickname || nickname.length < 2) {
+      setModalType('error');
+      setModalMsg('닉네임을 입력해주세요.');
+      setModalOpen(true);
+      return;
+    }
+    if (nickAvailable === false) {
+      setModalType('error');
+      setModalMsg('이미 사용 중인 닉네임입니다.');
+      setModalOpen(true);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -96,11 +137,18 @@ export default function EditProfileScreen({ onBack }) {
         { nickname },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("닉네임이 변경되었습니다.");
-      navigate('/mypage');
-      onBack?.();
+
+      // ✅ 성공 모달 오픈 (확인 누르면 /mypage로 이동)
+      setModalType('success');
+      setModalMsg('닉네임이 변경되었습니다.');
+      setModalOpen(true);
+
+      // ❌ navigate('/mypage');  // 모달에서 이동 처리
+      // onBack?.();              // 모달 UX 유지 위해 주석
     } catch {
-      alert("수정 실패. 다시 시도해주세요.");
+      setModalType('error');
+      setModalMsg('수정 실패. 다시 시도해주세요.');
+      setModalOpen(true);
     } finally {
       setLoading(false);
     }
@@ -112,45 +160,40 @@ export default function EditProfileScreen({ onBack }) {
     <div className="auth-wrap">
       <style>{styles}</style>
 
+      {/* ✅ 모달 렌더 */}
+      {modalOpen && (
+        <Modal
+          type={modalType}
+          message={modalMsg}
+          onClose={() => setModalOpen(false)}
+          redirectPath="/mypage"   // ✅ 성공 시 이동 경로
+        />
+      )}
+
       <div className="card">
         <h2 className="title">프로필 수정</h2>
         <p className="subtitle">이메일은 변경할 수 없습니다.</p>
 
-        {/*  프로필 이미지 (수정 불가, 표시만) */}
         {avatar ? (
           <img src={avatar} alt="프로필" className="profile-image" />
         ) : (
           <div
             className="profile-image"
-            style={{
-              fontSize: 36,
-              color: "#777",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            style={{ fontSize: 36, color: "#777", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             👤
           </div>
         )}
 
-        {/* 이메일 */}
         <div className="field">
           <label className="label">이메일</label>
           <input className="input filled" value={email} disabled />
         </div>
 
-        {/* 닉네임 */}
         <div className="field">
           <label className={`label ${nickname ? "filled" : ""}`}>닉네임</label>
           <input
-            className={`input ${
-              nicknameValid
-                ? nickAvailable === false
-                  ? "invalid"
-                  : "valid"
-                : ""
-            }`}
+            className={`input ${nicknameValid ? (nickAvailable === false ? "invalid" : "valid") : ""}`}
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             placeholder="닉네임 입력"
@@ -164,12 +207,10 @@ export default function EditProfileScreen({ onBack }) {
           <span style={{ color: "red" }}>이미 존재하는 닉네임입니다 </span>
         )}
 
-        {/* 안내 */}
         <div style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
           프로필 사진 및 비밀번호 변경은 추후 지원 예정입니다.
         </div>
 
-        {/* 저장 */}
         <button
           className="btn"
           style={{ marginTop: 16 }}
@@ -179,7 +220,6 @@ export default function EditProfileScreen({ onBack }) {
           {loading ? "저장 중..." : "저장"}
         </button>
 
-        {/* 뒤로가기 */}
         <button
           style={{
             marginTop: 10,
