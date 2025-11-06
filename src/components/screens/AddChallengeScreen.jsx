@@ -12,7 +12,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 
-export default function AddCallengScreen({ onNavigate }) {
+export default function AddChallengeScreen({ onNavigate }) {
     const dispatch = useDispatch();
 
     const navigate = (tab) => {
@@ -35,7 +35,7 @@ export default function AddCallengScreen({ onNavigate }) {
             <div>챌린지 작성</div>
             <div>
                 <label>
-                    <span>챌린리명 </span>
+                    <span>챌린리명</span>
                     <input type='text' maxLength="16" id='challengeName' placeholder='따릉이 5km 타기'></input>
                 </label>
                 <label>

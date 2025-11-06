@@ -28,7 +28,7 @@ import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
-import AddCallengScreen from './components/screens/AddCallengScreen';
+import AddChallengeScreen from './components/screens/AddChallengeScreen';
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -145,17 +145,18 @@ export default function App() {
                         path='/FAQ'
                         element={<FaqScreen onNavigate={navigate} />}
                     />
+                    <Route
+                        path='/addChallenge'
+                        element={
+                            <AddChallengeScreen onNavigate={navigate} />
+                        }
+                    />
                     {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
                     <Route 
                         path='*' 
                         element={<Navigate to='/' replace />} 
                     />
-                    <Route
-                        path='/addChallenge'
-                        element={
-                            <AddCallengScreen onNavigate={navigate} />
-                        }
-                    />
+                    
                 </Routes>
 
                 <BottomNavigation

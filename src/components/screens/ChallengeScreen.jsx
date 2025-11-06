@@ -1,375 +1,486 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Calendar, Plus, Award, Target, TrendingUp } from 'lucide-react';
 import api from '../../api/axios';
 import CertModal from '../cert/CertModal';
 import { certTypes } from '../../util/certConfig';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 
-
 export default function ChallengeScreen({ onNavigate }) {
     const dispatch = useDispatch();
 
     const navigate = (tab) => {
-      if (typeof onNavigate === 'function') return onNavigate(tab);
-      dispatch(setActiveTab(tab));
+        if (typeof onNavigate === 'function') return onNavigate(tab);
+        dispatch(setActiveTab(tab));
     };
 
+    const [filter, setFilter] = useState('ongoing');
+    const [available, setAvailable] = useState([]);
+    const [end, setEnd] = useState([]);
+    const [attend, setAttend] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  const [filter, setFilter] = React.useState('ongoing');
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setLoading(false);
+            return;
+        }
 
-  const [available, setAvailable] = React.useState([]);
-  const [end, setEnd] = React.useState([]);
-  const [attend, setAttend] = React.useState([]);
+        const fetchData = async () => {
+            try {
+                setLoading(true);
 
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
+                const [attendRes, availableRes, endRes] = await Promise.all([
+                    api.get('/chal/attend', {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    api.get('/chal/available', {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    api.get('/chal/end', {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                ]);
 
+                setAttend(attendRes.data.data.challenges || []);
+                setAvailable(availableRes.data.data.availableChallenges || []);
+                setEnd(endRes.data.data.challenges || []);
+            } catch (err) {
+                console.error('챌린지 정보 조회 실패', err.response || err);
+                setError('챌린지 정보를 가져오는데 실패했습니다.');
+            } finally {
+                setLoading(false);
+            }
+        };
 
+        fetchData();
+    }, []);
 
-
-  React.useEffect(() => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const fetchData = async () => {
-        api.get("/chal/attend", {
-              headers: { Authorization: `Bearer ${token}` }
-        })
-        .then((res) => {
-              console.log("정보 응답:", res.data.data.challenges);
-              console.log("정보 응답:", res.data.data.challenges.memberChallengeId);
-
-              setAttend(res.data.data.challenges);
-
-
-        })
-        .catch((err) => {
-              console.error("참여중인 챌린지 정보 조회 실패", err.response || err);
-              setError("회원 정보를 가져오는데 실패했습니다.");
-        });
-
-
-        api.get("/chal/available", {
-              headers: { Authorization: `Bearer ${token}` }
-        })
-        .then((res) => {
-              console.log("정보 응답:", res.data.data.availableChallenges);
-              setAvailable(res.data.data.availableChallenges);
-
-
-        })
-        .catch((err) => {
-              console.error("참여가능한 챌린지 정보 조회 실패", err.response || err);
-              setError("회원 정보를 가져오는데 실패했습니다.");
-        });
-
-
-        api.get("/chal/end", {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        .then((res) => {
-            console.log("정보 응답:", res.data.data.challenges);
-            setEnd(res.data.data.challenges);
-        })
-        .catch((err) => {
-            console.error("완료한 챌린지 정보 조회 실패", err.response || err);
-            setError("회원 정보를 가져오는데 실패했습니다.");
-        });
-      }
-
-      fetchData();
-  }, []);
-
-
-    // if (loading) return <div className="p-10 text-center m-72 text-gray-500">로딩 중 ...</div>;
-    // if (error) return <div className="p-10 text-center m-72 text-gray-500">{error}</div>;
-   
-  const handleChallengeParticipated = (challengeId) => {
-      setAttend((prevAttend) => [
-          ...prevAttend,
-          available.find(challenge => challenge.challengeId === challengeId)
-      ]);
-      setAvailable((prevAvailable) =>
-          prevAvailable.filter(challenge => challenge.challengeId !== challengeId)
-      );
-  };
-
-
-
-
-  return (
-  <>
-  <div className="w-full bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] py-10 text-center text-white mb-8 shadow-md">
-    <h1 className="text-3xl font-bold text-white mb-2">챌린지</h1>
-    <p className="text-white text-opacity-90 text-sm">
-      친환경 활동을 인증하고 포인트를 받으세요 🌱
-    </p>
-  </div>
-
-
-
-
-  <div className="min-h-screen bg-gray-50 p-4 flex flex-col items-center">
-    <div className="w-full max-w-3xl bg-gray-100 rounded-2xl p-3 mb-6 flex justify-center space-x-4 shadow">
-      {['available','ongoing','completed'].map(f => (
-        <button
-          key={f}
-          onClick={() => setFilter(f)}
-          className={`px-5 py-2 rounded-lg font-medium transition ${
-            filter === f ? 'bg-green-600 text-white shadow' : 'text-gray-600 hover:text-green-600'
-          }`}
-        >
-          {f === 'available' ? '참여가능' : f === 'ongoing' ? '진행중' : '완료'}
-        </button>
-      ))}
-    </div>
-
-
-
-
-    <div className="w-full max-w-3xl space-y-4">
-     
-      {
-        filter === 'available' && available.map(c => (
-          <ChallengeCard key={c.challengeId} filter={filter} {...c} onChall={handleChallengeParticipated} onNavigate={onNavigate} />
-        ))
-      }
-              {
-        filter === 'ongoing' && attend.map(c => (
-          <ChallengeCard key={c.challengeId} filter={filter} {...c} onChall={handleChallengeParticipated} onNavigate={onNavigate} />
-        ))
-      }
-              {
-        filter === 'completed' && end.map(c => (
-          <ChallengeCard key={c.challengeId} filter={filter} {...c} onChall={handleChallengeParticipated} onNavigate={onNavigate} />
-        ))
-      }
-    </div>
-
-    <button
-      aria-label="quick-action"
-      className="fixed top-10 left-10 z-50 w-16 h-16 bg-gradient-to-br from-[#6AA431] to-[#2E7D32] rounded-lg shadow-2xl flex items-center justify-center text-white text-3xl font-extrabold select-none transform transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-green-500"
-      onClick={() => navigate('addChal')}
-      // 어드민 일때만 보이기
-      // 로그인 어드민 확인 
-      // 토큰확인 -> 로봇인가요?
-    >
-      +
-    </button>
-  </div>
-  </>
-
-
-
-
-  );
-}
-
-
-
-
-
-
-
-
-
-
-
-
-function ChallengeCard({ challengeId, memberChallengeId, challengeName, description, pointAmount, progress, success, createdAt, deadline, image_url, filter, onChall}) {
-  const ticketHeight = 160; //
-
-  const [showModal, setShowModal] = useState(false);
-  const [selectedType, setSelectedType] = useState(null);
-  
-
-  const handleChallenge = () => {
-    const token = localStorage.getItem("token");
-
-
-    api.post("/chal",
-      {
-        challengeId: challengeId,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then((res) => {
-          console.log("챌린지 참여 응답:", res.data);
-          onChall(challengeId);
-      })
-      .catch((err) => {
-          console.error("챌린지 참여 실패", err.response || err);
-    });
-  };
-
-
-  function determineType(challengeName) {
-    const sanitizedChallengeName = challengeName.toLowerCase().replace(/\s+/g, '');
-
-    let type = null;
-
-    if (sanitizedChallengeName.includes('따릉이') || sanitizedChallengeName.includes('bike')) {
-      type = certTypes.find((type) => type.label === '따릉이 이용 인증');
-    }
-    else if (sanitizedChallengeName.includes('전기차') || sanitizedChallengeName.includes('수소차')
-    || sanitizedChallengeName.includes('electric') || sanitizedChallengeName.includes('hydrogen')) {
-      type = certTypes.find((type) => type.label === '전기차/수소차 충전 영수증');
-    }
-    else if (sanitizedChallengeName.includes('제로') || sanitizedChallengeName.includes('zero')) {
-      type = certTypes.find((type) => type.label === '제로웨이스트 스토어 / 재활용센터 영수증');
-    }
-    else if (sanitizedChallengeName.includes('재활용') || sanitizedChallengeName.includes('recycle')) {
-      type = certTypes.find((type) => type.label === '제로웨이스트 스토어 / 재활용센터 영수증');
-    }
-
-    if (!type) {
-      return null;
-    }
-
-    // 인증 타입이 정해지면 추가적인 키워드 설정
-    const result = {
-      id: type.id,
-      keywords: type.keywords || [],
-      zeroKeywords: type.zeroKeywords || [],
-      recycleKeywords: type.recycleKeywords || [],
+    const handleChallengeParticipated = (challengeId) => {
+        const challenge = available.find((c) => c.challengeId === challengeId);
+        if (challenge) {
+            setAttend((prev) => [...prev, challenge]);
+            setAvailable((prev) =>
+                prev.filter((c) => c.challengeId !== challengeId)
+            );
+        }
     };
 
-    if (sanitizedChallengeName.includes("제로")) {
-      result.zeroKeywords = type.zeroKeywords;
-    }
-    else if (sanitizedChallengeName.includes("재활용")) {
-      result.recycleKeywords = type.recycleKeywords;
-    }
+    // 필터별 챌린지 목록
+    const currentChallenges = useMemo(() => {
+        switch (filter) {
+            case 'available':
+                return available;
+            case 'ongoing':
+                return attend;
+            case 'completed':
+                return end;
+            default:
+                return [];
+        }
+    }, [filter, available, attend, end]);
 
-    return result;
-  }
-
-
-
-
-
-    // 인증 모달 열기
-  function openCertModal() {
-      const type = determineType(challengeName); 
-      if (type) {
-          setSelectedType(type); 
-          setShowModal(true); 
-      } else {
-          alert("해당하는 인증 타입을 찾을 수 없습니다.");
-      }
-  }
-
-  function closeModal() {
-    setShowModal(false);
-    setSelectedType(null);
-  }
-
-
-
-
-
-
-
-  return (
-    <div className="flex items-center mb-6">
-      <div
-        className="flex bg-white rounded-2xl shadow overflow-hidden flex-1 relative"
-        style={{ height: `${ticketHeight}px` }}
-      >
-        <div className="w-1/3 relative h-full">
-          <img
-            src={image_url || "https://th.bing.com/th/id/OIP.SG7Qb8nwstq9qogVhNt7KAHaE8?w=230&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3"}
-            alt={challengeName}
-            className="h-full w-full object-cover rounded-l-2xl"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white rounded-l-2xl"></div>
-        </div>
-
-
-
-
-        <div className="flex-1 p-4 flex flex-col justify-between h-full">
-          <h3 className="text-2xl font-bold text-gray-800 text-center">{challengeName}</h3>
-          <p className="text-sm text-gray-500 mt-1 text-right">{description}</p>
-
-
-
-
-          {filter === 'ongoing' && (
-            <div className="w-full mt-2 flex flex-col items-center">
-              <div className="w-full bg-gray-200 h-3 rounded-full">
-                <div
-                  className="bg-green-600 h-3 rounded-full"
-                  style={{ width: `${Math.min((progress / success) * 100, 100)}%` }}
-                ></div>
-              </div>
-              <div className="text-xs text-gray-500 mt-1 text-center w-full">
-                {progress} / {success}
-              </div>
+    return (
+        <div className='min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col'>
+            {/* 헤더 */}
+            <div className='w-full bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] py-10 text-center text-white mb-8 shadow-md'>
+                <h1 className='text-3xl font-bold text-white mb-2'>챌린지</h1>
+                <p className='text-white text-opacity-90 text-sm'>
+                    친환경 활동을 인증하고 포인트를 받으세요 🌱
+                </p>
             </div>
-          )}
 
+            {/* 필터 탭 */}
+            <div className='sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm'>
+                <div className='max-w-3xl mx-auto px-4 py-4'>
+                    <div className='flex gap-2'>
+                        {[
+                            {
+                                key: 'available',
+                                label: '참여가능',
+                                count: available.length,
+                            },
+                            {
+                                key: 'ongoing',
+                                label: '진행중',
+                                count: attend.length,
+                            },
+                            {
+                                key: 'completed',
+                                label: '완료',
+                                count: end.length,
+                            },
+                        ].map(({ key, label, count }) => (
+                            <button
+                                key={key}
+                                onClick={() => setFilter(key)}
+                                className={`flex-1 relative px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                                    filter === key
+                                        ? 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white shadow-lg shadow-green-500/30 scale-105'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-102'
+                                }`}
+                            >
+                                <span className='text-sm'>{label}</span>
+                                {count > 0 && (
+                                    <span
+                                        className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                                            filter === key
+                                                ? 'bg-white text-[#4CAF50]'
+                                                : 'bg-[#4CAF50] text-white'
+                                        }`}
+                                    >
+                                        {count}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
 
+            {/* 콘텐츠 영역 */}
+            <div className='flex-1 max-w-3xl mx-auto w-full px-4 py-6 pb-32'>
+                {loading ? (
+                    <div className='flex flex-col items-center justify-center py-20'>
+                        <div className='relative'>
+                            <div className='w-16 h-16 border-4 border-gray-200 rounded-full'></div>
+                            <div className='w-16 h-16 border-4 border-[#4CAF50] border-t-transparent rounded-full animate-spin absolute top-0 left-0'></div>
+                        </div>
+                        <p className='mt-4 text-gray-600 font-medium'>
+                            챌린지를 불러오는 중...
+                        </p>
+                    </div>
+                ) : error ? (
+                    <div className='flex flex-col items-center justify-center py-20'>
+                        <div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4'>
+                            <span className='text-3xl'>😕</span>
+                        </div>
+                        <p className='text-gray-600 text-center'>{error}</p>
+                    </div>
+                ) : currentChallenges.length === 0 ? (
+                    <div className='flex flex-col items-center justify-center py-20'>
+                        <div className='w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4'>
+                            <span className='text-4xl'>🏆</span>
+                        </div>
+                        <p className='text-gray-600 text-center font-medium mb-1'>
+                            {filter === 'available'
+                                ? '참여 가능한 챌린지가 없습니다'
+                                : filter === 'ongoing'
+                                ? '진행 중인 챌린지가 없습니다'
+                                : '완료한 챌린지가 없습니다'}
+                        </p>
+                        <p className='text-sm text-gray-400 text-center'>
+                            {filter === 'available'
+                                ? '새로운 챌린지가 곧 추가될 예정입니다'
+                                : '새로운 챌린지에 참여해보세요!'}
+                        </p>
+                    </div>
+                ) : (
+                    <div className='space-y-4'>
+                        {currentChallenges.map((challenge) => (
+                            <ChallengeCard
+                                key={challenge.challengeId}
+                                filter={filter}
+                                {...challenge}
+                                onChall={handleChallengeParticipated}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
 
-
-          <div className="flex justify-center gap-4 mt-3 text-sm text-gray-600">
-            <span>포인트: {pointAmount}</span>
-            <span>달성: {success}번</span>
-            <span>기한: {deadline}일</span>
-          </div>
-        </div>
-      </div>
-
-
-
-
-      <div className="ml-0 relative flex flex-col items-center justify-center" style={{ height: `${ticketHeight}px`, width: '6rem' }}>
-       
-        {filter === 'completed' && (
-          <div className="relative w-full h-full flex items-center justify-center mb-2">
-            <img
-              src="src/assets/Stamp.png"
-              alt="도장"
-              className="w-full h-full object-contain rotate-90"
-              style={{ filter: 'brightness(0) saturate(100%) invert(14%) sepia(56%) saturate(4000%) hue-rotate(345deg) brightness(95%) contrast(100%)' }}
-            />
-            <span
-              className="absolute text-xs font-bold"
-              style={{ color: '#7B1113' }}
+            {/* Admin 전용 챌린지 추가 버튼 */}
+            <button
+                onClick={() => navigate('addChal')}
+                className='fixed bottom-28 right-6 w-16 h-16 bg-gradient-to-br from-[#4CAF50] to-[#2E7D32] rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 hover:rotate-90 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#4CAF50]/30 group'
+                aria-label='챌린지 추가'
             >
-              {createdAt}
-            </span>
-          </div>
-        )}
-
-
-        {filter !== 'completed' && (
-          <button
-            onClick={filter === 'available' ? handleChallenge : () => openCertModal(selectedType)}
-            className="relative flex flex-col items-center justify-center bg-gradient-to-br from-[#8BC34A] to-[#4CAF50] text-white rounded-l-2xl h-full w-full px-0"
-          >
-            <div hidden id={challengeId}></div>
-            <span className="text-sm font-medium">
-              {filter === 'available' ? '참여' : '인증'}
-            </span>
-          </button>
-        )}
-      </div>
-
-
-      {showModal && selectedType && (
-          <CertModal 
-            type={selectedType} 
-            onClose={closeModal} 
-            memberChallengeId={memberChallengeId} />
-      )}
-
-      
-    </div>
-  );
+                <Plus className='w-8 h-8 group-hover:scale-110 transition-transform' />
+                <div className='absolute -top-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap'>
+                    챌린지 추가
+                    <div className='absolute bottom-0 right-6 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900'></div>
+                </div>
+            </button>
+        </div>
+    );
 }
 
+function ChallengeCard({
+    challengeId,
+    memberChallengeId,
+    challengeName,
+    description,
+    pointAmount,
+    progress,
+    success,
+    createdAt,
+    deadline,
+    image_url,
+    filter,
+    onChall,
+}) {
+    const [showModal, setShowModal] = useState(false);
+    const [selectedType, setSelectedType] = useState(null);
 
+    const handleChallenge = async () => {
+        const token = localStorage.getItem('token');
 
+        try {
+            await api.post(
+                '/chal',
+                { challengeId: challengeId },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            onChall(challengeId);
+        } catch (err) {
+            console.error('챌린지 참여 실패', err.response || err);
+            alert('챌린지 참여에 실패했습니다.');
+        }
+    };
 
+    function determineType(challengeName) {
+        const sanitizedChallengeName = challengeName
+            .toLowerCase()
+            .replace(/\s+/g, '');
+
+        let type = null;
+
+        if (
+            sanitizedChallengeName.includes('따릉이') ||
+            sanitizedChallengeName.includes('bike')
+        ) {
+            type = certTypes.find((type) => type.label === '따릉이 이용 인증');
+        } else if (
+            sanitizedChallengeName.includes('전기차') ||
+            sanitizedChallengeName.includes('수소차') ||
+            sanitizedChallengeName.includes('electric') ||
+            sanitizedChallengeName.includes('hydrogen')
+        ) {
+            type = certTypes.find(
+                (type) => type.label === '전기차/수소차 충전 영수증'
+            );
+        } else if (
+            sanitizedChallengeName.includes('제로') ||
+            sanitizedChallengeName.includes('zero')
+        ) {
+            type = certTypes.find(
+                (type) =>
+                    type.label === '제로웨이스트 스토어 / 재활용센터 영수증'
+            );
+        } else if (
+            sanitizedChallengeName.includes('재활용') ||
+            sanitizedChallengeName.includes('recycle')
+        ) {
+            type = certTypes.find(
+                (type) =>
+                    type.label === '제로웨이스트 스토어 / 재활용센터 영수증'
+            );
+        }
+
+        if (!type) {
+            return null;
+        }
+
+        const result = {
+            id: type.id,
+            keywords: type.keywords || [],
+            zeroKeywords: type.zeroKeywords || [],
+            recycleKeywords: type.recycleKeywords || [],
+        };
+
+        if (sanitizedChallengeName.includes('제로')) {
+            result.zeroKeywords = type.zeroKeywords;
+        } else if (sanitizedChallengeName.includes('재활용')) {
+            result.recycleKeywords = type.recycleKeywords;
+        }
+
+        return result;
+    }
+
+    function openCertModal() {
+        const type = determineType(challengeName);
+        if (type) {
+            setSelectedType(type);
+            setShowModal(true);
+        } else {
+            alert('해당하는 인증 타입을 찾을 수 없습니다.');
+        }
+    }
+
+    function closeModal() {
+        setShowModal(false);
+        setSelectedType(null);
+    }
+
+    // 진행률 계산
+    const progressPercent =
+        filter === 'ongoing' && progress && success
+            ? Math.min((progress / success) * 100, 100)
+            : 0;
+
+    return (
+        <>
+            <div
+                onClick={
+                    filter === 'available'
+                        ? handleChallenge
+                        : filter === 'ongoing'
+                        ? openCertModal
+                        : undefined
+                }
+                className={`group bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 ${
+                    filter !== 'completed'
+                        ? 'cursor-pointer hover:scale-[1.02]'
+                        : ''
+                }`}
+            >
+                {/* 메인 콘텐츠 영역 */}
+                <div className='flex-1 flex flex-col'>
+                    {/* 이미지 섹션 */}
+                    {image_url ? (
+                        <div className='relative h-40 bg-gradient-to-br from-green-400 to-blue-500 flex-shrink-0 overflow-hidden'>
+                            <img
+                                src={image_url}
+                                alt={challengeName}
+                                className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                }}
+                            />
+                            <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent'></div>
+
+                            {/* 완료 스탬프 */}
+                            {filter === 'completed' && (
+                                <div className='absolute top-3 right-3 bg-gradient-to-br from-red-500 to-red-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-xl transform rotate-12 border-2 border-white'>
+                                    ✓ 완료
+                                </div>
+                            )}
+
+                            {/* 카테고리 배지 */}
+                            <div className='absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full'>
+                                <span className='text-xs font-semibold bg-gradient-to-r from-[#4CAF50] to-[#66BB6A] bg-clip-text text-transparent'>
+                                    ECO CHALLENGE
+                                </span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className='relative h-40 bg-gradient-to-br from-[#4CAF50]/20 to-[#8BC34A]/20 flex-shrink-0 flex items-center justify-center'>
+                            <Award className='w-16 h-16 text-[#4CAF50]/30' />
+                        </div>
+                    )}
+
+                    {/* 콘텐츠 섹션 */}
+                    <div className='p-4 flex-1 flex flex-col'>
+                        <h3 className='text-lg font-bold text-gray-800 mb-1.5 leading-tight group-hover:text-[#4CAF50] transition-colors'>
+                            {challengeName}
+                        </h3>
+                        <p className='text-xs text-gray-500 mb-3 line-clamp-2 leading-relaxed'>
+                            {description}
+                        </p>
+
+                        {/* 진행 상태 바 (진행중일 때만) */}
+                        {filter === 'ongoing' && (
+                            <div className='mb-3 bg-gray-50 rounded-xl p-2.5'>
+                                <div className='flex justify-between items-center mb-1.5'>
+                                    <div className='flex items-center gap-1.5'>
+                                        <Target className='w-3.5 h-3.5 text-[#4CAF50]' />
+                                        <span className='text-xs font-semibold text-gray-700'>
+                                            진행률
+                                        </span>
+                                    </div>
+                                    <span className='text-xs font-bold text-[#4CAF50]'>
+                                        {progress} / {success}
+                                    </span>
+                                </div>
+                                <div className='relative w-full bg-gray-200 rounded-full h-2 overflow-hidden'>
+                                    <div
+                                        className='absolute top-0 left-0 h-full bg-gradient-to-r from-[#4CAF50] via-[#66BB6A] to-[#8BC34A] rounded-full transition-all duration-700 ease-out shadow-sm'
+                                        style={{ width: `${progressPercent}%` }}
+                                    >
+                                        <div className='absolute inset-0 bg-white/20 animate-pulse'></div>
+                                    </div>
+                                </div>
+                                <div className='mt-1 text-right'>
+                                    <span className='text-[10px] text-gray-500 font-medium'>
+                                        {Math.round(progressPercent)}% 달성
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 정보 그리드 */}
+                        <div className='grid grid-cols-3 gap-2 mt-auto'>
+                            <div className='relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-2.5 text-center border border-blue-200/50 overflow-hidden group/card'>
+                                <div className='absolute inset-0 bg-gradient-to-br from-blue-400/0 to-blue-400/10 opacity-0 group-hover/card:opacity-100 transition-opacity'></div>
+                                <div className='relative'>
+                                    <div className='text-[10px] text-blue-600 font-semibold mb-0.5 flex items-center justify-center gap-1'>
+                                        <TrendingUp className='w-3 h-3' />
+                                        포인트
+                                    </div>
+                                    <div className='text-base font-bold text-blue-700'>
+                                        {pointAmount}
+                                    </div>
+                                    <div className='text-[9px] text-blue-500 font-medium'>
+                                        POINT
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='relative bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-2.5 text-center border border-green-200/50 overflow-hidden group/card'>
+                                <div className='absolute inset-0 bg-gradient-to-br from-green-400/0 to-green-400/10 opacity-0 group-hover/card:opacity-100 transition-opacity'></div>
+                                <div className='relative'>
+                                    <div className='text-[10px] text-green-600 font-semibold mb-0.5 flex items-center justify-center gap-1'>
+                                        <Target className='w-3 h-3' />
+                                        목표
+                                    </div>
+                                    <div className='text-base font-bold text-green-700'>
+                                        {success}
+                                    </div>
+                                    <div className='text-[9px] text-green-500 font-medium'>
+                                        TIMES
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-2.5 text-center border border-orange-200/50 overflow-hidden group/card'>
+                                <div className='absolute inset-0 bg-gradient-to-br from-orange-400/0 to-orange-400/10 opacity-0 group-hover/card:opacity-100 transition-opacity'></div>
+                                <div className='relative'>
+                                    <div className='text-[10px] text-orange-600 font-semibold mb-0.5 flex items-center justify-center gap-1'>
+                                        <Calendar className='w-3 h-3' />
+                                        기한
+                                    </div>
+                                    <div className='text-base font-bold text-orange-700'>
+                                        {deadline}
+                                    </div>
+                                    <div className='text-[9px] text-orange-500 font-medium'>
+                                        DAYS
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 완료 날짜 (완료된 챌린지일 때) */}
+                        {filter === 'completed' && createdAt && (
+                            <div className='flex items-center gap-2 text-xs text-gray-500 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-2.5 mt-3 border border-gray-200'>
+                                <Calendar className='w-3.5 h-3.5 text-gray-400' />
+                                <span className='font-medium'>완료일:</span>
+                                <span className='font-semibold text-gray-700'>
+                                    {createdAt}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* 인증 모달 */}
+            {showModal && selectedType && (
+                <CertModal
+                    type={selectedType}
+                    onClose={closeModal}
+                    memberChallengeId={memberChallengeId}
+                />
+            )}
+        </>
+    );
+}
