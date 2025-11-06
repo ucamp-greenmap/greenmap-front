@@ -152,7 +152,9 @@ export default function HomeScreen({ onNavigate }) {
                                     </p>
                                     <div className='flex items-baseline gap-2'>
                                         <span className='text-4xl font-bold'>
-                                            {stats.point}
+                                            {Number(
+                                                stats.point
+                                            ).toLocaleString()}
                                         </span>
                                         <span className='text-lg'>P</span>
                                     </div>
