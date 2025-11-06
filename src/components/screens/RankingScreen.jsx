@@ -2,6 +2,7 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { usePointRanking } from '../../hooks/usePointApi';
+import { ArrowLeft } from 'lucide-react';
 
 export default function RankingScreen({ onNavigate }) {
     const dispatch = useDispatch();
@@ -13,6 +14,18 @@ export default function RankingScreen({ onNavigate }) {
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
+    };
+
+    const handleGoBack = () => {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        if (typeof onNavigate === 'function') {
+            onNavigate('home');
+            return;
+        }
+        dispatch(setActiveTab('home'));
     };
 
     const medalFor = (rank) => {
@@ -38,27 +51,10 @@ export default function RankingScreen({ onNavigate }) {
         <div className='p-4'>
             <div className='flex items-center gap-3 mb-4'>
                 <button
-                    onClick={() => navigate('home')}
-                    aria-label='뒤로가기'
-                    title='뒤로'
-                    className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow-sm text-sm text-gray-700 hover:bg-gray-50'
+                    onClick={handleGoBack}
+                    style={{ backgroundColor: 'white' }} // 기본 배경색
                 >
-                    <svg
-                        xmlns='http://www.w3.org/2000/svg'
-                        className='h-4 w-4'
-                        fill='none'
-                        viewBox='0 0 24 24'
-                        stroke='currentColor'
-                        strokeWidth='2'
-                        aria-hidden
-                    >
-                        <path
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            d='M15 19l-7-7 7-7'
-                        />
-                    </svg>
-                    <span className='hidden sm:inline'>뒤로</span>
+                    <ArrowLeft className="w-5 h-5 text-black" />
                 </button>
                 <h2 className='text-lg font-bold'>랭킹</h2>
             </div>

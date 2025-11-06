@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchPointDetail } from '../../store/slices/pointSlice';
+import { ArrowLeft } from 'lucide-react';
 
 export default function PointHistoryScreen({ onNavigate }) {
     const dispatch = useDispatch();
@@ -10,6 +11,18 @@ export default function PointHistoryScreen({ onNavigate }) {
     const { logs, getPoint, usedPoint, loading, error } = useSelector(
         (state) => state.point
     );
+
+    const handleGoBack = () => {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        if (typeof onNavigate === 'function') {
+            onNavigate('home');
+            return;
+        }
+        dispatch(setActiveTab('home'));
+    };
 
     useEffect(() => {
         console.log(
@@ -71,10 +84,10 @@ export default function PointHistoryScreen({ onNavigate }) {
             {/* 헤더 */}
             <div className='flex items-center gap-3 mb-6'>
                 <button
-                    onClick={() => navigate('home')}
-                    className='text-sm text-gray-600 px-2 py-1 rounded hover:bg-gray-100'
+                    onClick={handleGoBack}
+                    style={{ backgroundColor: 'white' }} // 기본 배경색
                 >
-                    ← 뒤로
+                    <ArrowLeft className="w-5 h-5 text-black" />
                 </button>
                 <h2 className='text-xl font-bold'>포인트 내역</h2>
             </div>
