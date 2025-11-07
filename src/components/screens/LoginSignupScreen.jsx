@@ -44,6 +44,7 @@ const styles = `
   .hint{ font-size:.85rem; color:#6b7280; margin-top:6px; }
   .error{ font-size:.85rem; color:#e11d48; margin-top:6px; }
   .btn{ width:100%; padding:12px 14px; border-radius:12px; border:0; background:var(--brand); color:#fff; font-weight:800; cursor:pointer; margin-top:6px;}
+  button:focus{ outline:none; box-shadow:none; }
   .btn:disabled{ opacity:.5; cursor:not-allowed; }
   .kakao{ width:100%; margin-top:12px; padding:12px 14px; border-radius:12px; border:0;
           background:#FEE500; color:#3C1E1E; font-weight:700; cursor:pointer; }
@@ -65,7 +66,6 @@ const styles = `
   }
 `;
 
-/* ✅ 모달 컴포넌트 */
 function Modal({ message, type = 'info', onClose }) {
   const handleClick = () => {
     if (type === 'success') {
@@ -161,27 +161,29 @@ export default function LoginSignupScreen() {
             <HomeScreen />
           )}
 
-          {!userInfo && (
-            <button
-              onClick={kakaoLogin}
-              style={{
-                width: '100%',
-                marginTop: '12px',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                padding: 0,
-              }}
-            >
-              <img
-                src={kakaoBtn}
-                alt="카카오 로그인"
-                style={{ width: '100%', display: 'block' }}
-              />
-            </button>
-          )}
+          
+{!userInfo && page === 'login' && (
+  <button
+    onClick={kakaoLogin}
+    style={{
+      width: '100%',
+      marginTop: '12px',
+      borderRadius: '12px',
+      overflow: 'hidden',
+      padding: 0,
+    }}
+  >
+    <img
+      src={kakaoBtn}
+      alt="카카오 로그인"
+      style={{ width: '100%', display: 'block' }}
+    />
+  </button>
+)}
+
         </div>
 
-        {/* ✅ 모달 표시 */}
+
         {modal && (
           <Modal
             message={modal.message}
@@ -324,13 +326,13 @@ function SignupForm({ setPage, setModal }) {
     try {
       await api.post('/member', { email, password, nickname });
       setModal({
-        message: '회원가입 완료! 로그인해주세요 🌿',
+        message: '회원가입 성공 로그인해주세요',
         type: 'success',
       });
       setTimeout(() => setPage('login'), 1000);
     } catch {
       setModal({
-        message: '회원가입 실패. 다시 시도해주세요 🍂',
+        message: '다시 시도해주세요',
         type: 'error',
       });
     }
