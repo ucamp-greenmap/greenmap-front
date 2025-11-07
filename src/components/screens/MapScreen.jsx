@@ -124,9 +124,32 @@ export default function MapScreen() {
             }
 
             // Focus on map marker
+            let offsetLat = 0.002; // 위로 약간 이동 (값은 지도의 줌 레벨에 따라 조정)
             if (mapInstance) {
+                const zoomLevel = mapInstance.getLevel();
+                console.log('Current zoom level:', zoomLevel);
+                switch (zoomLevel) {
+                    case 3:
+                        offsetLat = 0.0007;
+                        break;
+                    case 4:
+                        offsetLat = 0.001;
+                        break;
+                    case 5:
+                        offsetLat = 0.002;
+                        break;
+                    case 6:
+                        offsetLat = 0.0025;
+                        break;
+                    default:
+                        offsetLat = 0.002;
+                        break;
+                }
                 mapInstance.setCenter(
-                    new window.kakao.maps.LatLng(facility.lat, facility.lng)
+                    new window.kakao.maps.LatLng(
+                        facility.lat - offsetLat * zoomLevel,
+                        facility.lng
+                    )
                 );
             }
         },
