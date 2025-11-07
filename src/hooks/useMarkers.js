@@ -93,7 +93,7 @@ export const useMarkers = (
         const currentLevel = mapInstance.getLevel();
         const bookmarkSet = new Set(bookmarkedIds || []);
 
-        // 줌 레벨 5 이하(더 확대)일 때만 마커 표시
+        // 줌 레벨 6 이하(더 확대)일 때만 마커 표시
         const shouldShowMarkers = currentLevel <= 6;
 
         // 현재 화면에 표시되는 시설들을 추적
