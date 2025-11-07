@@ -138,17 +138,6 @@ export default function FaqScreen() {
                         />
                     ))}
                 </div>
-
-                {/* 하단 고객센터 정보 */}
-                <div className='mt-8 text-center text-gray-600'>
-                    <p className='mb-2'>찾으시는 답변이 없으신가요?</p>
-                    <a
-                        href='#'
-                        className='text-green-500 font-medium hover:underline'
-                    >
-                        1:1 문의하기
-                    </a>
-                </div>
             </div>
         </div>
     );

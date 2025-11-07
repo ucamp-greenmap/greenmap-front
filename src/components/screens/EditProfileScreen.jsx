@@ -221,6 +221,18 @@ export default function EditProfileScreen({ onBack }) {
           {loading ? "저장 중..." : "저장"}
         </button>
 
+        {/* 회원 탈퇴 */}
+        <button
+          className="btn"
+          style={{ background: "#f25c5c" }}
+          onClick={() => {
+            if (onBack) onBack(); // 부모에서 전달된 함수가 있으면 실행
+            else navigate(-1); // 없으면 브라우저 뒤로가기
+          }}
+        >
+          회원 탈퇴
+        </button>
+
         {/* 뒤로가기 */}
         <button
           style={{
