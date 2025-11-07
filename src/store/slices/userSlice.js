@@ -327,6 +327,7 @@ const userSlice = createSlice({
                 carbonReduction: 0,
             };
             localStorage.removeItem('token');
+            localStorage.removeItem('memberId');
         },
 
         // 로그인 처리 (토큰 저장)
