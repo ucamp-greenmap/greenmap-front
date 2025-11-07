@@ -21,9 +21,6 @@ export default function EcoNewsList() {
     const [leftTimes, setLeftTimes] = useState(3); // 서버에서 받은 남은 횟수
     const [toast, setToast] = useState(null);
 
-    // 로그인되면 바꾸기
-    // const CURRENT_MEMBER_ID = 1;
-
     // ------------------------------------
     // 서버에서 뉴스 목록을 불러오는 함수 (GET /news)
     // ------------------------------------
@@ -33,14 +30,6 @@ export default function EcoNewsList() {
         try {
             const response = await api.get('/news');
             const result = response.data;
-
-            console.log('=== API 전체 응답 ===', result);
-            console.log('=== data 객체 ===', result.data);
-            console.log('=== items 배열 ===', result.data?.items);
-            console.log(
-                '=== items[0] (첫번째 뉴스) ===',
-                result.data?.items?.[0]
-            );
 
             // 1. 서버 응답의 status 필드 확인
             if (result.status !== 'SUCCESS') {
@@ -83,7 +72,7 @@ export default function EcoNewsList() {
     const handleReadArticle = async (articleTitle) => {
         if (leftTimes <= 0) {
             setToast('오늘의 뉴스 보상 한도에 도달했습니다');
-            setTimeout(() => setToast(null), 2000);
+            setTimeout(() => setToast(null), 5000);
             return;
         }
 
@@ -199,9 +188,9 @@ export default function EcoNewsList() {
                                         setTimeout(() => setToast(null), 2500);
                                     }
                                 }}
-                                className={`flex items-start w-full bg-white rounded-2xl overflow-hidden p-3 shadow-sm hover:shadow-md transition-all border-2 ${
+                                className={`flex items-start w-full bg-white rounded-2xl overflow-hidden p-3 shadow-sm hover:shadow-md transition-all border-3 ${
                                     isRead
-                                        ? 'border-[#4CAF50] opacity-90'
+                                        ? 'border-[#4CAF50]'
                                         : 'border-gray-100'
                                 } ${'cursor-pointer'}`}
                             >
