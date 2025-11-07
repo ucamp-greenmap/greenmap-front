@@ -40,7 +40,7 @@ export function BottomNavigation({ active = 'home', onChange = () => {} }) {
                         }}
                         aria-current={isActive ? 'page' : undefined}
                         aria-label={t.label}
-                        className={`flex-1 flex flex-col items-center gap-1 py-2 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] ${
+                        className={`flex-1 flex flex-col items-center gap-1 py-2 focus:outline-none focus:ring-2 focus:ring-[#FFFFFF] ${
                             isActive ? 'text-[#4CAF50]' : 'text-gray-400'
                         }`}
                         
