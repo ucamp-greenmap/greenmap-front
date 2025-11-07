@@ -211,12 +211,12 @@ function LoginForm({ setUserInfo, setModal }) {
     try {
       const res = await api.post('/member/login', { email, password });
       localStorage.setItem('token', res.data.data.accessToken);
+       localStorage.setItem('memberId', res.data.data.memberId);
 
       const info = await api.get('/member/me', {
         headers: { Authorization: `Bearer ${res.data.data.accessToken}` },
       });
       setUserInfo(info.data.data);
-
       setModal({ message: '로그인 성공!', type: 'success' });
       setTimeout(() => (window.location.href = '/'), 800);
     } catch {
