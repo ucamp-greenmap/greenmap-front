@@ -10,10 +10,12 @@ export const useMarkers = (
     facilities,
     currentInfoWindowRef,
     selectedFilter,
-    bookmarkedIds
+    bookmarkedIds,
+    onMarkerClick // 마커 클릭 콜백 추가
 ) => {
     const markersRef = useRef([]);
     const markerImageCacheRef = useRef({}); // MarkerImage 캐시
+    const selectedMarkerIdRef = useRef(null); // 선택된 마커 ID 추적
     const _isMountedRef = useRef(true); // 마운트 상태 추적 (언더스코어로 unused 허용)
     const _abortControllerRef = useRef(null); // 마커 생성 중단용 (언더스코어로 unused 허용)
     const isCreatingMarkersRef = useRef(false); // 마커 생성 중인지 추적
@@ -29,18 +31,59 @@ export const useMarkers = (
     }, []);
 
     // MarkerImage 캐싱 - 카테고리별로 한 번만 생성
-    const getMarkerImage = useCallback((category) => {
+    const getMarkerImage = useCallback((category, isSelected = false) => {
         if (!window.kakao) return null;
 
-        if (!markerImageCacheRef.current[category]) {
-            markerImageCacheRef.current[category] = createMarkerImage(
+        const cacheKey = `${category}-${isSelected ? 'selected' : 'normal'}`;
+
+        if (!markerImageCacheRef.current[cacheKey]) {
+            markerImageCacheRef.current[cacheKey] = createMarkerImage(
                 window.kakao,
-                category
+                category,
+                isSelected
             );
         }
 
-        return markerImageCacheRef.current[category];
+        return markerImageCacheRef.current[cacheKey];
     }, []);
+
+    // 선택된 마커 업데이트 (애니메이션 효과)
+    const updateSelectedMarker = useCallback(
+        (facilityId) => {
+            if (!window.kakao) return;
+
+            // 이전 선택된 마커를 일반 상태로 되돌림
+            if (selectedMarkerIdRef.current) {
+                const prevSelected = markersRef.current.find(
+                    (m) => m.id === selectedMarkerIdRef.current
+                );
+                if (prevSelected) {
+                    const normalImage = getMarkerImage(
+                        prevSelected.category,
+                        false
+                    );
+                    prevSelected.marker.setImage(normalImage);
+                    prevSelected.marker.setZIndex(1);
+                }
+            }
+
+            // 새로 선택된 마커를 선택 상태로 변경
+            const newSelected = markersRef.current.find(
+                (m) => m.id === facilityId
+            );
+            if (newSelected) {
+                const selectedImage = getMarkerImage(
+                    newSelected.category,
+                    true
+                );
+                newSelected.marker.setImage(selectedImage);
+                newSelected.marker.setZIndex(100); // 맨 앞에 표시
+            }
+
+            selectedMarkerIdRef.current = facilityId;
+        },
+        [getMarkerImage]
+    );
 
     // 지도 이동/줌 이벤트 시 마커 표시 업데이트 - 필터 적용
     const updateVisibleMarkers = useCallback(() => {
@@ -105,7 +148,6 @@ export const useMarkers = (
                 // Clear existing markers
                 markersRef.current.forEach((m) => {
                     if (m.marker) m.marker.setMap(null);
-                    if (m.infowindow) m.infowindow.close();
                 });
 
                 const newMarkers = [];
@@ -130,20 +172,15 @@ export const useMarkers = (
                             image: markerImage,
                         });
 
-                        const infoContent = `<div style="padding:8px"><strong>${f.name}</strong><div style="font-size:12px;color:#666">${f.category}</div></div>`;
-                        const infowindow = new window.kakao.maps.InfoWindow({
-                            content: infoContent,
-                        });
-
+                        // 마커 클릭 이벤트: InfoWindow 대신 콜백 호출
                         window.kakao.maps.event.addListener(
                             marker,
                             'click',
                             () => {
-                                if (currentInfoWindowRef.current) {
-                                    currentInfoWindowRef.current.close();
+                                if (onMarkerClick) {
+                                    updateSelectedMarker(f.id);
+                                    onMarkerClick(f);
                                 }
-                                infowindow.open(mapInstance, marker);
-                                currentInfoWindowRef.current = infowindow;
                             }
                         );
 
@@ -151,7 +188,7 @@ export const useMarkers = (
                             id: f.id,
                             category: f.category,
                             marker,
-                            infowindow,
+                            infowindow: null, // InfoWindow 더 이상 사용 안 함
                             data: f,
                         };
                     });
@@ -193,6 +230,8 @@ export const useMarkers = (
         currentInfoWindowRef,
         updateVisibleMarkers,
         getMarkerImage,
+        onMarkerClick,
+        updateSelectedMarker,
     ]);
 
     // 지도 이동/줌 이벤트 리스너 등록
@@ -262,7 +301,6 @@ export const useMarkers = (
                 window.requestIdleCallback(() => {
                     markers.forEach((m) => {
                         if (m.marker) m.marker.setMap(null);
-                        if (m.infowindow) m.infowindow.close();
                     });
                 });
             } else if (markers.length > 0) {
@@ -270,12 +308,16 @@ export const useMarkers = (
                 setTimeout(() => {
                     markers.forEach((m) => {
                         if (m.marker) m.marker.setMap(null);
-                        if (m.infowindow) m.infowindow.close();
                     });
                 }, 0);
             }
         };
     }, []);
 
-    return { markersRef, updateVisibleMarkers, visibleFacilities };
+    return {
+        markersRef,
+        updateVisibleMarkers,
+        visibleFacilities,
+        updateSelectedMarker,
+    };
 };

@@ -9,7 +9,7 @@ export default function LoginSuccess() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        console.log('✅ LoginSuccess 페이지 렌더링됨:', window.location.href);
+        console.log(' LoginSuccess 페이지 렌더링됨:', window.location.href);
 
         const currentUrl = window.location.href;
 

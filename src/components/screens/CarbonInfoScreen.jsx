@@ -26,10 +26,20 @@ const Progress = ({ value, className }) => {
     );
 };
 
-export default function CarbonInfoScreen({ onBack }) {
+export default function CarbonInfoScreen({ onBack, navigation }) {
     const [carbonData, setCarbonData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const handleGoBack = () => {
+        if (onBack) {
+            onBack();
+        } else if (navigation) {
+            navigation.goBack();
+        } else if (window.history.length > 1) {
+            window.history.back();
+        }
+    };
 
     useEffect(() => {
         const loadCarbonData = async () => {
@@ -52,7 +62,6 @@ export default function CarbonInfoScreen({ onBack }) {
         loadCarbonData();
     }, []);
 
-    // 로딩중
     if (loading) {
         return (
             <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
@@ -61,7 +70,6 @@ export default function CarbonInfoScreen({ onBack }) {
         );
     }
 
-    // 에러
     if (error || !carbonData) {
         return (
             <div className='min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6'>
@@ -69,7 +77,7 @@ export default function CarbonInfoScreen({ onBack }) {
                     {error || '데이터를 찾을 수 없습니다.'}
                 </div>
                 <button
-                    onClick={onBack}
+                    onClick={handleGoBack}
                     className='px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors'
                 >
                     <ArrowLeft className='w-4 h-4 inline mr-2' /> 뒤로 돌아가기
@@ -78,11 +86,20 @@ export default function CarbonInfoScreen({ onBack }) {
         );
     }
 
-    // 데이터에서 값 가져오기
     const totalCarbon = carbonData.carbonSave || 0;
     const treeEffect = (totalCarbon / 6.6).toFixed(1);
     const powerSaved = (totalCarbon * 2.096).toFixed(0);
     const recycleEffect = (totalCarbon * 10).toFixed(0);
+
+    // 지난 달 데이터 (고정값)
+    const lastMonthCarbon = 109;
+
+    // 증감률 계산
+    const carbonChange = (
+        ((totalCarbon - lastMonthCarbon) / lastMonthCarbon) *
+        100
+    ).toFixed(1);
+    const isIncrease = carbonChange > 0;
 
     const impactData = [
         {
@@ -157,7 +174,7 @@ export default function CarbonInfoScreen({ onBack }) {
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
                 <div className='flex items-center gap-3 mb-6'>
                     <button
-                        onClick={onBack}
+                        onClick={handleGoBack}
                         className='p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors'
                     >
                         <ArrowLeft className='w-5 h-5 text-white' />
@@ -308,7 +325,7 @@ export default function CarbonInfoScreen({ onBack }) {
                             <div className='flex items-center justify-between p-3 bg-gray-50 rounded-xl'>
                                 <span className='text-gray-600'>10월</span>
                                 <span className='text-gray-600'>
-                                    38.2 kg CO₂
+                                    {lastMonthCarbon} kg CO₂
                                 </span>
                             </div>
                             <div className='flex items-center justify-between p-3 bg-gray-50 rounded-xl'>
@@ -322,10 +339,17 @@ export default function CarbonInfoScreen({ onBack }) {
                         <div className='mt-4 pt-4 border-t border-gray-100 text-center'>
                             <p className='text-sm text-gray-600'>
                                 지난 달 대비{' '}
-                                <span className='text-[#4CAF50] font-semibold'>
-                                    +11.3%
+                                <span
+                                    className={`font-semibold ${
+                                        isIncrease
+                                            ? 'text-[#4CAF50]'
+                                            : 'text-red-500'
+                                    }`}
+                                >
+                                    {isIncrease ? '+' : ''}
+                                    {carbonChange}%
                                 </span>{' '}
-                                증가
+                                {isIncrease ? '증가' : '감소'}
                             </p>
                         </div>
                     </Card>

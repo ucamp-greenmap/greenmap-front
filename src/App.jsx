@@ -22,11 +22,13 @@ import PointExchangeScreen from './components/screens/PointExchangeScreen';
 import RankingScreen from './components/screens/RankingScreen';
 import LoginSignupScreen from './components/screens/LoginSignupScreen';
 import LoginSuccess from './components/screens/LoginSuccess';
-// import BadgeScreen from './components/screens/BadgeScreen';
+import EditProfile from './components/screens/EditProfileScreen';
+import BadgeScreen from './components/screens/BadgeScreen';
 import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
+import AddChallengeScreen from './components/screens/AddChallengeScreen';
 
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -35,7 +37,7 @@ const TAB_TO_PATH = {
     map: '/map',
     cert: '/verification',
     challenge: '/challenge',
-    
+    'edit-profile': '/edit-profile',
     mypage: '/mypage',
     points: '/points',
     'point-exchange': '/point-exchange',
@@ -45,6 +47,7 @@ const TAB_TO_PATH = {
     FAQ: '/FAQ',
     'cert-history': '/cert-history',
     'carbon-info': '/carbon-info',
+    addChal: '/addChallenge',
 };
 
 export default function App() {
@@ -119,11 +122,15 @@ export default function App() {
                         path='/login'
                         element={<LoginSignupScreen onNavigate={navigate} />}
                     />
+                    <Route
+                        path='/edit-profile'
+                        element={<EditProfile onNavigate={navigate} />}
+                    />
                     <Route path='/login/success' element={<LoginSuccess />} />
-                    {/* <Route
+                    <Route
                         path='/badge'
                         element={<BadgeScreen onNavigate={navigate} />}
-                    /> */}
+                    />
                     <Route
                         path='/carbon-info'
                         element={<CarbonInfoScreen onNavigate={navigate} />}
@@ -138,14 +145,21 @@ export default function App() {
                         path='/FAQ'
                         element={<FaqScreen onNavigate={navigate} />}
                     />
+                    <Route
+                        path='/addChallenge'
+                        element={<AddChallengeScreen onNavigate={navigate} />}
+                    />
                     {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
                     <Route path='*' element={<Navigate to='/' replace />} />
                 </Routes>
 
-                <BottomNavigation
-                    active={activeTab}
-                    onChange={(tab) => navigate(tab)}
-                />
+                {/* 하단 네비게이션 바 - addChallenge 페이지에서는 숨김 */}
+                {location.pathname !== '/addChallenge' && (
+                    <BottomNavigation
+                        active={activeTab}
+                        onChange={(tab) => navigate(tab)}
+                    />
+                )}
             </div>
         );
     }
