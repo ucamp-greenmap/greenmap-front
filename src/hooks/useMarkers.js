@@ -94,7 +94,7 @@ export const useMarkers = (
         const bookmarkSet = new Set(bookmarkedIds || []);
 
         // 줌 레벨 5 이하(더 확대)일 때만 마커 표시
-        const shouldShowMarkers = currentLevel <= 5;
+        const shouldShowMarkers = currentLevel <= 6;
 
         // 현재 화면에 표시되는 시설들을 추적
         const currentlyVisible = [];
