@@ -19,7 +19,7 @@ const Progress = ({ value, className }) => {
             className={`bg-gray-200 rounded-full overflow-hidden ${className}`}
         >
             <div
-                className='bg-[#4CAF50] h-full transition-all'
+                className='h-full transition-all duration-700 ease-out bg-gradient-to-r from-emerald-400 to-[#4CAF50]'
                 style={{ width: `${value}%` }}
             />
         </div>
@@ -99,11 +99,11 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
             unit: '그루',
             description: `약 나무 ${treeEffect}그루를 심는 것과 같은 효과`,
             color: 'text-green-600',
-            bgColor: 'bg-green-50',
-            bgGradient: 'from-emerald-50 to-green-100',
-            iconBg: 'bg-emerald-100',
+            bgGradient: 'from-emerald-50 via-green-50 to-teal-50',
+            iconBg: 'bg-emerald-200/50',
             iconColor: 'text-emerald-700',
             gradient: 'from-emerald-600 to-green-600',
+            shadow: 'shadow-md shadow-emerald-200',
         },
         {
             icon: Zap,
@@ -114,11 +114,11 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
                 0
             )}일분의 전력량`,
             color: 'text-yellow-600',
-            bgColor: 'bg-yellow-50',
-            bgGradient: 'from-amber-50 to-yellow-100',
-            iconBg: 'bg-amber-100',
+            bgGradient: 'from-amber-50 via-yellow-50 to-orange-50',
+            iconBg: 'bg-amber-200/50',
             iconColor: 'text-amber-700',
             gradient: 'from-amber-600 to-yellow-600',
+            shadow: 'shadow-md shadow-amber-200',
         },
         {
             icon: Recycle,
@@ -127,11 +127,11 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
             unit: 'kg',
             description: `약 재활용 ${recycleEffect}kg과 동일한 효과`,
             color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
-            bgGradient: 'from-blue-50 to-cyan-100',
-            iconBg: 'bg-blue-100',
+            bgGradient: 'from-blue-50 via-cyan-50 to-sky-50',
+            iconBg: 'bg-blue-200/50',
             iconColor: 'text-blue-700',
             gradient: 'from-blue-600 to-cyan-600',
+            shadow: 'shadow-md shadow-blue-200',
         },
     ];
 
@@ -172,7 +172,7 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
 
     return (
         <div className='min-h-screen bg-gray-50 pb-24'>
-            {/* Header */}
+            {/* Header*/}
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
                 <div className='flex items-center gap-3 mb-6'>
                     <button
@@ -184,13 +184,9 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
                     <h1 className='text-white text-xl font-bold'>탄소 중립</h1>
                 </div>
 
-                {/* Main Carbon Card */}
                 <Card className='bg-white rounded-3xl p-8 shadow-2xl shadow-emerald-500/20 border border-emerald-100'>
                     <div className='text-center'>
-                        <div className='bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl p-6 w-28 h-28 mx-auto mb-6 flex items-center justify-center shadow-inner'>
-                            <TrendingDown className='w-14 h-14 text-emerald-600' />
-                        </div>
-                        <p className='text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider'>
+                        <p className='text-gray-500 text-lg font-medium mb-2 uppercase tracking-wider'>
                             이번 달 탄소 감축량
                         </p>
                         <div className='flex items-baseline justify-center gap-2 mb-8'>
@@ -224,35 +220,35 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
             </div>
 
             {/* Content */}
-            <div className='px-6 py-6 space-y-6'>
+            <div className='px-6 py-6 space-y-8'>
                 {/* Impact Equivalents */}
                 <div>
-                    <div className='flex items-center gap-3 mb-6'>
-                        <h3 className='text-2xl font-bold text-gray-900'>
-                            환경 영향
-                        </h3>
-                    </div>
+                    {/* 1. 상위 flex div 제거 및 h2에 text-center 클래스 추가 */}
+                    <h2 className='text-2xl font-extrabold text-gray-900 mb-6 tracking-tight text-center'>
+                        🌍 환경 기여도
+                    </h2>
                     <div className='space-y-4'>
                         {impactData.map((item, index) => {
                             const Icon = item.icon;
                             return (
                                 <Card
                                     key={item.label}
-                                    className={`bg-gradient-to-br ${item.bgGradient} rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-white`}
+                                    className={`bg-gradient-to-br ${item.bgGradient} rounded-3xl p-6 ${item.shadow} hover:shadow-xl hover:shadow-opacity-30 transition-all duration-500 border border-white/50 transform hover:scale-[1.01]`}
                                     style={{
                                         animationDelay: `${index * 100}ms`,
                                     }}
                                 >
                                     <div className='flex items-center gap-5'>
+                                        {/* 아이콘 컨테이너 개선: 더 부드러운 배경, 미세한 애니메이션 효과 */}
                                         <div
-                                            className={`${item.iconBg} rounded-2xl p-4 shadow-sm`}
+                                            className={`${item.iconBg} rounded-2xl p-4 shadow-lg transform hover:rotate-3 transition-transform duration-300`}
                                         >
                                             <Icon
                                                 className={`w-12 h-12 ${item.iconColor}`}
                                             />
                                         </div>
                                         <div className='flex-1'>
-                                            <p className='text-gray-700 font-bold text-base mb-3'>
+                                            <p className='text-gray-700 font-extrabold text-lg mb-2'>
                                                 {item.label}
                                             </p>
                                             <div className='flex items-baseline gap-2 mb-2'>
@@ -265,7 +261,7 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
                                                     {item.unit}
                                                 </span>
                                             </div>
-                                            <p className='text-gray-600 text-sm font-medium'>
+                                            <p className='text-gray-600 text-sm font-medium border-t border-gray-200 pt-2'>
                                                 {item.description}
                                             </p>
                                         </div>
@@ -275,29 +271,38 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
                         })}
                     </div>
                 </div>
+                {/* --- (분리선은 필요에 따라 추가/삭제 가능) */}
                 {/* Activity Breakdown */}
                 <div>
-                    <h3 className='text-xl font-bold text-gray-900 mb-4'>
-                        활동별 기여도
-                    </h3>
-                    <Card className='bg-white rounded-2xl p-6 shadow'>
-                        <div className='space-y-5'>
+                    {/* 2. 활동별 기여도 h2에도 text-center 클래스 추가 */}
+                    <h2 className='text-2xl font-extrabold text-gray-900 mb-6 tracking-tight text-center'>
+                        📈 활동별 감축 기여도
+                    </h2>
+                    {/* 카드 디자인 개선: 더 부드러운 모서리, 강조된 그림자 */}
+                    <Card className='bg-white rounded-3xl p-6 shadow-xl border border-gray-100'>
+                        <div className='space-y-6'>
                             {activitiesContribution.map((item, index) => (
-                                <div key={index}>
+                                <div
+                                    key={index}
+                                    className='p-3 rounded-xl hover:bg-emerald-50 transition-colors'
+                                >
                                     <div className='flex items-center justify-between mb-2'>
-                                        <span className='text-gray-900 font-medium'>
+                                        <span className='text-gray-900 font-semibold text-lg'>
                                             {item.activity}
                                         </span>
-                                        <span className='text-[#4CAF50] font-bold'>
-                                            {item.reduction}kg CO₂
+                                        <span className='text-2xl text-emerald-600 font-extrabold'>
+                                            {item.reduction}
+                                            <span className='text-sm font-medium ml-1 text-gray-500'>
+                                                kg CO₂
+                                            </span>
                                         </span>
                                     </div>
                                     <div className='flex items-center gap-3'>
                                         <Progress
                                             value={item.percentage}
-                                            className='flex-1 h-3'
+                                            className='flex-1 h-3.5'
                                         />
-                                        <span className='text-sm text-gray-600 font-medium w-12 text-right'>
+                                        <span className='text-base text-gray-700 font-bold w-10 text-right'>
                                             {item.percentage}%
                                         </span>
                                     </div>
