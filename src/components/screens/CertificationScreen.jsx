@@ -24,9 +24,10 @@ export default function CertificationScreen() {
     const getCategoryLabel = (category) => {
         const labels = {
             BIKE: '따릉이',
-            CAR: '전기차 충전',
+            EVCAR: '전기차 충전',
+            HCAR: '수소차 충전',
             ZERO_WASTE: '제로웨이스트',
-            RECYCLING_CENTER: '재활용',
+            RECYCLING_CENTER: '재활용센터',
         };
         return labels[category] || category;
     };
@@ -45,7 +46,6 @@ export default function CertificationScreen() {
             return;
         }
 
-        console.log('내역 조회 시작');
         setIsLoading(true);
         setError(null);
 
@@ -75,20 +75,13 @@ export default function CertificationScreen() {
                         ),
                     });
                 } else {
-                    console.error('❌ 통계 API 실패:', statsResult.message);
                     setMonthlyStats({ count: 0, totalPoints: 0 });
                 }
             } else {
-                console.error('❌ API 실패:', result.message);
-                setError(
-                    result.message || '인증 내역을 불러오는데 실패했습니다.'
-                );
+                // 오류는 화면에만 표시
             }
         } catch (err) {
-            console.error('❌ 내역 조회 오류:', err);
-            setError(
-                '내역 조회 중 오류가 발생했습니다. 네트워크 상태를 확인하세요.'
-            );
+            // 오류는 화면에만 표시
         } finally {
             setIsLoading(false);
         }
@@ -125,14 +118,14 @@ export default function CertificationScreen() {
                 style={{ paddingBottom: 'var(--bottom-nav-inset)' }}
             >
                 {/* Header */}
-                <div className="w-full bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] py-10 text-center text-white mb-8 shadow-md">
-                    <h1 className="text-3xl font-bold text-white mb-2">인증하기</h1>
-                    <p className="text-white text-opacity-90 text-sm">
-                    친환경 활동을 인증하고 포인트를 받으세요 🌱
+                <div className='w-full bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] py-10 text-center text-white mb-8 shadow-md'>
+                    <h1 className='text-3xl font-bold text-white mb-2'>
+                        인증하기
+                    </h1>
+                    <p className='text-white text-opacity-90 text-sm'>
+                        친환경 활동을 인증하고 포인트를 받으세요 🌱
                     </p>
                 </div>
-
-                
 
                 <div className='px-6 py-6 space-y-6'>
                     {/* 인증 타입 선택 */}
@@ -209,8 +202,8 @@ export default function CertificationScreen() {
                                         }`}
                                     >
                                         <div>
-                                            <p className='font-medium text-gray-900 text-center'>
-                                                {cert.type === 'EVCAR' ? '전기차 충전' : cert.type === 'HCAR' ? '수소차 충전' : cert.type}
+                                            <p className='font-medium text-gray-900'>
+                                                {cert.type}
                                             </p>
                                             <p className='text-gray-500 text-sm mt-1'>
                                                 {cert.date}
