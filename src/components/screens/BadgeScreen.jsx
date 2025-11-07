@@ -81,7 +81,7 @@ export default function BadgeScreen({ onBack, navigation }) {
                     </button>
                     <h1 className='text-xl font-bold'>뱃지 컬렉션</h1>
                 </div>
-                <p className='text-white text-opacity-90 text-sm text-center'>
+                <p className='text-white text-opacity-90 text-sm text-center relative -top-2'>
                     GreenMap을 이용하고 뱃지를 수집해 보세요 🌱
                 </p>
             </div>

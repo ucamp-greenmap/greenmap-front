@@ -1,10 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchPointInfo } from '../../store/slices/userSlice';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
+import {
+    searchCachedPlaces,
+    convertPlaceToFacility,
+} from '../../util/placeApi';
+import { formatDistance, calculateDistance } from '../../util/location';
+import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 
 const ECO_TIPS = [
     {
@@ -36,6 +42,35 @@ const ECO_TIPS = [
 export default function HomeScreen({ onNavigate }) {
     const dispatch = useDispatch();
 
+    // 검색 상태
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [showSearchResults, setShowSearchResults] = useState(false);
+    const searchInputRef = useRef(null);
+    const searchResultsRef = useRef(null);
+
+    // 현재 위치 가져오기
+    const {
+        currentLocation,
+        isLoading: isLocationLoading,
+        fetchCurrentLocation,
+    } = useCurrentLocation();
+
+    // 컴포넌트 마운트 시 현재 위치 가져오기
+    useEffect(() => {
+        if (!currentLocation && !isLocationLoading) {
+            fetchCurrentLocation().catch(() => {
+                // 위치 가져오기 실패 시 기본 위치 사용 (handleSearchChange에서 처리)
+            });
+        }
+    }, [currentLocation, isLocationLoading, fetchCurrentLocation]);
+
+    useEffect(() => {
+        const onFocus = () => dispatch(fetchPointInfo());
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
+    }, [dispatch]);
+
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
     useEffect(() => {
@@ -61,6 +96,79 @@ export default function HomeScreen({ onNavigate }) {
         dispatch(setActiveTab(tab));
     };
 
+    // 검색어 변경 핸들러
+    const handleSearchChange = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        if (query.trim().length >= 1) {
+            // 최소 1글자 이상 입력 시 검색
+            const results = searchCachedPlaces(query);
+
+            // 기본 위치 (마곡 - LG사이언스파크 근처)
+            const defaultLocation = {
+                lat: 37.56182106449056,
+                lng: 126.83556624636658,
+            };
+
+            // 현재 위치 또는 기본 위치 사용
+            const locationToUse = currentLocation || defaultLocation;
+
+            // 항상 위치 기반으로 거리 재계산 (백엔드 distance는 km 단위라서 무시)
+            const resultsWithDistance = results.map((place) => {
+                const distance = calculateDistance(
+                    locationToUse.lat,
+                    locationToUse.lng,
+                    place.latitude,
+                    place.longitude
+                );
+
+                return { ...place, distance };
+            });
+
+            setSearchResults(resultsWithDistance);
+            setShowSearchResults(true);
+        } else {
+            setSearchResults([]);
+            setShowSearchResults(false);
+        }
+    };
+
+    // 검색 결과 클릭 핸들러
+    const handleResultClick = (place) => {
+        // Redux에 선택된 장소 저장 (MapScreen에서 사용)
+        const facility = convertPlaceToFacility(place);
+
+        // MapScreen으로 이동하면서 선택된 시설 정보 전달
+        // MapScreen이 마운트되면 해당 시설로 포커스
+        sessionStorage.setItem('selectedFacility', JSON.stringify(facility));
+
+        // 검색 상태 초기화
+        setSearchQuery('');
+        setShowSearchResults(false);
+
+        navigate('map');
+    };
+
+    // 검색창 외부 클릭 시 결과 닫기
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                searchResultsRef.current &&
+                !searchResultsRef.current.contains(event.target) &&
+                searchInputRef.current &&
+                !searchInputRef.current.contains(event.target)
+            ) {
+                setShowSearchResults(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     return (
         <div style={{ paddingBottom: 'var(--bottom-nav-inset)' }}>
             {/* Header - gradient */}
@@ -81,14 +189,90 @@ export default function HomeScreen({ onNavigate }) {
 
                 <div className='relative w-full'>
                     <input
+                        ref={searchInputRef}
                         type='text'
-                        placeholder='지도 검색...'
+                        placeholder='지도 검색... (예: LG사이언스파크 E13, 서울식물원 )'
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onFocus={() =>
+                            searchQuery.trim().length >= 2 &&
+                            setShowSearchResults(true)
+                        }
                         className='w-full pl-12 pr-4 py-4 rounded-[30px] text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white shadow-lg'
                         aria-label='지도 검색'
                     />
                     <div className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400'>
                         🔍
                     </div>
+
+                    {/* 검색 결과 드롭다운 */}
+                    {showSearchResults && searchResults.length > 0 && (
+                        <div
+                            ref={searchResultsRef}
+                            className='absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50 border border-gray-100'
+                        >
+                            <div className='p-2'>
+                                <div className='text-xs text-gray-500 px-3 py-2 flex items-center justify-between'>
+                                    <span>
+                                        검색 결과 {searchResults.length}개
+                                    </span>
+                                </div>
+                                {searchResults.map((place, index) => (
+                                    <button
+                                        key={`${place.placeId}-${index}`}
+                                        onClick={() => handleResultClick(place)}
+                                        className='w-full text-left px-3 py-3 hover:bg-gray-50 rounded-xl transition-colors flex items-start gap-3'
+                                    >
+                                        <div className='text-2xl mt-1'>
+                                            {place.categoryId === 1
+                                                ? '🚲'
+                                                : place.categoryId === 2
+                                                ? '🛍️'
+                                                : place.categoryId === 3
+                                                ? '⚡'
+                                                : place.categoryId === 5
+                                                ? '♻️'
+                                                : '📍'}
+                                        </div>
+                                        <div className='flex-1 min-w-0'>
+                                            <div className='font-medium text-gray-900 truncate'>
+                                                {place.placeName}
+                                            </div>
+                                            <div className='text-sm text-gray-500 truncate'>
+                                                {place.address}
+                                            </div>
+                                            {place.distance && (
+                                                <div className='text-xs text-[#4CAF50] mt-1'>
+                                                    📍{' '}
+                                                    {formatDistance(
+                                                        place.distance
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 검색 결과 없음 */}
+                    {showSearchResults &&
+                        searchQuery.trim().length >= 2 &&
+                        searchResults.length === 0 && (
+                            <div
+                                ref={searchResultsRef}
+                                className='absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl p-6 z-50 border border-gray-100 text-center'
+                            >
+                                <div className='text-4xl mb-2'>🔍</div>
+                                <p className='text-gray-600 text-sm'>
+                                    "{searchQuery}"에 대한 검색 결과가 없습니다
+                                </p>
+                                <p className='text-xs text-gray-400 mt-2'>
+                                    지도에서 장소를 탐색하면 검색할 수 있어요
+                                </p>
+                            </div>
+                        )}
                 </div>
             </div>
 
@@ -146,7 +330,9 @@ export default function HomeScreen({ onNavigate }) {
                                     </p>
                                     <div className='flex items-baseline gap-2'>
                                         <span className='text-4xl font-bold'>
-                                            {stats.point}
+                                            {Number(
+                                                stats.point
+                                            ).toLocaleString()}
                                         </span>
                                         <span className='text-lg'>P</span>
                                     </div>

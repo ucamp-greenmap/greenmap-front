@@ -65,6 +65,87 @@ export const clearLocationWatch = (watchId) => {
 };
 
 /**
+ * Calculate distance between two coordinates using Haversine formula
+ * @param {number} lat1 - Latitude of first point
+ * @param {number} lng1 - Longitude of first point
+ * @param {number} lat2 - Latitude of second point
+ * @param {number} lng2 - Longitude of second point
+ * @returns {number} Distance in meters
+ */
+export const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+    const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distance = R * c; // Distance in meters
+    return Math.round(distance); // Round to nearest meter
+};
+
+/**
+ * Format distance for display
+ * @param {number} distance - Distance in meters
+ * @returns {string} Formatted distance string
+ */
+export const formatDistance = (distance) => {
+    if (distance === null || distance === undefined) {
+        return null;
+    }
+
+    if (distance < 1000) {
+        return `${Math.round(distance)}m`;
+    }
+
+    return `${(distance / 1000).toFixed(1)}km`;
+};
+
+/**
+ * Calculate distances for multiple facilities from a given location
+ * @param {Array} facilities - Array of facility objects with lat/lng
+ * @param {Object} currentLocation - Current location with lat/lng
+ * @returns {Array} Facilities array with added distance property
+ */
+export const calculateDistancesForFacilities = (
+    facilities,
+    currentLocation
+) => {
+    if (!currentLocation) {
+        return facilities;
+    }
+
+    return facilities.map((facility) => ({
+        ...facility,
+        distance: calculateDistance(
+            currentLocation.lat,
+            currentLocation.lng,
+            facility.lat,
+            facility.lng
+        ),
+    }));
+};
+
+/**
+ * Sort facilities by distance
+ * @param {Array} facilities - Array of facilities with distance property
+ * @returns {Array} Sorted facilities array
+ */
+export const sortByDistance = (facilities) => {
+    return [...facilities].sort((a, b) => {
+        // 거리 정보가 없는 경우 뒤로 이동
+        if (!a.distance && !b.distance) return 0;
+        if (!a.distance) return 1;
+        if (!b.distance) return -1;
+        return a.distance - b.distance;
+    });
+};
+
+/**
  * Create custom overlay for current location marker
  */
 export const createCurrentLocationOverlay = (kakao, position) => {
