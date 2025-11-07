@@ -93,11 +93,16 @@ export default function EcoNewsList() {
                 setLeftTimes((prev) => Math.max(0, prev - 1));
 
                 setNewsList((prev) =>
-                    prev.map((article) =>
-                        article.title === articleTitle
-                            ? { ...article, isRead: true }
-                            : article
-                    )
+                    prev.map((article) => {
+                        const articleCleanTitle = article.title.replace(
+                            /<[^>]*>/g,
+                            ''
+                        );
+                        if (articleCleanTitle === articleTitle) {
+                            return { ...article, isRead: true };
+                        }
+                        return article;
+                    })
                 );
 
                 dispatch(
