@@ -20,6 +20,7 @@ export default function ChallengeScreen({ onNavigate }) {
     const [attend, setAttend] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -56,6 +57,69 @@ export default function ChallengeScreen({ onNavigate }) {
         };
 
         fetchData();
+    }, []);
+
+    // 관리자 권한 확인
+    const checkAdminStatus = async () => {
+        const token = localStorage.getItem('token');
+        const memberId = localStorage.getItem('memberId');
+
+        // memberId가 1인 경우만 API 호출
+        if (!token || memberId !== '1') {
+            setIsAdmin(false);
+            return;
+        }
+
+        try {
+            const response = await api.get('/admin', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (
+                response.data.status === 'SUCCESS' &&
+                response.data.data.result
+            ) {
+                setIsAdmin(true);
+            } else {
+                setIsAdmin(false);
+            }
+        } catch (err) {
+            console.error('관리자 권한 확인 실패', err.response || err);
+            setIsAdmin(false);
+        }
+    };
+
+    // 챌린지 추가 버튼 클릭 시 관리자 확인
+    const handleAddChallenge = async () => {
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        try {
+            const response = await api.get('/admin', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (
+                response.data.status === 'SUCCESS' &&
+                response.data.data.result
+            ) {
+                navigate('addChal');
+            } else {
+                alert('관리자 권한이 없습니다.');
+            }
+        } catch (err) {
+            console.error('관리자 권한 확인 실패', err.response || err);
+            alert('관리자 권한 확인에 실패했습니다.');
+        }
+    };
+
+    // 컴포넌트 마운트 시 관리자 권한 확인
+    useEffect(() => {
+        checkAdminStatus();
     }, []);
 
     const handleChallengeParticipated = (challengeId) => {
@@ -192,17 +256,19 @@ export default function ChallengeScreen({ onNavigate }) {
             </div>
 
             {/* Admin 전용 챌린지 추가 버튼 */}
-            <button
-                onClick={() => navigate('addChal')}
-                className='fixed bottom-28 right-6 w-16 h-16 bg-gradient-to-br from-[#4CAF50] to-[#2E7D32] rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 hover:rotate-90 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#4CAF50]/30 group'
-                aria-label='챌린지 추가'
-            >
-                <Plus className='w-8 h-8 group-hover:scale-110 transition-transform' />
-                <div className='absolute -bottom-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap'>
-                    챌린지 추가
-                    <div className='absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900'></div>
-                </div>
-            </button>
+            {isAdmin && (
+                <button
+                    onClick={handleAddChallenge}
+                    className='fixed bottom-28 right-6 w-16 h-16 bg-gradient-to-br from-[#4CAF50] to-[#2E7D32] rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 hover:rotate-90 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#4CAF50]/30 group'
+                    aria-label='챌린지 추가'
+                >
+                    <Plus className='w-8 h-8 group-hover:scale-110 transition-transform' />
+                    <div className='absolute -bottom-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap'>
+                        챌린지 추가
+                        <div className='absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900'></div>
+                    </div>
+                </button>
+            )}
         </div>
     );
 }

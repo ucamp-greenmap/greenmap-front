@@ -154,9 +154,9 @@ function LoginForm({ setUserInfo }) {
                 email,
                 password,
             });
-
+            console.log("login response: ", res.data.data);
             localStorage.setItem('token', res.data.data.accessToken);
-
+            localStorage.setItem('memberId', res.data.data.memberId);
             const info = await api.get('/member/me', {
                 headers: {
                     Authorization: `Bearer ${res.data.data.accessToken}`,
