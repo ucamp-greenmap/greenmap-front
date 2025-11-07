@@ -463,7 +463,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                                 </h3>
 
                                 {/* 금액 빠른 선택 */}
-                                <div className='mb-4'>
+                                <div className='mb-4 '>
                                     <label className='block text-sm font-medium text-gray-700 mb-2'>
                                         금액 선택
                                     </label>
@@ -498,6 +498,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                                     </label>
                                     <input
                                         type='number'
+                                        step="1000"    
                                         value={transferAmount}
                                         onChange={(e) =>
                                             setTransferAmount(e.target.value)
@@ -585,13 +586,13 @@ export default function PointExchangeScreen({ onNavigate }) {
 
                                 {/* 안내사항 */}
                                 <div className='mt-4 p-4 bg-blue-50 rounded-xl'>
-                                    <div className='flex items-start gap-2'>
+                                    <div className='flex items-start justify-center gap-2'>
                                         <AlertCircle className='w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0' />
                                         <div className='text-sm text-blue-800'>
                                             <p className='font-medium mb-1'>
                                                 계좌이체 안내
                                             </p>
-                                            <ul className='space-y-1 text-xs'>
+                                            <ul className='space-y-1 text-xs '>
                                                 <li>
                                                     • 수수료 5%가 차감되어
                                                     입금됩니다
