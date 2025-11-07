@@ -14,7 +14,6 @@ const styles = `
   .subtitle{ color:#6b7280; margin-bottom:14px; }
   .field{ margin:14px 0; text-align:left; }
   .label{ display:block; font-weight:600; color:#333; margin-bottom:6px; transition:color .2s ease; }
-  .label.filled{ color:var(--brand); }
   .input{ width:100%; padding:12px 14px; border-radius:12px; border:2px solid #e5e7eb; outline:none;
           transition:border-color .15s ease, box-shadow .15s ease, background .15s ease; }
   .input:focus{ border-color:var(--brand); box-shadow:0 0 0 4px rgba(133,193,75,.15); }
@@ -34,14 +33,43 @@ const styles = `
   }
 `;
 
+function Modal({ message, type = 'info', onClose }) {
+  const handleClick = () => onClose();
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+      <div className="bg-white rounded-2xl shadow-xl w-80 p-6 text-center">
+        <div
+          className={`text-4xl mb-3 ${
+            type === 'success' ? 'text-green-500' : 'text-red-500'
+          }`}
+        >
+          {type === 'success' ? '🌳' : '🍂'}
+        </div>
+        <p className="text-gray-800 font-semibold mb-4 mt-4">{message}</p>
+        <button
+          onClick={handleClick}
+          className="w-full py-2 rounded-xl font-bold text-white"
+          style={{
+            background: type === 'success' ? '#96cb6f' : '#e63e3e',
+          }}
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function EditProfileScreen({ onBack }) {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [nickname, setNickname] = useState("");
+  const [originNickname, setOriginNickname] = useState("");
   const [email, setEmail] = useState("");
   const [avatar, setAvatar] = useState(null);
   const [nickAvailable, setNickAvailable] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [modal, setModal] = useState(null); 
   const token = localStorage.getItem("token");
 
   //  1. 기존 회원정보 불러오기
@@ -52,11 +80,12 @@ export default function EditProfileScreen({ onBack }) {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = res.data.data;
+        setOriginNickname(data.nickname);
         setNickname(data.nickname);
         setEmail(data.email);
-        setAvatar(data.image.imageUrl || data.avatarUrl || null); //  이미지 필드명 대응
+        setAvatar(data.image?.imageUrl || data.avatarUrl || null);
       } catch {
-        alert("로그인이 필요합니다.");
+        setModal({ message: "로그인이 필요합니다 🍂", type: "error" });
       }
     };
     fetchMyInfo();
@@ -65,6 +94,11 @@ export default function EditProfileScreen({ onBack }) {
   //  2. 닉네임 중복 검사 (debounce)
   useEffect(() => {
     if (!nickname || nickname.length < 2) {
+      setNickAvailable(null);
+      return;
+    }
+
+    if (nickname === originNickname) {
       setNickAvailable(null);
       return;
     }
@@ -86,8 +120,12 @@ export default function EditProfileScreen({ onBack }) {
 
   //  3. 닉네임 변경
   const handleSubmit = async () => {
-    if (!nickname || nickname.length < 2) return alert("닉네임을 입력해주세요.");
-    if (nickAvailable === false) return alert("이미 사용 중인 닉네임입니다.");
+    if (!nickname || nickname.length < 2)
+      return setModal({ message: "닉네임을 입력해주세요", type: "error" });
+    if (nickname === originNickname)
+      return setModal({ message: "현재 닉네임과 동일합니다", type: "error" });
+    if (nickAvailable === false)
+      return setModal({ message: "이미 사용 중인 닉네임입니다", type: "error" });
 
     try {
       setLoading(true);
@@ -96,11 +134,13 @@ export default function EditProfileScreen({ onBack }) {
         { nickname },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("닉네임이 변경되었습니다.");
-      navigate('/mypage');
-      onBack?.();
+      setModal({ message: "회원정보 수정이 완료되었습니다 ", type: "success" });
+      setTimeout(() => {
+        navigate("/mypage");
+        onBack?.();
+      }, 1000);
     } catch {
-      alert("수정 실패. 다시 시도해주세요.");
+      setModal({ message: "다시 시도해주세요", type: "error" });
     } finally {
       setLoading(false);
     }
@@ -116,7 +156,7 @@ export default function EditProfileScreen({ onBack }) {
         <h2 className="title">프로필 수정</h2>
         <p className="subtitle">이메일은 변경할 수 없습니다.</p>
 
-        {/*  프로필 이미지 (수정 불가, 표시만) */}
+        {/* 프로필 이미지 */}
         {avatar ? (
           <img src={avatar} alt="프로필" className="profile-image" />
         ) : (
@@ -157,23 +197,25 @@ export default function EditProfileScreen({ onBack }) {
           />
         </div>
 
-        {nicknameValid && nickAvailable === true && (
-          <span style={{ color: "green" }}>사용 가능한 닉네임입니다 </span>
-        )}
-        {nicknameValid && nickAvailable === false && (
-          <span style={{ color: "red" }}>이미 존재하는 닉네임입니다 </span>
-        )}
-
-        {/* 안내 */}
-        <div style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
-          프로필 사진 및 비밀번호 변경은 추후 지원 예정입니다.
-        </div>
+        {/* 상태 메시지 */}
+        {nicknameValid && nickname === originNickname ? (
+          <span style={{ color: "#d33b3b" }}>현재 닉네임입니다</span>
+        ) : nicknameValid && nickAvailable === true ? (
+          <span style={{ color: "#3fa14a" }}>사용 가능한 닉네임입니다</span>
+        ) : nicknameValid && nickAvailable === false ? (
+          <span style={{ color: "#d33b3b" }}>이미 존재하는 닉네임입니다</span>
+        ) : null}
 
         {/* 저장 */}
         <button
           className="btn"
           style={{ marginTop: 16 }}
-          disabled={!nicknameValid || nickAvailable === false || loading}
+          disabled={
+            !nicknameValid ||
+            nickname === originNickname ||
+            nickAvailable === false ||
+            loading
+          }
           onClick={handleSubmit}
         >
           {loading ? "저장 중..." : "저장"}
@@ -195,6 +237,15 @@ export default function EditProfileScreen({ onBack }) {
           뒤로가기
         </button>
       </div>
+
+      {/* ✅ 모달 표시 */}
+      {modal && (
+        <Modal
+          message={modal.message}
+          type={modal.type}
+          onClose={() => setModal(null)}
+        />
+      )}
     </div>
   );
 }
