@@ -202,8 +202,10 @@ export default function CertificationScreen() {
                                         }`}
                                     >
                                         <div>
-                                            <p className='font-medium text-gray-900'>
-                                                {cert.type}
+                                            <p className='font-medium text-gray-900 text-left'>
+                                                {cert.type
+                                                    .replace(/\s+/g, ' ')
+                                                    .trim()}
                                             </p>
                                             <p className='text-gray-500 text-sm mt-1'>
                                                 {cert.date}
