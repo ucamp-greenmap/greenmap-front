@@ -124,7 +124,10 @@ export default function CertModal({ type, onClose }) {
             }
         } catch (error) {
             console.error('OCR 오류:', error);
-            showToast('이미지 인식에 실패했습니다. 다시 시도해주세요.', 'error');
+            showToast(
+                '이미지 인식에 실패했습니다. 다시 시도해주세요.',
+                'error'
+            );
         } finally {
             setIsProcessing(false);
         }
@@ -219,7 +222,8 @@ export default function CertModal({ type, onClose }) {
                 let msg =
                     result.message || '인증에 실패했습니다. 다시 시도해주세요.';
                 if (msg.includes('중복') || msg.includes('이미'))
-                    msg = '이미 인증된 내역입니다. 다른 영수증으로 시도해주세요.';
+                    msg =
+                        '이미 인증된 내역입니다. 다른 영수증으로 시도해주세요.';
                 alert(`❌ ${msg}`);
             }
         } catch (error) {
@@ -231,9 +235,9 @@ export default function CertModal({ type, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto'>
             <div
-                className="rounded-2xl max-w-md w-full my-4 flex flex-col shadow-2xl overflow-hidden bg-clip-padding"
+                className='rounded-2xl max-w-md w-full my-4 flex flex-col shadow-2xl overflow-hidden bg-clip-padding'
                 style={{
                     backgroundColor: 'transparent',
                     maxHeight: 'calc(100vh - 64px)',
@@ -246,23 +250,23 @@ export default function CertModal({ type, onClose }) {
                     <button
                         onClick={onClose}
                         disabled={isProcessing}
-                        className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition"
+                        className='absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition'
                     >
-                        <X className="w-6 h-6" />
+                        <X className='w-6 h-6' />
                     </button>
-                    <div className="text-5xl mb-3">{type.icon}</div>
-                    <h3 className="text-2xl font-bold text-white mb-1">
+                    <div className='text-5xl mb-3'>{type.icon}</div>
+                    <h3 className='text-2xl font-bold text-white mb-1'>
                         {type.label}
                     </h3>
-                    <p className="text-white text-opacity-90 text-sm">
+                    <p className='text-white text-opacity-90 text-sm'>
                         {type.description}
                     </p>
                 </div>
 
                 {/* 내부 내용 */}
-                <div className="bg-white flex flex-col flex-1">
+                <div className='bg-white flex flex-col flex-1'>
                     <div
-                        className="overflow-y-auto p-6 space-y-4"
+                        className='overflow-y-auto p-6 space-y-4'
                         style={{
                             overscrollBehavior: 'contain',
                             maxHeight: 'calc(100vh - 400px)',
@@ -277,56 +281,56 @@ export default function CertModal({ type, onClose }) {
                                     : 'bg-white border-2 border-green-500 hover:bg-green-50'
                             }`}
                         >
-                            <Upload className="w-12 h-12 mx-auto mb-3 text-green-500" />
-                            <div className="text-green-600 font-semibold">
+                            <Upload className='w-12 h-12 mx-auto mb-3 text-green-500' />
+                            <div className='text-green-600 font-semibold'>
                                 {isProcessing
                                     ? '분석 중...'
                                     : isLoggedIn
                                     ? '📷 사진 선택하기'
-                                    : '로그인이 필요합니다'}
+                                    : '  '}
                             </div>
 
                             {isLoggedIn && (
-                                <div className="text-gray-500 text-sm mt-1">
+                                <div className='text-gray-500 text-sm mt-1'>
                                     영수증이나 이용내역을 촬영해주세요
                                 </div>
                             )}
                             <input
-                                type="file"
-                                accept="image/*"
+                                type='file'
+                                accept='image/*'
                                 onChange={handleFileSelect}
                                 disabled={isProcessing || !isLoggedIn}
-                                className="hidden"
+                                className='hidden'
                             />
                         </label>
 
                         {/* 이미지 미리보기 */}
                         {previewImage && (
-                            <div className="rounded-xl overflow-hidden border-2 border-gray-200">
+                            <div className='rounded-xl overflow-hidden border-2 border-gray-200'>
                                 <img
                                     src={previewImage}
-                                    alt="미리보기"
-                                    className="w-full max-h-64 object-contain bg-gray-50"
+                                    alt='미리보기'
+                                    className='w-full max-h-64 object-contain bg-gray-50'
                                 />
                             </div>
                         )}
 
                         {/* OCR 결과 */}
                         {ocrResult && (
-                            <div className="space-y-3">
+                            <div className='space-y-3'>
                                 {(extractedPrice > 0 ||
                                     extractedCharge > 0 ||
                                     extractedDistance > 0) && (
-                                    <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-green-800 font-semibold">
+                                    <div className='bg-green-50 rounded-xl p-4 border-2 border-green-200'>
+                                        <div className='flex items-center justify-between'>
+                                            <span className='text-green-800 font-semibold'>
                                                 {type.id === 'bike'
                                                     ? '🚴 추출된 거리'
                                                     : type.id === 'ev'
                                                     ? '⚡ 충전량 / 💰 금액'
                                                     : '💰 추출된 금액'}
                                             </span>
-                                            <span className="text-xl font-bold text-green-600">
+                                            <span className='text-xl font-bold text-green-600'>
                                                 {type.id === 'bike'
                                                     ? `${extractedDistance.toFixed(
                                                           2
@@ -337,14 +341,14 @@ export default function CertModal({ type, onClose }) {
                                     </div>
                                 )}
 
-                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <CheckCircle className="w-5 h-5 text-[#4CAF50]" />
-                                        <p className="font-semibold text-gray-900">
+                                <div className='bg-gray-50 rounded-xl p-4 border border-gray-200'>
+                                    <div className='flex items-center gap-2 mb-2'>
+                                        <CheckCircle className='w-5 h-5 text-[#4CAF50]' />
+                                        <p className='font-semibold text-gray-900'>
                                             인식된 텍스트
                                         </p>
                                     </div>
-                                    <div className="bg-white rounded-lg p-3 max-h-20 overflow-y-auto text-sm text-gray-700 whitespace-pre-wrap">
+                                    <div className='bg-white rounded-lg p-3 max-h-20 overflow-y-auto text-sm text-gray-700 whitespace-pre-wrap'>
                                         {ocrResult}
                                     </div>
                                 </div>
@@ -353,23 +357,22 @@ export default function CertModal({ type, onClose }) {
                     </div>
 
                     {/* 하단 버튼 */}
-                    <div className="p-6 pt-4 border-t border-gray-200 flex-shrink-0 rounded-b-2xl bg-white">
+                    <div className='p-6 pt-4 border-t border-gray-200 flex-shrink-0 rounded-b-2xl bg-white'>
                         <button
                             onClick={handleCertification}
                             disabled={
                                 isSubmitting ||
                                 isProcessing ||
                                 !isLoggedIn ||
-                                (type.id === 'bike' && extractedDistance <= 0) ||
+                                (type.id === 'bike' &&
+                                    extractedDistance <= 0) ||
                                 (type.id !== 'bike' &&
                                     extractedCharge <= 0 &&
                                     extractedPrice <= 0)
                             }
                             className={`w-full py-4 rounded-xl font-bold transition-all
                             ${
-                                isSubmitting ||
-                                isProcessing ||
-                                !isLoggedIn
+                                isSubmitting || isProcessing || !isLoggedIn
                                     ? 'bg-gray-400 text-white cursor-not-allowed'
                                     : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
                             }`}
