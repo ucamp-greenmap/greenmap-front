@@ -13,10 +13,12 @@ import {
     verifyHCar,
     verifyShop,
 } from '../../util/certApi';
-
-function Modal({ message, type = 'info', onClose }) {
+function Modal({ message, type = 'info', onClose, onSuccess }) {
     const handleClick = () => {
         onClose();
+        if (type === 'success' && onSuccess) {
+            onSuccess();
+        }
     };
 
     return (
@@ -276,16 +278,14 @@ export default function CertModal({ type, onClose }) {
                 };
                 result = await verifyShop(body);
             }
-
             if (result.success) {
                 const carbonAmount =
                     result.data.carbon_save || result.data.carbonSave || 0;
 
-                showModal(
-                    `인증 성공! ${result.message}\n\n획득 포인트: ${result.data.point}P\n탄소 감소량: ${carbonAmount}kg`,
-                    'success'
-                );
-                onClose();
+                const successMessage = `인증 성공! ${result.message}\n\n획득 포인트: ${result.data.point}P\n탄소 감소량: ${carbonAmount}kg`;
+
+                showModal(successMessage, 'success');
+                // onClose();
             } else {
                 let userMessage = result.message || '인증에 실패했습니다.';
                 if (
@@ -483,6 +483,7 @@ export default function CertModal({ type, onClose }) {
                     message={modal.message}
                     type={modal.type}
                     onClose={() => setModal({ ...modal, isVisible: false })}
+                    onSuccess={onClose}
                 />
             )}
         </div>
