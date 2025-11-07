@@ -146,6 +146,27 @@ export default function EditProfileScreen({ onBack }) {
     }
   };
 
+  // 4. 회원 탈퇴
+  const stopbeingmember = async () => {
+    try {
+      setLoading(true);
+      await api.put(
+        "/member/deactivate",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setModal({ message: "회원 탈퇴가 완료되었습니다 ", type: "success" });
+      localStorage.clear();
+      setTimeout(() => {
+        navigate("/mypage");
+        onBack?.();
+      }, 1000);
+    } catch {
+      setModal({ message: "다시 시도해주세요", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const nicknameValid = nickname.length >= 2;
 
   return (
@@ -219,6 +240,15 @@ export default function EditProfileScreen({ onBack }) {
           onClick={handleSubmit}
         >
           {loading ? "저장 중..." : "저장"}
+        </button>
+
+        {/* 회원 탈퇴 */}
+        <button
+          className="btn"
+          style={{ background: "#f25c5c" }}
+          onClick={stopbeingmember}
+        >
+          회원 탈퇴
         </button>
 
         {/* 뒤로가기 */}
