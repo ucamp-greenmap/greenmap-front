@@ -77,7 +77,7 @@ export default function FacilityDetail({
                     <h4 className='text-sm font-semibold text-gray-600 mb-1'>
                         거리
                     </h4>
-                    <p className='text-gray-800 flex items-center gap-1'>
+                    <p className='text-gray-800'>
                         <span className='text-blue-600'>📍</span>
                         <span>약 {formatDistance(facility.distance)}</span>
                     </p>

@@ -123,6 +123,79 @@ export const createMarkerImage = (kakao, category, isSelected = false) => {
         ? `<animate attributeName='opacity' values='1;0.6;1' dur='1s' repeatCount='indefinite'/>`
         : '';
 
+    // 색상 hue 180도 shift 함수 (hex -> hsl -> h+180 -> hex)
+    function shiftHue(hex, degree) {
+        // hex to rgb
+        let r = 0,
+            g = 0,
+            b = 0;
+        if (hex.length === 4) {
+            r = parseInt(hex[1] + hex[1], 16);
+            g = parseInt(hex[2] + hex[2], 16);
+            b = parseInt(hex[3] + hex[3], 16);
+        } else if (hex.length === 7) {
+            r = parseInt(hex[1] + hex[2], 16);
+            g = parseInt(hex[3] + hex[4], 16);
+            b = parseInt(hex[5] + hex[6], 16);
+        }
+        r /= 255;
+        g /= 255;
+        b /= 255;
+        const max = Math.max(r, g, b),
+            min = Math.min(r, g, b);
+        let h,
+            s,
+            l = (max + min) / 2;
+        if (max === min) {
+            h = s = 0;
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r:
+                    h = (g - b) / d + (g < b ? 6 : 0);
+                    break;
+                case g:
+                    h = (b - r) / d + 2;
+                    break;
+                case b:
+                    h = (r - g) / d + 4;
+                    break;
+            }
+            h /= 6;
+        }
+        h = (h * 360 + degree) % 360;
+        if (h < 0) h += 360;
+        h /= 360;
+        // hsl to rgb
+        let r1, g1, b1;
+        if (s === 0) {
+            r1 = g1 = b1 = l;
+        } else {
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1 / 6) return p + (q - p) * 6 * t;
+                if (t < 1 / 2) return q;
+                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                return p;
+            };
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r1 = hue2rgb(p, q, h + 1 / 3);
+            g1 = hue2rgb(p, q, h);
+            b1 = hue2rgb(p, q, h - 1 / 3);
+        }
+        const toHex = (x) => {
+            const hex = Math.round(x * 255).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        };
+        return `#${toHex(r1)}${toHex(g1)}${toHex(b1)}`;
+    }
+
+    // 선택된 마커는 진한 초록 계열로 고정
+    const markerColor = isSelected ? '#08743b' : config.color;
+
     const svg = `
         <svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' viewBox='0 0 ${size} ${size}'>
             <defs>
@@ -145,9 +218,7 @@ export const createMarkerImage = (kakao, category, isSelected = false) => {
                     ? `
             <!-- 반짝이는 외부 링 -->
             <circle cx='${size / 2}' cy='${size / 2}' r='${radius + 4}' 
-                fill='none' stroke='${
-                    config.color
-                }' stroke-width='2' opacity='0.6'>
+                fill='none' stroke='${markerColor}' stroke-width='2' opacity='0.6'>
                 <animate attributeName='r' values='${radius + 4};${
                           radius + 8
                       };${radius + 4}' dur='1.5s' repeatCount='indefinite'/>
@@ -160,9 +231,7 @@ export const createMarkerImage = (kakao, category, isSelected = false) => {
         isSelected ? 'selected' : 'normal'
     })'>
                 <circle cx='${size / 2}' cy='${size / 2}' r='${radius}' 
-                    fill='${
-                        config.color
-                    }' stroke='white' stroke-width='${strokeWidth}'>
+                    fill='${markerColor}' stroke='white' stroke-width='${strokeWidth}'>
                     ${animation}
                 </circle>
             </g>

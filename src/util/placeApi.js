@@ -169,7 +169,10 @@ export async function getPlaces(longitude, latitude, forceRefresh = false) {
         });
 
         if (response.data.status === 'SUCCESS') {
-            const places = response.data.data.places || [];
+            const places = (response.data.data.places || []).map((place) => ({
+                ...place,
+                distance: null,
+            }));
             // 캐시 저장
             setCachedPlaces(longitude, latitude, places);
             return places;
