@@ -60,6 +60,7 @@ export const certTypes = [
             '환경',
             '환 경',
             '충 전 량',
+            '수 소',
         ],
     },
     {
