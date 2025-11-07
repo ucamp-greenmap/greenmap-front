@@ -147,16 +147,10 @@ export default function App() {
                     />
                     <Route
                         path='/addChallenge'
-                        element={
-                            <AddChallengeScreen onNavigate={navigate} />
-                        }
+                        element={<AddChallengeScreen onNavigate={navigate} />}
                     />
                     {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
-                    <Route 
-                        path='*' 
-                        element={<Navigate to='/' replace />} 
-                    />
-                    
+                    <Route path='*' element={<Navigate to='/' replace />} />
                 </Routes>
 
                 {/* 하단 네비게이션 바 - addChallenge 페이지에서는 숨김 */}
