@@ -107,7 +107,9 @@ export default function FacilityList({
                                 {/* 시설 정보 */}
                                 <div className='flex-1 min-w-0'>
                                     <h4 className='font-bold text-gray-900 truncate text-[15px] mb-1'>
-                                        <span className='text-left block'>{facility.name}</span>
+                                        <span className='text-left block'>
+                                            {facility.name}
+                                        </span>
                                     </h4>
 
                                     <div className='flex items-center gap-2 flex-wrap'>
