@@ -193,8 +193,8 @@ export const createMarkerImage = (kakao, category, isSelected = false) => {
         return `#${toHex(r1)}${toHex(g1)}${toHex(b1)}`;
     }
 
-    // 선택된 마커는 색상 hue 180도 shift
-    const markerColor = isSelected ? shiftHue(config.color, 180) : config.color;
+    // 선택된 마커는 진한 초록 계열로 고정
+    const markerColor = isSelected ? '#08743b' : config.color;
 
     const svg = `
         <svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' viewBox='0 0 ${size} ${size}'>
