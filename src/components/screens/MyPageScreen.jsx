@@ -41,6 +41,7 @@ export default function MyPageScreen({ onNavigate }) {
         (s) => s.user
     );
     const { allBadges, earnedIds } = useSelector((state) => state.badge);
+    const [isAdmin, setIsAdmin] = useState(true);
 
     const [showSetting, setShowSetting] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false); // 로그아웃 모달 상태
@@ -237,6 +238,20 @@ export default function MyPageScreen({ onNavigate }) {
                         메뉴
                     </h3>
                     <ul className='space-y-10'>
+                            {isAdmin && (
+                            <li>
+                                <button
+                                    onClick={() => navigate('admin')}
+                                    className='w-full text-left px-4 py-4 rounded-xl hover:bg-green-50 transition-all text-green-700 flex items-center justify-between border border-green-200'
+                                >
+                                    <span className='flex items-center gap-3'>
+                                        <span className='text-xl'>🛡️</span>
+                                        <span>관리자</span>
+                                    </span>
+                                    <span className='text-green-400'>→</span>
+                                </button>
+                            </li>
+                        )}
                         <li>
                             <button
                                 onClick={() => navigate('point-exchange')}
