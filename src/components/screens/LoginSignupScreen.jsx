@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 // ↓ redux 안 쓰면 이 부분 제거해도됨
 import { useDispatch } from 'react-redux';
-import { updateProfile } from '../../store/slices/userSlice';
-import { useNavigate } from 'react-router-dom';
+import { updateProfile, login, fetchPointInfo } from '../../store/slices/userSlice';
 import kakaoBtn from '../../assets/kakao_login_medium_wide.png';
 import HomeScreen from './HomeScreen';
 
@@ -103,7 +102,7 @@ function Modal({ message, type = 'info', onClose }) {
 }
 
 /* ------------------ 로그인 / 회원가입 통합 ------------------ */
-export default function LoginSignupScreen() {
+export default function LoginSignupScreen({ onNavigate }) {
   const [page, setPage] = useState('login');
   const [userInfo, setUserInfo] = useState(null);
   const [modal, setModal] = useState(null); 
@@ -120,14 +119,24 @@ export default function LoginSignupScreen() {
       })
       .then((res) => {
         setUserInfo(res.data.data);
+        // Redux 상태 업데이트
+        dispatch(login({ token }));
         dispatch(
-          updateProfile?.({
+          updateProfile({
             name: res.data.data.nickname,
             email: res.data.data.email,
+            nickname: res.data.data.nickname,
+            avatar: res.data.data.imageUrl,
+            memberId: res.data.data.memberId,
           })
         );
+        // 포인트 정보 가져오기
+        dispatch(fetchPointInfo());
       })
-      .catch(() => localStorage.removeItem('token'));
+      .catch(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('memberId');
+      });
   }, [dispatch]);
 
   return (
@@ -155,12 +164,12 @@ export default function LoginSignupScreen() {
 
           {!userInfo ? (
             page === 'login' ? (
-              <LoginForm setUserInfo={setUserInfo} setModal={setModal} />
+              <LoginForm setUserInfo={setUserInfo} setModal={setModal} onNavigate={onNavigate} />
             ) : (
               <SignupForm setPage={setPage} setModal={setModal} />
             )
           ) : (
-            <HomeScreen />
+            <HomeScreen onNavigate={onNavigate} />
           )}
 
           
@@ -199,8 +208,8 @@ export default function LoginSignupScreen() {
 }
 
 /* ------------------ 로그인 ------------------ */
-function LoginForm({ setUserInfo, setModal }) {
-  const navigate = useNavigate();
+function LoginForm({ setUserInfo, setModal, onNavigate }) {
+  const dispatch = useDispatch();
   const [email, setEmail] = useState('');
   const [tEmail, setTEmail] = useState(false);
   const [password, setPassword] = useState('');
@@ -213,14 +222,41 @@ function LoginForm({ setUserInfo, setModal }) {
   const submitLogin = async () => {
     try {
       const res = await api.post('/member/login', { email, password });
-      localStorage.setItem('token', res.data.data.accessToken);
-       localStorage.setItem('memberId', res.data.data.memberId);
+      const token = res.data.data.accessToken;
+      const memberId = res.data.data.memberId;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('memberId', memberId);
 
       const info = await api.get('/member/me', {
-        headers: { Authorization: `Bearer ${res.data.data.accessToken}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
+      
+      // Redux 상태 업데이트
+      dispatch(login({ token }));
+      dispatch(
+        updateProfile({
+          name: info.data.data.nickname,
+          email: info.data.data.email,
+          nickname: info.data.data.nickname,
+          avatar: info.data.data.imageUrl,
+          memberId: info.data.data.memberId,
+        })
+      );
+      // 포인트 정보 가져오기
+      dispatch(fetchPointInfo());
+      
       setUserInfo(info.data.data);
-      setTimeout(() => navigate('/'));
+      setModal({ message: '로그인 성공!', type: 'success' });
+      
+      // 네비게이션 처리 - 새로고침 없이 이동
+      setTimeout(() => {
+        if (onNavigate) {
+          onNavigate('home');
+        } else if (window.location.pathname === '/login') {
+          window.location.href = '/';
+        }
+      }, 800);
     } catch {
       setModal({
         message: '이메일 또는 비밀번호를 확인해주세요.',

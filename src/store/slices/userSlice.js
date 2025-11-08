@@ -326,6 +326,8 @@ const userSlice = createSlice({
                 totalPoint: 0,
                 carbonReduction: 0,
             };
+            state.loading = false;
+            state.error = null;
             localStorage.removeItem('token');
             localStorage.removeItem('memberId');
         },
