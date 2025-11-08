@@ -351,16 +351,27 @@ const userSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchPointInfo.fulfilled, (state, action) => {
-                state.loading = false;
-                state.isLoggedIn = true;
+           .addCase(fetchPointInfo.fulfilled, (state, action) => {
+    state.loading = false;
+    state.isLoggedIn = true;
 
-                state.stats = {
-                    point: action.payload.point,
-                    totalPoint: action.payload.totalPoint || 0,
-                    carbonReduction: action.payload.carbon_save,
-                };
-            })
+    state.stats = {
+        point: action.payload.point,
+        totalPoint: action.payload.totalPoint || 0,
+        carbonReduction: action.payload.carbon_save,
+    };
+
+    if (action.payload.member) {
+        const member = action.payload.member;
+        state.profile = {
+            memberId: member.memberId,
+            name: member.nickname,
+            email: member.email,
+            avatar: member.imageUrl,
+            nickname: member.nickname,
+        };
+    }
+})
             .addCase(fetchPointInfo.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;

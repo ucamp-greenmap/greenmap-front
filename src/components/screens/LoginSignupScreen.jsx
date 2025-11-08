@@ -20,6 +20,7 @@ const kakaoLogin = () => {
   }/oauth2/authorization/kakao`;
 };
 
+
 //  전역 스타일 그대로 유지
 const styles = `
   :root { --brand: ${themeColor}; }

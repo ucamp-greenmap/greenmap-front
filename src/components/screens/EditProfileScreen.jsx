@@ -219,9 +219,11 @@ export default function EditProfileScreen({ onBack }) {
         </div>
 
         {/* 상태 메시지 */}
-        {nicknameValid && nickname === originNickname ? (
-          <span style={{ color: "#d33b3b" }}>현재 닉네임입니다</span>
-        ) : nicknameValid && nickAvailable === true ? (
+        {
+        // nicknameValid && nickname === originNickname ? (
+        //   <span style={{ color: "#d33b3b" }}>현재 닉네임입니다</span>
+        // ) :
+         nicknameValid && nickAvailable === true ? (
           <span style={{ color: "#3fa14a" }}>사용 가능한 닉네임입니다</span>
         ) : nicknameValid && nickAvailable === false ? (
           <span style={{ color: "#d33b3b" }}>이미 존재하는 닉네임입니다</span>
