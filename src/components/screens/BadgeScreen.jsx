@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Award, Sparkles, Trophy, Target } from 'lucide-react';
 import { getBadges } from '../../api/badgeApi';
 
+const DEFAULT_BADGE_IMAGE =
+    'https://em-content.zobj.net/thumbs/120/apple/325/leaf-fluttering-in-wind_1f343.png';
+
 export default function BadgeScreen({ onBack, navigation, onNavigate }) {
     const [badges, setBadges] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -135,12 +138,19 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
                                     <img
                                         src={
                                             selectedBadge.image_url ||
-                                            '/default-badge.png'
+                                            DEFAULT_BADGE_IMAGE
                                         }
                                         alt={selectedBadge.name}
-                                        className='relative w-20 h-20 rounded-full border-4 border-white/50 object-cover shadow-lg'
+                                        className='relative w-20 h-20 rounded-full border-4 border-white/50 object-cover shadow-lg bg-gray-200'
                                         onError={(e) => {
-                                            e.target.src = '/default-badge.png';
+                                            // 이미지 로드 실패 시 기본 이미지로 설정
+                                            if (
+                                                e.target.src !==
+                                                DEFAULT_BADGE_IMAGE
+                                            ) {
+                                                e.target.src =
+                                                    DEFAULT_BADGE_IMAGE;
+                                            }
                                         }}
                                     />
                                     {selectedBadge.isSelected && (
@@ -354,15 +364,18 @@ function BadgeCard({ badge, index }) {
                         <div className='absolute inset-0 bg-green-400 rounded-full blur-xl opacity-50 animate-pulse'></div>
                     )}
                     <img
-                        src={badge.image_url || '/default-badge.png'}
+                        src={badge.image_url || DEFAULT_BADGE_IMAGE}
                         alt={badge.name}
-                        className={`relative w-20 h-20 rounded-full object-cover border-4 transition-all duration-300 ${
+                        className={`relative w-20 h-20 rounded-full object-cover border-4 transition-all duration-300 bg-gray-200 ${
                             badge.isAcquired
                                 ? 'border-green-400 shadow-lg shadow-green-400/50 scale-110'
                                 : 'border-gray-300 grayscale'
                         }`}
                         onError={(e) => {
-                            e.target.src = '/default-badge.png';
+                            // 이미지 로드 실패 시 기본 이미지로 설정
+                            if (e.target.src !== DEFAULT_BADGE_IMAGE) {
+                                e.target.src = DEFAULT_BADGE_IMAGE;
+                            }
                         }}
                     />
                 </div>
