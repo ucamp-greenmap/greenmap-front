@@ -22,40 +22,40 @@ export default function ChallengeScreen({ onNavigate }) {
     const [error, setError] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
 
-    useEffect(() => {
+    const fetchData = async () => {
         const token = localStorage.getItem('token');
         if (!token) {
             setLoading(false);
             return;
         }
 
-        const fetchData = async () => {
-            try {
-                setLoading(true);
+        try {
+            setLoading(true);
 
-                const [attendRes, availableRes, endRes] = await Promise.all([
-                    api.get('/chal/attend', {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                    api.get('/chal/available', {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                    api.get('/chal/end', {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }),
-                ]);
+            const [attendRes, availableRes, endRes] = await Promise.all([
+                api.get('/chal/attend', {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+                api.get('/chal/available', {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+                api.get('/chal/end', {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+            ]);
 
-                setAttend(attendRes.data.data.challenges || []);
-                setAvailable(availableRes.data.data.availableChallenges || []);
-                setEnd(endRes.data.data.challenges || []);
-            } catch (err) {
-                console.error('챌린지 정보 조회 실패', err.response || err);
-                setError('챌린지 정보를 가져오는데 실패했습니다.');
-            } finally {
-                setLoading(false);
-            }
-        };
+            setAttend(attendRes.data.data.challenges || []);
+            setAvailable(availableRes.data.data.availableChallenges || []);
+            setEnd(endRes.data.data.challenges || []);
+        } catch (err) {
+            console.error('챌린지 정보 조회 실패', err.response || err);
+            setError('챌린지 정보를 가져오는데 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchData();
     }, []);
 
@@ -188,6 +188,7 @@ export default function ChallengeScreen({ onNavigate }) {
                                 filter={filter}
                                 {...challenge}
                                 onChall={handleChallengeParticipated}
+                                onRefresh={fetchData}
                             />
                         ))}
                     </div>
@@ -210,6 +211,7 @@ function ChallengeCard({
     image_url,
     filter,
     onChall,
+    onRefresh,
 }) {
     const [showModal, setShowModal] = useState(false);
     const [selectedType, setSelectedType] = useState(null);
@@ -305,17 +307,20 @@ function ChallengeCard({
             return null;
         }
 
+        // 전체 타입 객체를 반환하되, 챌린지 이름에 따라 필요한 키워드 정보를 포함
         const result = {
-            id: type.id,
+            ...type,
             keywords: type.keywords || [],
             zeroKeywords: type.zeroKeywords || [],
             recycleKeywords: type.recycleKeywords || [],
         };
 
-        if (sanitizedChallengeName.includes('제로')) {
-            result.zeroKeywords = type.zeroKeywords;
-        } else if (sanitizedChallengeName.includes('재활용')) {
-            result.recycleKeywords = type.recycleKeywords;
+        // 수소차 여부 확인 (챌린지 이름에 '수소' 또는 'hydrogen'이 포함된 경우)
+        if (
+            sanitizedChallengeName.includes('수소') ||
+            sanitizedChallengeName.includes('hydrogen')
+        ) {
+            result.carType = 'H';
         }
 
         return result;
@@ -334,6 +339,12 @@ function ChallengeCard({
     function closeModal() {
         setShowModal(false);
         setSelectedType(null);
+    }
+
+    function handleCertSuccess() {
+        if (onRefresh) {
+            onRefresh();
+        }
     }
 
     // 진행률 계산
@@ -505,6 +516,7 @@ function ChallengeCard({
                     type={selectedType}
                     onClose={closeModal}
                     memberChallengeId={memberChallengeId}
+                    onSuccess={handleCertSuccess}
                 />
             )}
         </>

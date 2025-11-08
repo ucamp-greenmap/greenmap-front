@@ -57,7 +57,12 @@ function Modal({ message, type = 'info', onClose, onSuccess }) {
     );
 }
 
-export default function CertModal({ type, onClose }) {
+export default function CertModal({
+    type,
+    onClose,
+    memberChallengeId,
+    onSuccess,
+}) {
     const dispatch = useDispatch();
     const { isLoggedIn } = useSelector((state) => state.user);
 
@@ -236,6 +241,43 @@ export default function CertModal({ type, onClose }) {
         if (file) processImageWithOCR(file);
     }
 
+    // 버튼 비활성화 조건 계산
+    const isButtonDisabled = () => {
+        // type이 없으면 비활성화
+        if (!type || !type.id) {
+            return true;
+        }
+
+        if (isSubmitting || isProcessing || !isLoggedIn || !ocrResult) {
+            return true;
+        }
+
+        if (type.id === 'bike') {
+            const disabled =
+                extractedDistance <= 0 ||
+                !extraData.bike_number ||
+                !extraData.startTime ||
+                !extraData.endTime;
+            return disabled;
+        }
+
+        if (type.id === 'ev') {
+            const disabled =
+                (extractedCharge <= 0 && extractedPrice <= 0) ||
+                !extraData.startTime ||
+                !extraData.endTime;
+            return disabled;
+        }
+
+        if (type.id === 'z') {
+            const disabled =
+                extractedPrice <= 0 || !extraData.name || !extraData.approveNum;
+            return disabled;
+        }
+
+        return false;
+    };
+
     const handleCertification = async () => {
         if (!isLoggedIn) {
             showModal('로그인 후 이용 가능합니다.', 'error');
@@ -280,6 +322,7 @@ export default function CertModal({ type, onClose }) {
                     distance: Math.round(extractedDistance * 100) / 100,
                     start_time: extraData.startTime,
                     end_time: extraData.endTime,
+                    ...(memberChallengeId && { memberChallengeId }),
                 };
                 result = await verifyBike(body);
             } else if (type.id === 'ev') {
@@ -299,6 +342,7 @@ export default function CertModal({ type, onClose }) {
                     chargeFee: finalChargeFee,
                     start_time: extraData.startTime,
                     end_time: extraData.endTime,
+                    ...(memberChallengeId && { memberChallengeId }),
                 };
 
                 if (isHydrogenCar) {
@@ -313,6 +357,7 @@ export default function CertModal({ type, onClose }) {
                     name: extraData.name,
                     price: extractedPrice,
                     approveNum: parseInt(extraData.approveNum) || 0,
+                    ...(memberChallengeId && { memberChallengeId }),
                 };
                 result = await verifyShop(body);
             }
@@ -470,6 +515,17 @@ export default function CertModal({ type, onClose }) {
                                     </div>
                                 )}
 
+                                {type.id === 'bike' &&
+                                    extractedDistance <= 0 && (
+                                        <div className='bg-orange-50 rounded-xl p-4 border-2 border-orange-200'>
+                                            <p className='text-orange-800 text-sm font-medium'>
+                                                ⚠️ 거리 정보를 인식하지
+                                                못했습니다. 더 선명한 이미지로
+                                                다시 시도해주세요.
+                                            </p>
+                                        </div>
+                                    )}
+
                                 <div className='bg-gray-50 rounded-xl p-4 border border-gray-200'>
                                     <div className='flex items-center gap-2 mb-2'>
                                         <CheckCircle className='w-5 h-5 text-[#4CAF50]' />
@@ -489,28 +545,23 @@ export default function CertModal({ type, onClose }) {
                     <div className='p-6 pt-4 border-t border-gray-200 flex-shrink-0 rounded-b-2xl bg-white'>
                         <button
                             onClick={handleCertification}
-                            disabled={
-                                isSubmitting ||
-                                isProcessing ||
-                                !isLoggedIn ||
-                                (type.id === 'bike' &&
-                                    extractedDistance <= 0) ||
-                                (type.id !== 'bike' &&
-                                    extractedCharge <= 0 &&
-                                    extractedPrice <= 0)
-                            }
+                            disabled={isButtonDisabled()}
                             className={`w-full py-4 rounded-xl font-bold transition-all
                             ${
-                                isSubmitting || isProcessing || !isLoggedIn
+                                isButtonDisabled()
                                     ? 'bg-gray-400 text-white cursor-not-allowed'
-                                    : 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50'
+                                    : 'bg-gradient-to-r from-[#4CAF50] to-[#66BB6A] text-white hover:from-[#66BB6A] hover:to-[#8BC34A] shadow-lg'
                             }`}
                         >
-                            {isLoggedIn
-                                ? isSubmitting
-                                    ? '인증 처리 중...'
-                                    : '인증 요청하기'
-                                : '로그인 후 이용하세요'}
+                            {!isLoggedIn
+                                ? '로그인 후 이용하세요'
+                                : isSubmitting
+                                ? '인증 처리 중...'
+                                : isProcessing
+                                ? 'OCR 분석 중...'
+                                : !ocrResult
+                                ? '사진을 선택해주세요'
+                                : '인증 요청하기'}
                         </button>
                     </div>
                 </div>
@@ -521,7 +572,12 @@ export default function CertModal({ type, onClose }) {
                     message={modal.message}
                     type={modal.type}
                     onClose={() => setModal({ ...modal, isVisible: false })}
-                    onSuccess={onClose}
+                    onSuccess={() => {
+                        if (onSuccess) {
+                            onSuccess();
+                        }
+                        onClose();
+                    }}
                 />
             )}
         </div>
