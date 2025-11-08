@@ -160,9 +160,10 @@ export default function App() {
                     <Route path='*' element={<Navigate to='/' replace />} />
                 </Routes>
 
-                {/* 하단 네비게이션 바 - addChallenge, admin 페이지에서는 숨김 */}
+                {/* 하단 네비게이션 바 - addChallenge, admin, ranking 페이지에서는 숨김 */}
                 {location.pathname !== '/addChallenge' &&
-                    location.pathname !== '/admin' && (
+                    location.pathname !== '/admin' &&
+                    location.pathname !== '/ranking' && (
                         <BottomNavigation
                             active={activeTab}
                             onChange={(tab) => navigate(tab)}
