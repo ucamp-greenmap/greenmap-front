@@ -3,6 +3,7 @@ import api from '../../api/axios';
 // ↓ redux 안 쓰면 이 부분 제거해도됨
 import { useDispatch } from 'react-redux';
 import { updateProfile } from '../../store/slices/userSlice';
+import { useNavigate } from 'react-router-dom';
 import kakaoBtn from '../../assets/kakao_login_medium_wide.png';
 import HomeScreen from './HomeScreen';
 
@@ -19,6 +20,7 @@ const kakaoLogin = () => {
     import.meta.env.VITE_APP_SERVER_URL
   }/oauth2/authorization/kakao`;
 };
+
 
 //  전역 스타일 그대로 유지
 const styles = `
@@ -198,6 +200,7 @@ export default function LoginSignupScreen() {
 
 /* ------------------ 로그인 ------------------ */
 function LoginForm({ setUserInfo, setModal }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [tEmail, setTEmail] = useState(false);
   const [password, setPassword] = useState('');
@@ -217,8 +220,7 @@ function LoginForm({ setUserInfo, setModal }) {
         headers: { Authorization: `Bearer ${res.data.data.accessToken}` },
       });
       setUserInfo(info.data.data);
-      setModal({ message: '로그인 성공!', type: 'success' });
-      setTimeout(() => (window.location.href = '/'), 800);
+      setTimeout(() => navigate('/'));
     } catch {
       setModal({
         message: '이메일 또는 비밀번호를 확인해주세요.',
