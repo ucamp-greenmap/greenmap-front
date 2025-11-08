@@ -29,7 +29,6 @@ import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
-import AddChallengeScreen from './components/screens/AddChallengeScreen';
 import AdminScreen from './components/screens/AdminScreen';
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
@@ -49,7 +48,6 @@ const TAB_TO_PATH = {
     FAQ: '/FAQ',
     'cert-history': '/cert-history',
     'carbon-info': '/carbon-info',
-    addChal: '/addChallenge',
 };
 
 export default function App() {
@@ -153,10 +151,6 @@ export default function App() {
                     <Route
                         path='/FAQ'
                         element={<FaqScreen onNavigate={navigate} />}
-                    />
-                    <Route
-                        path='/addChallenge'
-                        element={<AddChallengeScreen onNavigate={navigate} />}
                     />
                     <Route
                         path='/admin'

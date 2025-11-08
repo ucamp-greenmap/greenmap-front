@@ -21,7 +21,6 @@ export default function ChallengeScreen({ onNavigate }) {
     const [attend, setAttend] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isAdmin, setIsAdmin] = useState(false);
 
     const fetchData = async () => {
         const token = localStorage.getItem('token');
@@ -32,7 +31,6 @@ export default function ChallengeScreen({ onNavigate }) {
 
         try {
             setLoading(true);
-
             const [attendRes, availableRes, endRes] = await Promise.all([
                 api.get('/chal/attend', {
                     headers: { Authorization: `Bearer ${token}` },
