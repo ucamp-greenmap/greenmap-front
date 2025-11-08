@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../../api/axios';
+import { createChallenge } from '../../api/challengeApi';
 
 // 챌린지 타입 키워드 (백엔드 자동 인증 연동용)
 const VALID_CHALLENGE_TYPES = [
@@ -74,34 +74,19 @@ const ChallengeForm = () => {
         setIsLoading(true);
 
         try {
-            const res = await api.post('/chalregis', data);
-            console.log('챌린지 추가 응답:', res.data);
-
-            if (res.data.status === 'SUCCESS') {
-                alert('✅ 챌린지가 성공적으로 등록되었습니다!');
-                // 폼 초기화
-                setCategory('');
-                document.getElementById('challengeName').value = '';
-                document.getElementById('description').value = '';
-                document.getElementById('success').value = '50';
-                document.getElementById('pointAmount').value = '500';
-                document.getElementById('deadline').value = '7';
-                document.getElementById('updatedAt').value = '';
-            } else {
-                setError(res.data.message || '챌린지 추가에 실패했습니다.');
-            }
+            await createChallenge(data);
+            alert('✅ 챌린지가 성공적으로 등록되었습니다!');
+            // 폼 초기화
+            setCategory('');
+            document.getElementById('challengeName').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('success').value = '50';
+            document.getElementById('pointAmount').value = '500';
+            document.getElementById('deadline').value = '7';
+            document.getElementById('updatedAt').value = '';
         } catch (err) {
-            console.error('챌린지 추가 실패', err.response || err);
-
-            if (err.response?.status === 401) {
-                setError('❌ 인증이 필요합니다. 다시 로그인해주세요.');
-            } else if (err.response?.status === 400) {
-                setError('❌ 입력 형식이 올바르지 않습니다.');
-            } else if (err.response?.data?.message) {
-                setError(`❌ ${err.response.data.message}`);
-            } else {
-                setError('❌ 챌린지 추가 중 오류가 발생했습니다.');
-            }
+            console.error('챌린지 추가 실패', err);
+            setError(err.message || '❌ 챌린지 추가 중 오류가 발생했습니다.');
         } finally {
             setIsLoading(false);
         }

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Plus, Award, Target, TrendingUp } from 'lucide-react';
-import api from '../../api/axios';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Calendar, Plus, Award, Target, TrendingUp, Clock } from 'lucide-react';
 import CertModal from '../cert/CertModal';
 import { certTypes } from '../../util/certConfig';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
+import { getAllChallenges, participateChallenge } from '../../api/challengeApi';
 
 export default function ChallengeScreen({ onNavigate }) {
     const dispatch = useDispatch();
@@ -22,66 +22,98 @@ export default function ChallengeScreen({ onNavigate }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         const token = localStorage.getItem('token');
         if (!token) {
             setLoading(false);
+            setAvailable([]);
+            setAttend([]);
+            setEnd([]);
             return;
         }
 
         try {
             setLoading(true);
-            const [attendRes, availableRes, endRes] = await Promise.all([
-                api.get('/chal/attend', {
-                    headers: { Authorization: `Bearer ${token}` },
-                }),
-                api.get('/chal/available', {
-                    headers: { Authorization: `Bearer ${token}` },
-                }),
-                api.get('/chal/end', {
-                    headers: { Authorization: `Bearer ${token}` },
-                }),
-            ]);
+            setError(null);
 
-            setAttend(attendRes.data.data.challenges || []);
-            setAvailable(availableRes.data.data.availableChallenges || []);
-            setEnd(endRes.data.data.challenges || []);
+            const {
+                available: availableList,
+                attend: attendList,
+                end: endList,
+            } = await getAllChallenges();
+
+            // 상태를 원자적으로 업데이트하여 일관성 보장
+            setAvailable(Array.isArray(availableList) ? availableList : []);
+            setAttend(Array.isArray(attendList) ? attendList : []);
+            setEnd(Array.isArray(endList) ? endList : []);
         } catch (err) {
-            console.error('챌린지 정보 조회 실패', err.response || err);
-            setError('챌린지 정보를 가져오는데 실패했습니다.');
+            console.error('챌린지 정보 조회 실패', err);
+            setError(err.message || '챌린지 정보를 가져오는데 실패했습니다.');
+            // 에러 발생 시에도 빈 배열로 초기화
+            setAvailable([]);
+            setAttend([]);
+            setEnd([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
-    // 관리자 권한 확인
+    // 챌린지 참여 핸들러 - useCallback으로 안정화
+    const handleChallengeParticipated = useCallback(
+        async (challengeId) => {
+            try {
+                await participateChallenge(challengeId);
+                // 참여 성공 후 데이터 새로고침
+                await fetchData();
+            } catch (err) {
+                console.error('챌린지 참여 실패', err);
+                alert(err.message || '챌린지 참여에 실패했습니다.');
+            }
+        },
+        [fetchData]
+    );
 
-    const handleChallengeParticipated = (challengeId) => {
-        const challenge = available.find((c) => c.challengeId === challengeId);
-        if (challenge) {
-            setAttend((prev) => [...prev, challenge]);
-            setAvailable((prev) =>
-                prev.filter((c) => c.challengeId !== challengeId)
-            );
-        }
-    };
-
-    // 필터별 챌린지 목록
+    // 필터별 챌린지 목록 - 명확한 필터링과 정규화
     const currentChallenges = useMemo(() => {
+        let challenges = [];
+
         switch (filter) {
             case 'available':
-                return available;
+                challenges = available || [];
+                break;
             case 'ongoing':
-                return attend;
+                challenges = attend || [];
+                break;
             case 'completed':
-                return end;
+                challenges = end || [];
+                break;
             default:
-                return [];
+                challenges = [];
         }
+
+        // 데이터 정규화 및 중복 제거
+        const normalizedChallenges = challenges.map((challenge) => ({
+            ...challenge,
+            // 각 탭별 고유 키 생성
+            uniqueKey: challenge.memberChallengeId
+                ? `${filter}-${challenge.memberChallengeId}`
+                : `${filter}-${challenge.challengeId}`,
+        }));
+
+        // 중복 제거 (같은 challengeId가 여러 번 나타나는 경우)
+        const seen = new Set();
+        return normalizedChallenges.filter((challenge) => {
+            const key = challenge.memberChallengeId || challenge.challengeId;
+            if (seen.has(key)) {
+                return false;
+            }
+            seen.add(key);
+            return true;
+        });
     }, [filter, available, attend, end]);
 
     return (
@@ -200,15 +232,18 @@ export default function ChallengeScreen({ onNavigate }) {
                     </div>
                 ) : (
                     <div className='space-y-4'>
-                        {currentChallenges.map((challenge) => (
-                            <ChallengeCard
-                                key={challenge.challengeId}
-                                filter={filter}
-                                {...challenge}
-                                onChall={handleChallengeParticipated}
-                                onRefresh={fetchData}
-                            />
-                        ))}
+                        {currentChallenges.map((challenge) => {
+                            const { uniqueKey, ...challengeProps } = challenge;
+                            return (
+                                <ChallengeCard
+                                    key={uniqueKey}
+                                    filter={filter}
+                                    {...challengeProps}
+                                    onChall={handleChallengeParticipated}
+                                    onRefresh={fetchData}
+                                />
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -225,7 +260,12 @@ function ChallengeCard({
     progress,
     success,
     createdAt,
+
     deadline,
+    updatedAt,
+    memberCount,
+    // eslint-disable-next-line no-unused-vars
+    isActive,
     image_url,
     filter,
     onChall,
@@ -235,44 +275,31 @@ function ChallengeCard({
     const [selectedType, setSelectedType] = useState(null);
 
     const handleChallenge = async () => {
-        const token = localStorage.getItem('token');
-
-        try {
-            await api.post(
-                '/chal',
-                { challengeId: challengeId },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            onChall(challengeId);
-        } catch (err) {
-            console.error('챌린지 참여 실패', err.response || err);
-            alert('챌린지 참여에 실패했습니다.');
+        if (onChall) {
+            await onChall(challengeId);
         }
     };
 
-    // 목표 단위 결정 함수
-    function getGoalUnit(challengeName) {
-        const sanitizedChallengeName = challengeName
-            .toLowerCase()
-            .replace(/\s+/g, '');
+    // 목표 단위 결정 함수 (description에서 카테고리 추출)
+    function getGoalUnit(description) {
+        if (!description) return 'TIMES';
+
+        const firstWord = description.trim().split(' ')[0].toLowerCase();
 
         // 따릉이: Km
-        if (
-            sanitizedChallengeName.includes('따릉이') ||
-            sanitizedChallengeName.includes('bike')
-        ) {
+        if (firstWord === '따릉이' || firstWord.includes('bike')) {
             return 'Km';
         }
         // 전기차/수소차/제로웨이스트/재활용: WON
         else if (
-            sanitizedChallengeName.includes('전기차') ||
-            sanitizedChallengeName.includes('수소차') ||
-            sanitizedChallengeName.includes('electric') ||
-            sanitizedChallengeName.includes('hydrogen') ||
-            sanitizedChallengeName.includes('제로') ||
-            sanitizedChallengeName.includes('zero') ||
-            sanitizedChallengeName.includes('재활용') ||
-            sanitizedChallengeName.includes('recycle')
+            firstWord === '전기차' ||
+            firstWord === '수소차' ||
+            firstWord === '제로웨이스트' ||
+            firstWord === '재활용센터' ||
+            firstWord.includes('electric') ||
+            firstWord.includes('hydrogen') ||
+            firstWord.includes('zero') ||
+            firstWord.includes('recycle')
         ) {
             return 'WON';
         }
@@ -282,38 +309,29 @@ function ChallengeCard({
         }
     }
 
-    function determineType(challengeName) {
-        const sanitizedChallengeName = challengeName
-            .toLowerCase()
-            .replace(/\s+/g, '');
+    // description에서 카테고리 추출하여 인증 타입 결정
+    function determineType(description) {
+        if (!description) return null;
 
+        const firstWord = description.trim().split(' ')[0].toLowerCase();
         let type = null;
 
-        if (
-            sanitizedChallengeName.includes('따릉이') ||
-            sanitizedChallengeName.includes('bike')
-        ) {
+        if (firstWord === '따릉이' || firstWord.includes('bike')) {
             type = certTypes.find((type) => type.label === '따릉이 이용 인증');
         } else if (
-            sanitizedChallengeName.includes('전기차') ||
-            sanitizedChallengeName.includes('수소차') ||
-            sanitizedChallengeName.includes('electric') ||
-            sanitizedChallengeName.includes('hydrogen')
+            firstWord === '전기차' ||
+            firstWord === '수소차' ||
+            firstWord.includes('electric') ||
+            firstWord.includes('hydrogen')
         ) {
             type = certTypes.find(
                 (type) => type.label === '전기차/수소차 충전 영수증'
             );
         } else if (
-            sanitizedChallengeName.includes('제로') ||
-            sanitizedChallengeName.includes('zero')
-        ) {
-            type = certTypes.find(
-                (type) =>
-                    type.label === '제로웨이스트 스토어 / 재활용센터 영수증'
-            );
-        } else if (
-            sanitizedChallengeName.includes('재활용') ||
-            sanitizedChallengeName.includes('recycle')
+            firstWord === '제로웨이스트' ||
+            firstWord === '재활용센터' ||
+            firstWord.includes('zero') ||
+            firstWord.includes('recycle')
         ) {
             type = certTypes.find(
                 (type) =>
@@ -325,7 +343,7 @@ function ChallengeCard({
             return null;
         }
 
-        // 전체 타입 객체를 반환하되, 챌린지 이름에 따라 필요한 키워드 정보를 포함
+        // 전체 타입 객체를 반환하되, 필요한 키워드 정보를 포함
         const result = {
             ...type,
             keywords: type.keywords || [],
@@ -333,10 +351,11 @@ function ChallengeCard({
             recycleKeywords: type.recycleKeywords || [],
         };
 
-        // 수소차 여부 확인 (챌린지 이름에 '수소' 또는 'hydrogen'이 포함된 경우)
+        // 수소차 여부 확인 (description에 '수소' 또는 'hydrogen'이 포함된 경우)
+        const sanitizedDescription = description.toLowerCase();
         if (
-            sanitizedChallengeName.includes('수소') ||
-            sanitizedChallengeName.includes('hydrogen')
+            sanitizedDescription.includes('수소') ||
+            sanitizedDescription.includes('hydrogen')
         ) {
             result.carType = 'H';
         }
@@ -345,7 +364,7 @@ function ChallengeCard({
     }
 
     function openCertModal() {
-        const type = determineType(challengeName);
+        const type = determineType(description);
         if (type) {
             setSelectedType(type);
             setShowModal(true);
@@ -371,6 +390,85 @@ function ChallengeCard({
             ? Math.min((progress / success) * 100, 100)
             : 0;
 
+    // 남은 날짜 계산 함수
+    const getRemainingDays = (updatedAt, createdAt, deadline, filterType) => {
+        const now = new Date();
+        let expiryDate = null;
+
+        if (filterType === 'ongoing') {
+            // 진행 중: createdAt + deadline으로 만료일 계산
+            if (!createdAt || !deadline) return null;
+            const startDate = new Date(createdAt);
+            expiryDate = new Date(startDate);
+            expiryDate.setDate(startDate.getDate() + deadline);
+        } else if (filterType === 'available') {
+            // 참여 가능: updatedAt 사용
+            if (!updatedAt) return null;
+            expiryDate = new Date(updatedAt);
+        } else {
+            return null;
+        }
+
+        if (!expiryDate) return null;
+
+        const diffTime = expiryDate - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        return diffDays;
+    };
+
+    // 남은 날짜에 따른 스타일 결정
+    const getRemainingDaysStyle = (days) => {
+        if (days === null) return null;
+
+        // 만료된 경우
+        if (days < 0) {
+            return {
+                bg: 'bg-gradient-to-br from-gray-500 to-gray-600',
+                text: 'text-white',
+                shadow: 'shadow-gray-500/30',
+                label: '만료됨',
+            };
+        }
+
+        if (days === 0) {
+            return {
+                bg: 'bg-gradient-to-br from-red-600 to-red-700',
+                text: 'text-white',
+                shadow: 'shadow-red-500/40',
+                label: '오늘 마감',
+            };
+        } else if (days <= 3) {
+            return {
+                bg: 'bg-gradient-to-br from-red-500 to-red-600',
+                text: 'text-white',
+                shadow: 'shadow-red-500/30',
+                label: `D-${days}`,
+            };
+        } else if (days <= 7) {
+            return {
+                bg: 'bg-gradient-to-br from-orange-500 to-orange-600',
+                text: 'text-white',
+                shadow: 'shadow-orange-500/30',
+                label: `D-${days}`,
+            };
+        } else {
+            return {
+                bg: 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A]',
+                text: 'text-white',
+                shadow: 'shadow-green-500/30',
+                label: `D-${days}`,
+            };
+        }
+    };
+
+    // 참여가능/진행중 탭에서 남은 날짜 계산
+    const remainingDays =
+        filter === 'available' || filter === 'ongoing'
+            ? getRemainingDays(updatedAt, createdAt, deadline, filter)
+            : null;
+    const daysStyle = getRemainingDaysStyle(remainingDays);
+
     return (
         <>
             <div
@@ -381,12 +479,25 @@ function ChallengeCard({
                         ? openCertModal
                         : undefined
                 }
-                className={`group bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 ${
+                className={`group relative bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 ${
                     filter !== 'completed'
                         ? 'cursor-pointer hover:scale-[1.02]'
                         : ''
                 }`}
             >
+                {/* 카드 우측 상단 D-day 배지 (참여가능/진행중 탭에서만 표시) */}
+                {(filter === 'available' || filter === 'ongoing') &&
+                    daysStyle && (
+                        <div
+                            className={`absolute top-3 right-3 ${daysStyle.bg} ${daysStyle.text} px-4 py-2 rounded-xl text-sm font-bold shadow-xl ${daysStyle.shadow} border-2 border-white/90 flex items-center gap-2 z-20 backdrop-blur-sm`}
+                        >
+                            <Clock className='w-4 h-4' />
+                            <span className='tracking-wide'>
+                                {daysStyle.label}
+                            </span>
+                        </div>
+                    )}
+
                 {/* 메인 콘텐츠 영역 */}
                 <div className='flex-1 flex flex-col'>
                     {/* 이미지 섹션 */}
@@ -404,13 +515,13 @@ function ChallengeCard({
 
                             {/* 완료 스탬프 */}
                             {filter === 'completed' && (
-                                <div className='absolute top-3 right-3 bg-gradient-to-br from-red-500 to-red-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-xl transform rotate-12 border-2 border-white'>
+                                <div className='absolute top-3 right-3 bg-gradient-to-br from-red-500 to-red-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-xl transform rotate-12 border-2 border-white z-10'>
                                     ✓ 완료
                                 </div>
                             )}
 
                             {/* 카테고리 배지 */}
-                            <div className='absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full'>
+                            <div className='absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full z-10'>
                                 <span className='text-xs font-semibold bg-gradient-to-r from-[#4CAF50] to-[#66BB6A] bg-clip-text text-transparent'>
                                     ECO CHALLENGE
                                 </span>
@@ -419,6 +530,20 @@ function ChallengeCard({
                     ) : (
                         <div className='relative h-40 bg-gradient-to-br from-[#4CAF50]/20 to-[#8BC34A]/20 flex-shrink-0 flex items-center justify-center'>
                             <Award className='w-16 h-16 text-[#4CAF50]/30' />
+
+                            {/* 완료 스탬프 */}
+                            {filter === 'completed' && (
+                                <div className='absolute top-3 right-3 bg-gradient-to-br from-red-500 to-red-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-xl transform rotate-12 border-2 border-white z-10'>
+                                    ✓ 완료
+                                </div>
+                            )}
+
+                            {/* 카테고리 배지 */}
+                            <div className='absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full z-10'>
+                                <span className='text-xs font-semibold bg-gradient-to-r from-[#4CAF50] to-[#66BB6A] bg-clip-text text-transparent'>
+                                    ECO CHALLENGE
+                                </span>
+                            </div>
                         </div>
                     )}
 
@@ -489,7 +614,7 @@ function ChallengeCard({
                                         {success}
                                     </div>
                                     <div className='text-[9px] text-green-500 font-medium'>
-                                        {getGoalUnit(challengeName)}
+                                        {getGoalUnit(description)}
                                     </div>
                                 </div>
                             </div>
@@ -498,17 +623,58 @@ function ChallengeCard({
                                 <div className='relative'>
                                     <div className='text-[10px] text-orange-600 font-semibold mb-0.5 flex items-center justify-center gap-1'>
                                         <Calendar className='w-3 h-3' />
-                                        기한
+                                        참여자
                                     </div>
                                     <div className='text-base font-bold text-orange-700'>
-                                        {deadline}
+                                        {memberCount || 0}
                                     </div>
                                     <div className='text-[9px] text-orange-500 font-medium'>
-                                        DAYS
+                                        명
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        {/* 만료일 표시 */}
+                        {(filter === 'available' || filter === 'ongoing') &&
+                            (() => {
+                                let expiryDateStr = null;
+                                if (
+                                    filter === 'ongoing' &&
+                                    createdAt &&
+                                    deadline
+                                ) {
+                                    // 진행 중: createdAt + deadline으로 만료일 계산
+                                    const startDate = new Date(createdAt);
+                                    const expiryDate = new Date(startDate);
+                                    expiryDate.setDate(
+                                        startDate.getDate() + deadline
+                                    );
+                                    expiryDateStr = expiryDate
+                                        .toISOString()
+                                        .split('T')[0];
+                                } else if (
+                                    filter === 'available' &&
+                                    updatedAt
+                                ) {
+                                    // 참여 가능: updatedAt 사용
+                                    expiryDateStr = new Date(updatedAt)
+                                        .toISOString()
+                                        .split('T')[0];
+                                }
+
+                                return expiryDateStr ? (
+                                    <div className='flex items-center gap-2 text-xs text-gray-500 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-2.5 mt-3 border border-gray-200'>
+                                        <Calendar className='w-3.5 h-3.5 text-gray-400' />
+                                        <span className='font-medium'>
+                                            만료일:
+                                        </span>
+                                        <span className='font-semibold text-gray-700'>
+                                            {expiryDateStr}
+                                        </span>
+                                    </div>
+                                ) : null;
+                            })()}
 
                         {/* 완료 날짜 (완료된 챌린지일 때) */}
                         {filter === 'completed' && createdAt && (
