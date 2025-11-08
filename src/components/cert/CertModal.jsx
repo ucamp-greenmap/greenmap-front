@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import Tesseract from 'tesseract.js';
 import { X, Upload, CheckCircle } from 'lucide-react';
+import {
+    login,
+    updateProfile,
+    fetchPointInfo,
+} from '../../store/slices/userSlice';
+import api from '../../api/axios';
 import {
     extractDistance,
     extractAmounts,
@@ -52,7 +58,39 @@ function Modal({ message, type = 'info', onClose, onSuccess }) {
 }
 
 export default function CertModal({ type, onClose }) {
+    const dispatch = useDispatch();
     const { isLoggedIn } = useSelector((state) => state.user);
+
+    // 모달이 열릴 때 토큰이 있으면 로그인 상태 확인
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token && !isLoggedIn) {
+            // 토큰이 있지만 Redux 상태가 업데이트되지 않은 경우
+            api.get('/member/me', {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+                .then((res) => {
+                    // Redux 상태 업데이트
+                    dispatch(login({ token }));
+                    dispatch(
+                        updateProfile({
+                            name: res.data.data.nickname,
+                            email: res.data.data.email,
+                            nickname: res.data.data.nickname,
+                            avatar: res.data.data.imageUrl,
+                            memberId: res.data.data.memberId,
+                        })
+                    );
+                    // 포인트 정보 가져오기
+                    dispatch(fetchPointInfo());
+                })
+                .catch(() => {
+                    // 토큰이 유효하지 않으면 제거
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('memberId');
+                });
+        }
+    }, [dispatch, isLoggedIn]);
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);

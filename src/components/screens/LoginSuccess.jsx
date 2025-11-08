@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { useDispatch } from 'react-redux';
-import { updateProfile } from '../../store/slices/userSlice';
+import { updateProfile, login, fetchPointInfo } from '../../store/slices/userSlice';
 
 export default function LoginSuccess() {
     const navigate = useNavigate();
@@ -26,13 +26,19 @@ export default function LoginSuccess() {
                 headers: { Authorization: `Bearer ${token}` },
             })
                 .then((res) => {
-                    // Redux에 사용자 정보 저장
+                    // Redux 상태 업데이트
+                    dispatch(login({ token }));
                     dispatch(
                         updateProfile({
                             name: res.data.data.nickname,
                             email: res.data.data.email,
+                            nickname: res.data.data.nickname,
+                            avatar: res.data.data.imageUrl,
+                            memberId: res.data.data.memberId,
                         })
                     );
+                    // 포인트 정보 가져오기
+                    dispatch(fetchPointInfo());
 
                     console.log('카카오 로그인 성공');
 
