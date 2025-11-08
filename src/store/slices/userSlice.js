@@ -199,31 +199,15 @@
 // export const { logout, login, updateProfile } = userSlice.actions;
 // export default userSlice.reducer;
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../api/axios';
+import { getMyPageData } from '../../api/userApi';
+import { getPointInfo } from '../../util/pointApi';
 
 export const fetchPointInfo = createAsyncThunk(
     'user/fetchPointInfo',
     async (_, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                throw new Error('로그인이 필요합니다');
-            }
-
-            const response = await api.get('/point/info', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const result = response.data;
-
-            if (result.status !== 'SUCCESS') {
-                throw new Error(result.message || '정보를 가져올 수 없습니다');
-            }
-
-            return result.data;
+            const data = await getPointInfo();
+            return data;
         } catch (error) {
             console.error(
                 '❌ 포인트 정보 조회 오류:',
@@ -246,25 +230,8 @@ export const fetchMyPageData = createAsyncThunk(
     'user/fetchMyPageData',
     async (_, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                throw new Error('로그인이 필요합니다');
-            }
-
-            const response = await api.get('/mypage', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const result = response.data;
-
-            if (result.status !== 'SUCCESS') {
-                throw new Error(result.message || '정보를 가져올 수 없습니다');
-            }
-
-            return result.data;
+            const data = await getMyPageData();
+            return data;
         } catch (error) {
             console.error(
                 '❌ 마이페이지 조회 오류:',
@@ -351,27 +318,27 @@ const userSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-           .addCase(fetchPointInfo.fulfilled, (state, action) => {
-    state.loading = false;
-    state.isLoggedIn = true;
+            .addCase(fetchPointInfo.fulfilled, (state, action) => {
+                state.loading = false;
+                state.isLoggedIn = true;
 
-    state.stats = {
-        point: action.payload.point,
-        totalPoint: action.payload.totalPoint || 0,
-        carbonReduction: action.payload.carbon_save,
-    };
+                state.stats = {
+                    point: action.payload.point,
+                    totalPoint: action.payload.totalPoint || 0,
+                    carbonReduction: action.payload.carbon_save,
+                };
 
-    if (action.payload.member) {
-        const member = action.payload.member;
-        state.profile = {
-            memberId: member.memberId,
-            name: member.nickname,
-            email: member.email,
-            avatar: member.image?.imageUrl || null,
-            nickname: member.nickname,
-        };
-    }
-})
+                if (action.payload.member) {
+                    const member = action.payload.member;
+                    state.profile = {
+                        memberId: member.memberId,
+                        name: member.nickname,
+                        email: member.email,
+                        avatar: member.image?.imageUrl || null,
+                        nickname: member.nickname,
+                    };
+                }
+            })
             .addCase(fetchPointInfo.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
