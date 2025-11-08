@@ -230,6 +230,38 @@ function ChallengeCard({
         }
     };
 
+    // 목표 단위 결정 함수
+    function getGoalUnit(challengeName) {
+        const sanitizedChallengeName = challengeName
+            .toLowerCase()
+            .replace(/\s+/g, '');
+
+        // 따릉이: Km
+        if (
+            sanitizedChallengeName.includes('따릉이') ||
+            sanitizedChallengeName.includes('bike')
+        ) {
+            return 'Km';
+        }
+        // 전기차/수소차/제로웨이스트/재활용: WON
+        else if (
+            sanitizedChallengeName.includes('전기차') ||
+            sanitizedChallengeName.includes('수소차') ||
+            sanitizedChallengeName.includes('electric') ||
+            sanitizedChallengeName.includes('hydrogen') ||
+            sanitizedChallengeName.includes('제로') ||
+            sanitizedChallengeName.includes('zero') ||
+            sanitizedChallengeName.includes('재활용') ||
+            sanitizedChallengeName.includes('recycle')
+        ) {
+            return 'WON';
+        }
+        // 그 외: TIMES
+        else {
+            return 'TIMES';
+        }
+    }
+
     function determineType(challengeName) {
         const sanitizedChallengeName = challengeName
             .toLowerCase()
@@ -428,7 +460,7 @@ function ChallengeCard({
                                         {success}
                                     </div>
                                     <div className='text-[9px] text-green-500 font-medium'>
-                                        TIMES
+                                        {getGoalUnit(challengeName)}
                                     </div>
                                 </div>
                             </div>
