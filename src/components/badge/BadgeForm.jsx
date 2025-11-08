@@ -14,7 +14,6 @@ const BadgeForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [name, setName] = useState('');
-    const [desc, setDesc] = useState('');
     const [icon, setIcon] = useState('');
     const [category, setCategory] = useState('');
     const [requirement, setRequirement] = useState('');
@@ -24,7 +23,7 @@ const BadgeForm = () => {
         setError('');
 
         // 필수 필드 검사
-        if (!name || !desc || !icon || !category || !requirement) {
+        if (!name || !icon || !category || !requirement) {
             setError('비어있는 칸이 있습니다. 칸을 모두 채워주세요.');
             return;
         }
@@ -38,10 +37,9 @@ const BadgeForm = () => {
         }
 
         const badgeData = {
-            category: category.trim(),
             name: name.trim(),
             requirement: requirementNum,
-            description: desc.trim(),
+            description: category.trim(),
             image_url: icon.trim(),
         };
 
@@ -54,7 +52,6 @@ const BadgeForm = () => {
             alert('✅ 뱃지가 성공적으로 등록되었습니다!');
             // 폼 초기화
             setName('');
-            setDesc('');
             setIcon('');
             setCategory('');
             setRequirement('');
@@ -124,21 +121,6 @@ const BadgeForm = () => {
                         disabled={isLoading}
                         className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
                         placeholder='예: 초록이 뱃지'
-                    />
-                </div>
-
-                <div>
-                    <label className='block font-medium text-gray-700 mb-1'>
-                        설명
-                    </label>
-                    <input
-                        type='text'
-                        value={desc}
-                        onChange={(e) => setDesc(e.target.value)}
-                        required
-                        disabled={isLoading}
-                        className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
-                        placeholder='뱃지에 대한 설명을 입력하세요'
                     />
                 </div>
 
