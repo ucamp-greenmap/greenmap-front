@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, TypeOutline } from 'lucide-react';
+import { ChevronDown, ChevronUp, TypeOutline, ArrowLeft } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { setActiveTab } from '../../store/slices/appSlice';
 
 // FAQ 데이터
 const faqData = {
@@ -88,7 +90,7 @@ const faqData = {
             content:
                 '환경 기업, 단체와의 제휴를 환영합니다. contact@greenmap.com 으로 메일을 보내주시면 담당자가 확인 후 연락드립니다.',
         },
-       
+
     ],
 };
 
@@ -96,20 +98,21 @@ const faqData = {
 // 개별 FAQ 아이템 컴포넌트
 function FaqItem({ faq, isOpen, onToggle }) {
     return (
+
         <div className='border-b border-gray-200'>
-           <button
-    onClick={onToggle}
-    className={`w-full flex items-center justify-between p-5 text-left transition 
+            <button
+                onClick={onToggle}
+                className={`w-full flex items-center justify-between p-5 text-left transition 
         ${isOpen ? 'bg-white-50' : 'hover:bg-white-50'}
         focus:outline-none focus:ring-0 focus-visible:outline-none`}
->
-    <span className='font-medium text-gray-800'>{faq.title}</span>
-    {isOpen ? (
-        <ChevronUp className='text-gray-500 flex-shrink-0' size={20} />
-    ) : (
-        <ChevronDown className='text-gray-500 flex-shrink-0' size={20} />
-    )}
-</button>
+            >
+                <span className='font-medium text-gray-800'>{faq.title}</span>
+                {isOpen ? (
+                    <ChevronUp className='text-gray-500 flex-shrink-0' size={20} />
+                ) : (
+                    <ChevronDown className='text-gray-500 flex-shrink-0' size={20} />
+                )}
+            </button>
 
 
             {isOpen && (
@@ -122,7 +125,8 @@ function FaqItem({ faq, isOpen, onToggle }) {
 }
 
 // 메인 FAQ 페이지
-export default function FaqScreen() {
+export default function FaqScreen({ onNavigate }) {
+    const dispatch = useDispatch();
     const [selectedTab, setSelectedTab] = useState('인증');
     const [openItemId, setOpenItemId] = useState(null);
 
@@ -132,17 +136,38 @@ export default function FaqScreen() {
         setOpenItemId(openItemId === id ? null : id);
     };
 
+    const handleGoBack = () => {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        if (typeof onNavigate === 'function') {
+            onNavigate('home');
+            return;
+        }
+        dispatch(setActiveTab('home'));
+    };
+
     return (
         <div className='min-h-screen bg-gray-50 py-8'>
             <div className='max-w-4xl mx-auto px-4'>
                 {/* 헤더 */}
-                <div className='text-center mb-8'>
-                    <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-                        FAQ & 고객지원
-                    </h1>
-                    <p className='text-gray-600'>
-                        궁금하신 내용을 빠르게 찾아보세요
-                    </p>
+                <div className='flex items-center justify-center mb-8 relative'>
+                    <button
+                        onClick={handleGoBack}
+                        style={{ backgroundColor: '#f9fafb' }} // 기본 배경색
+                        className='absolute left-0 flex items-center p-2'
+                    >
+                        <ArrowLeft className="w-5 h-5 text-black" />
+                    </button>
+                    <div>
+                        <h1 className='text-3xl font-bold text-gray-900 mb-2'>
+                            FAQ & 고객지원
+                        </h1>
+                        <p className='text-gray-600'>
+                            궁금하신 내용을 빠르게 찾아보세요
+                        </p>
+                    </div>
                 </div>
 
                 {/* 탭 메뉴 */}
@@ -154,13 +179,12 @@ export default function FaqScreen() {
                                 setSelectedTab(tab);
                                 setOpenItemId(null); // 탭 변경시 열린 항목 초기화
                             }}
-                            className={`flex-1 py-3 px-4 rounded-md font-medium transition ${
-                                selectedTab === tab
-                                    ? 'bg-lime-500  text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100'
-                            }`}
+                            className={`flex-1 py-3 px-4 rounded-md font-medium transition ${selectedTab === tab
+                                ? 'bg-lime-500  text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
                         >
-                            {tab} 
+                            {tab}
                         </button>
                     ))}
                 </div>
