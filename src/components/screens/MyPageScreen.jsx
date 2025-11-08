@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchMyPageData, logout } from '../../store/slices/userSlice';
 import { calculateEarnedBadges } from '../../store/slices/badgeSlice';
+import api from '../../api/axios';
 
 const themeColor = '#96cb6f';
 
@@ -41,9 +42,40 @@ export default function MyPageScreen({ onNavigate }) {
         (s) => s.user
     );
     const { allBadges, earnedIds } = useSelector((state) => state.badge);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     const [showSetting, setShowSetting] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false); // 로그아웃 모달 상태
+
+    // 관리자 권한 확인
+    const checkAdminStatus = async () => {
+        const token = localStorage.getItem('token');
+        const memberId = localStorage.getItem('memberId');
+
+        // memberId가 1인 경우만 API 호출
+        if (!token || memberId !== '1') {
+            setIsAdmin(false);
+            return;
+        }
+
+        try {
+            const response = await api.get('/admin', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (
+                response.data.status === 'SUCCESS' &&
+                response.data.data.result
+            ) {
+                setIsAdmin(true);
+            } else {
+                setIsAdmin(false);
+            }
+        } catch (err) {
+            console.error('관리자 권한 확인 실패', err.response || err);
+            setIsAdmin(false);
+        }
+    };
 
     //  현재 획득한 최고 레벨 뱃지 찾기
     const myBadge = useMemo(() => {
@@ -63,6 +95,11 @@ export default function MyPageScreen({ onNavigate }) {
     useEffect(() => {
         dispatch(fetchMyPageData());
     }, [dispatch]);
+
+    // 컴포넌트 마운트 시 관리자 권한 확인
+    useEffect(() => {
+        checkAdminStatus();
+    }, []);
 
     useEffect(() => {
         if (stats.totalPoint !== undefined && stats.totalPoint !== null) {
@@ -237,6 +274,20 @@ export default function MyPageScreen({ onNavigate }) {
                         메뉴
                     </h3>
                     <ul className='space-y-10'>
+                        {isAdmin && (
+                            <li>
+                                <button
+                                    onClick={() => navigate('admin')}
+                                    className='w-full text-left px-4 py-4 rounded-xl hover:bg-green-50 transition-all text-green-700 flex items-center justify-between border border-green-200'
+                                >
+                                    <span className='flex items-center gap-3'>
+                                        <span className='text-xl'>🛡️</span>
+                                        <span>관리자</span>
+                                    </span>
+                                    <span className='text-green-400'>→</span>
+                                </button>
+                            </li>
+                        )}
                         <li>
                             <button
                                 onClick={() => navigate('point-exchange')}
