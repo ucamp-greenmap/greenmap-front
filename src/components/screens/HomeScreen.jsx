@@ -6,7 +6,7 @@ import {
     login,
     updateProfile,
 } from '../../store/slices/userSlice';
-import api from '../../api/axios';
+import { getMyProfile } from '../../api/userApi';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
@@ -77,19 +77,17 @@ export default function HomeScreen({ onNavigate }) {
         const token = localStorage.getItem('token');
         if (token && !isLoggedIn) {
             // 토큰이 있지만 Redux 상태가 업데이트되지 않은 경우
-            api.get('/member/me', {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then((res) => {
+            getMyProfile()
+                .then((me) => {
                     // Redux 상태 업데이트
                     dispatch(login({ token }));
                     dispatch(
                         updateProfile({
-                            name: res.data.data.nickname,
-                            email: res.data.data.email,
-                            nickname: res.data.data.nickname,
-                            avatar: res.data.data.imageUrl,
-                            memberId: res.data.data.memberId,
+                            name: me.nickname,
+                            email: me.email,
+                            nickname: me.nickname,
+                            avatar: me.imageUrl,
+                            memberId: me.memberId,
                         })
                     );
                     // 포인트 정보 가져오기
@@ -128,7 +126,7 @@ export default function HomeScreen({ onNavigate }) {
 
     const placeholderSvg = encodeURIComponent(
         "<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'>" +
-        "<rect fill='%23e5e7eb' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23939' font-size='12'>이미지</text></svg>"
+            "<rect fill='%23e5e7eb' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23939' font-size='12'>이미지</text></svg>"
     );
     const placeholder = `data:image/svg+xml;charset=UTF-8,${placeholderSvg}`;
 
@@ -271,12 +269,12 @@ export default function HomeScreen({ onNavigate }) {
                                             {place.categoryId === 1
                                                 ? '🚲'
                                                 : place.categoryId === 2
-                                                    ? '🛍️'
-                                                    : place.categoryId === 3
-                                                        ? '⚡'
-                                                        : place.categoryId === 5
-                                                            ? '♻️'
-                                                            : '📍'}
+                                                ? '🛍️'
+                                                : place.categoryId === 3
+                                                ? '⚡'
+                                                : place.categoryId === 5
+                                                ? '♻️'
+                                                : '📍'}
                                         </div>
                                         <div className='flex-1 min-w-0'>
                                             <div className='font-medium text-gray-900 truncate'>
@@ -352,31 +350,35 @@ export default function HomeScreen({ onNavigate }) {
                 {!loading && isLoggedIn && (
                     <div className='mt-4'>
                         <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-3xl p-6 text-white shadow-xl border-0'>
-
                             {/* 사용자 이름 + 프로필 */}
                             <div className='flex items-center gap-4 mb-4'>
                                 {/* 프로필 이미지 영역 */}
                                 <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
-                                        <img
-                                            src={profile.avatar}
-                                            alt='프로필'
-                                            className='w-full h-full object-cover'
-                                        /> 
+                                    <img
+                                        src={profile.avatar}
+                                        alt='프로필'
+                                        className='w-full h-full object-cover'
+                                    />
                                 </div>
 
                                 {/* 닉네임 */}
                                 <p className='text-white font-semibold text-lg sm:text-xl tracking-wide'>
-                                    {profile.nickname || profile.name}님의 그린 활동
+                                    {profile.nickname || profile.name}님의 그린
+                                    활동
                                 </p>
                             </div>
 
                             {/* 포인트 영역 */}
                             <div className='flex items-center justify-between mb-4'>
                                 <div>
-                                    <p className='text-white/90 mb-1'>나의 그린 포인트</p>
+                                    <p className='text-white/90 mb-1'>
+                                        나의 그린 포인트
+                                    </p>
                                     <div className='flex items-baseline gap-2'>
                                         <span className='text-4xl font-bold'>
-                                            {Number(stats.point).toLocaleString()}
+                                            {Number(
+                                                stats.point
+                                            ).toLocaleString()}
                                         </span>
                                         <span className='text-lg'>P</span>
                                     </div>
@@ -392,9 +394,13 @@ export default function HomeScreen({ onNavigate }) {
                             {/* 탄소 감축량 */}
                             <div className='bg-white/20 rounded-2xl p-3 backdrop-blur-sm mb-4'>
                                 <div className='flex items-center justify-between mb-2'>
-                                    <span className='text-white/90'>탄소 감축량</span>
+                                    <span className='text-white/90'>
+                                        탄소 감축량
+                                    </span>
                                     {stats.rank && (
-                                        <span className='text-white/90 text-sm'>🏆 {stats.rank}위</span>
+                                        <span className='text-white/90 text-sm'>
+                                            🏆 {stats.rank}위
+                                        </span>
                                     )}
                                 </div>
                                 <div className='flex items-baseline gap-2'>
