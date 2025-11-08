@@ -41,7 +41,24 @@ import api from '../api/axios';
  */
 
 /**
- * @typedef {'VOUCHER' | 'CASH'} PointUsageType
+ * @typedef {Object} ShopRequest
+ * @property {string} [imageUrl] - 이미지 URL (optional)
+ * @property {number} price - 가격 (포인트, required)
+ * @property {string} name - 상품 이름 (required)
+ * @property {string} [category] - 카테고리 (optional)
+ * @property {string} [brand] - 브랜드 (optional)
+ * @property {boolean} [popular] - 인기 상품 여부 (optional)
+ */
+
+/**
+ * @typedef {Object} ShopAddResponse
+ * @property {number} voucherId - 바우처 ID
+ * @property {string} imageUrl - 이미지 URL
+ * @property {number} price - 가격 (포인트)
+ * @property {string} name - 상품 이름
+ * @property {string} category - 카테고리
+ * @property {string} brand - 브랜드
+ * @property {boolean} popular - 인기 상품 여부
  */
 
 /**
@@ -110,6 +127,80 @@ export async function getPointInfo() {
     } catch (error) {
         console.error('포인트 정보 조회 오류:', error);
         throw error;
+    }
+}
+
+/**
+ * 포인트샵에 새로운 상품(바우처)을 추가합니다.
+ * @param {ShopRequest} request - 상품 정보
+ * @returns {Promise<ShopAddResponse>} 추가된 상품 정보
+ * @throws {Error} 필수 필드가 없거나 API 호출 실패 시
+ *
+ * @example
+ * await addShopVoucher({
+ *   imageUrl: "https://example.com/img.png",
+ *   price: 1000,
+ *   name: "에코 텀블러",
+ *   category: "lifestyle",
+ *   brand: "GreenBrand",
+ *   popular: true
+ * });
+ */
+export async function addShopVoucher(request) {
+    // 필수 필드 검증
+    if (request.price === undefined || request.price === null) {
+        throw new Error('가격(price)은 필수 필드입니다.');
+    }
+
+    if (
+        !request.name ||
+        typeof request.name !== 'string' ||
+        request.name.trim() === ''
+    ) {
+        throw new Error('상품 이름(name)은 필수 필드입니다.');
+    }
+
+    // price가 숫자인지 확인
+    if (typeof request.price !== 'number' || request.price < 0) {
+        throw new Error('가격(price)은 0 이상의 숫자여야 합니다.');
+    }
+
+    try {
+        // axios 인터셉터가 Authorization 헤더를 자동으로 추가합니다
+        const response = await api.post('/point/shop', {
+            imageUrl: request.imageUrl,
+            price: request.price,
+            name: request.name.trim(),
+            category: request.category,
+            brand: request.brand,
+            popular: request.popular,
+        });
+
+        // 백엔드 응답 형식: { message: string, data: ShopAddResponse }
+        // status 필드가 있는 경우와 없는 경우 모두 처리
+        if (response.data.status === 'SUCCESS' || response.data.data) {
+            return response.data.data;
+        } else {
+            throw new Error(response.data.message || '상품 추가 실패');
+        }
+    } catch (error) {
+        console.error('상품 추가 오류:', error);
+
+        // 클라이언트 검증 오류는 그대로 throw
+        if (
+            error.message &&
+            (error.message.includes('필수 필드') ||
+                error.message.includes('숫자여야'))
+        ) {
+            throw error;
+        }
+
+        // 서버 오류 처리
+        if (error.response?.data?.message) {
+            throw new Error(error.response.data.message);
+        }
+
+        throw new Error('상품 추가 중 오류가 발생했습니다.');
     }
 }
 
