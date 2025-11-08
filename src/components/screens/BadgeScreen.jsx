@@ -310,7 +310,7 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
 function BadgeCard({ badge, index }) {
     const progress =
         badge.standard > 0
-            ? Math.min((badge.progress / badge.standard) * 100, 100)
+            ? Math.min(((badge.progress || 0) / badge.standard) * 100, 100)
             : badge.isAcquired
             ? 100
             : 0;
@@ -382,8 +382,8 @@ function BadgeCard({ badge, index }) {
                     <div className='w-full space-y-1'>
                         <div className='flex justify-between items-center text-xs'>
                             <span className='text-gray-600 font-medium'>
-                                {badge.progress.toLocaleString()} /{' '}
-                                {badge.standard.toLocaleString()}
+                                {(badge.progress || 0).toLocaleString()} /{' '}
+                                {(badge.standard || 0).toLocaleString()}
                             </span>
                             <span className='text-green-600 font-bold'>
                                 {Math.round(progress)}%
