@@ -367,7 +367,7 @@ const userSlice = createSlice({
             memberId: member.memberId,
             name: member.nickname,
             email: member.email,
-            avatar: member.imageUrl,
+            avatar: member.image?.imageUrl || null,
             nickname: member.nickname,
         };
     }
