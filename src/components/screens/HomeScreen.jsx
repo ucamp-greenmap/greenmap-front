@@ -357,15 +357,11 @@ export default function HomeScreen({ onNavigate }) {
                             <div className='flex items-center gap-4 mb-4'>
                                 {/* 프로필 이미지 영역 */}
                                 <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
-                                    {profile.avatar ? (
                                         <img
                                             src={profile.avatar}
                                             alt='프로필'
                                             className='w-full h-full object-cover'
-                                        />
-                                    ) : (
-                                        <span className='text-3xl'>👤</span>
-                                    )}
+                                        /> 
                                 </div>
 
                                 {/* 닉네임 */}
