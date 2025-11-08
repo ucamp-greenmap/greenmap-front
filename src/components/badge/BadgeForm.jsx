@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import { registerBadge } from '../../api/badgeApi';
 
+// 뱃지 카테고리 키워드 (챌린지와 동일)
+const VALID_CATEGORIES = [
+    '따릉이',
+    '전기차',
+    '수소차',
+    '재활용센터',
+    '제로웨이스트',
+];
+
 const BadgeForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [name, setName] = useState('');
     const [desc, setDesc] = useState('');
     const [icon, setIcon] = useState('');
-    const [categoryId, setCategoryId] = useState('');
+    const [category, setCategory] = useState('');
     const [requirement, setRequirement] = useState('');
 
     const handleSubmit = async (e) => {
@@ -15,19 +24,13 @@ const BadgeForm = () => {
         setError('');
 
         // 필수 필드 검사
-        if (!name || !desc || !icon || !categoryId || !requirement) {
+        if (!name || !desc || !icon || !category || !requirement) {
             setError('비어있는 칸이 있습니다. 칸을 모두 채워주세요.');
             return;
         }
 
         // 숫자 필드 검증
-        const categoryIdNum = parseInt(categoryId, 10);
         const requirementNum = parseInt(requirement, 10);
-
-        if (isNaN(categoryIdNum) || categoryIdNum <= 0) {
-            setError('카테고리 ID는 양수여야 합니다.');
-            return;
-        }
 
         if (isNaN(requirementNum) || requirementNum <= 0) {
             setError('요구 포인트는 양수여야 합니다.');
@@ -35,7 +38,7 @@ const BadgeForm = () => {
         }
 
         const badgeData = {
-            categoryId: categoryIdNum,
+            category: category.trim(),
             name: name.trim(),
             requirement: requirementNum,
             description: desc.trim(),
@@ -53,7 +56,7 @@ const BadgeForm = () => {
             setName('');
             setDesc('');
             setIcon('');
-            setCategoryId('');
+            setCategory('');
             setRequirement('');
         } catch (err) {
             console.error('뱃지 추가 실패', err.response || err);
@@ -88,20 +91,24 @@ const BadgeForm = () => {
             <form onSubmit={handleSubmit} className='space-y-4'>
                 <div>
                     <label className='block font-medium text-gray-700 mb-1'>
-                        카테고리 ID
+                        카테고리 <span className='text-red-500'>*</span>
                     </label>
-                    <input
-                        type='number'
-                        value={categoryId}
-                        onChange={(e) => setCategoryId(e.target.value)}
-                        min='1'
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
                         required
                         disabled={isLoading}
                         className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
-                        placeholder='1'
-                    />
+                    >
+                        <option value=''>카테고리를 선택하세요</option>
+                        {VALID_CATEGORIES.map((cat) => (
+                            <option key={cat} value={cat}>
+                                {cat}
+                            </option>
+                        ))}
+                    </select>
                     <p className='text-xs text-gray-500 mt-1'>
-                        뱃지 카테고리를 선택하세요.
+                        뱃지의 카테고리를 선택하세요.
                     </p>
                 </div>
 
@@ -208,6 +215,31 @@ const BadgeForm = () => {
                     </button>
                 </div>
             </form>
+
+            {/* 카테고리 안내 */}
+            <div className='bg-blue-50 border border-blue-200 rounded-md p-4 text-sm mt-6'>
+                <h3 className='font-semibold text-blue-900 mb-2'>
+                    📋 카테고리 안내
+                </h3>
+                <ul className='space-y-1 text-blue-800'>
+                    <li>
+                        • <strong>따릉이</strong>: 자전거 이용 관련 뱃지
+                    </li>
+                    <li>
+                        • <strong>전기차</strong>: 전기차 충전 관련 뱃지
+                    </li>
+                    <li>
+                        • <strong>수소차</strong>: 수소차 충전 관련 뱃지
+                    </li>
+                    <li>
+                        • <strong>재활용센터</strong>: 재활용센터 방문 관련 뱃지
+                    </li>
+                    <li>
+                        • <strong>제로웨이스트</strong>: 제로웨이스트 상점 이용
+                        관련 뱃지
+                    </li>
+                </ul>
+            </div>
         </div>
     );
 };

@@ -184,8 +184,7 @@ const ChallengeForm = () => {
                         💡 설명은 <strong>따릉이</strong>,{' '}
                         <strong>전기차</strong>, <strong>수소차</strong>,{' '}
                         <strong>재활용센터</strong>,{' '}
-                        <strong>제로웨이스트</strong> 중 하나로 시작해야
-                        합니다.
+                        <strong>제로웨이스트</strong> 중 하나로 시작해야 합니다.
                     </p>
                     {/* Description 에러 메시지 */}
                     {descriptionError && (
@@ -318,20 +317,20 @@ const ChallengeForm = () => {
                         기준, km 단위)
                     </li>
                     <li>
-                        • <strong>전기차</strong>: 전기차 충전 챌린지
-                        (충전비용 기준, 원 단위)
+                        • <strong>전기차</strong>: 전기차 충전 챌린지 (충전비용
+                        기준, 원 단위)
                     </li>
                     <li>
-                        • <strong>수소차</strong>: 수소차 충전 챌린지
-                        (충전비용 기준, 원 단위)
+                        • <strong>수소차</strong>: 수소차 충전 챌린지 (충전비용
+                        기준, 원 단위)
                     </li>
                     <li>
-                        • <strong>재활용센터</strong>: 재활용센터 방문
+                        • <strong>재활용센터</strong>: 재활용센터 방문 챌린지
+                        (구매금액 기준, 원 단위)
+                    </li>
+                    <li>
+                        • <strong>제로웨이스트</strong>: 제로웨이스트 상점 이용
                         챌린지 (구매금액 기준, 원 단위)
-                    </li>
-                    <li>
-                        • <strong>제로웨이스트</strong>: 제로웨이스트 상점
-                        이용 챌린지 (구매금액 기준, 원 단위)
                     </li>
                 </ul>
                 <p className='mt-2 text-xs text-blue-700'>
