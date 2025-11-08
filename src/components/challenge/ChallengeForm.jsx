@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../../api/axios';
+import { createChallenge } from '../../api/challengeApi';
 
 // 챌린지 타입 키워드 (백엔드 자동 인증 연동용)
 const VALID_CHALLENGE_TYPES = [
@@ -13,30 +13,7 @@ const VALID_CHALLENGE_TYPES = [
 const ChallengeForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [descriptionError, setDescriptionError] = useState('');
-
-    // Description 유효성 검사 함수
-    const validateDescription = (description) => {
-        if (!description.trim()) {
-            return '설명을 입력해주세요.';
-        }
-
-        const firstWord = description.trim().split(' ')[0];
-        if (!VALID_CHALLENGE_TYPES.includes(firstWord)) {
-            return `설명은 다음 키워드 중 하나로 시작해야 합니다: ${VALID_CHALLENGE_TYPES.join(
-                ', '
-            )}`;
-        }
-
-        return '';
-    };
-
-    // Description 입력 변경 핸들러
-    const handleDescriptionChange = (e) => {
-        const value = e.target.value;
-        const validationError = validateDescription(value);
-        setDescriptionError(validationError);
-    };
+    const [category, setCategory] = useState('');
 
     const handleAddChallenge = async () => {
         setError('');
@@ -45,52 +22,50 @@ const ChallengeForm = () => {
             .getElementById('challengeName')
             .value.trim();
         const description = document.getElementById('description').value.trim();
-        const memberCount = document.getElementById('memberCount').value;
         const success = document.getElementById('success').value;
         const pointAmount = document.getElementById('pointAmount').value;
         const deadline = document.getElementById('deadline').value;
+        const updatedAt = document.getElementById('updatedAt').value;
 
         // 필수 필드 검사
         if (
+            !category ||
             !challengeName ||
             !description ||
-            !memberCount ||
             !success ||
             !pointAmount ||
-            !deadline
+            !deadline ||
+            !updatedAt
         ) {
             setError('비어있는 칸이 있습니다. 칸을 모두 채워주세요.');
             return;
         }
 
-        // Description 유효성 검사
-        const descError = validateDescription(description);
-        if (descError) {
-            setDescriptionError(descError);
-            setError('설명 형식을 확인해주세요.');
-            return;
-        }
-
         // 숫자 필드 검증
-        const memberCountNum = parseInt(memberCount, 10);
         const successNum = parseInt(success, 10);
         const pointAmountNum = parseInt(pointAmount, 10);
         const deadlineNum = parseInt(deadline, 10);
 
-        if (
-            memberCountNum < 0 ||
-            successNum <= 0 ||
-            pointAmountNum <= 0 ||
-            deadlineNum <= 0
-        ) {
+        if (successNum <= 0 || pointAmountNum <= 0 || deadlineNum <= 0) {
             setError('숫자 값을 올바르게 입력해주세요.');
             return;
         }
 
+        // updatedAt: 관리자가 입력한 만료 기한을 ISO 8601 형식으로 변환
+        const expirationDate = new Date(updatedAt);
+        if (isNaN(expirationDate.getTime())) {
+            setError('만료 기한 날짜 형식이 올바르지 않습니다.');
+            return;
+        }
+        const updatedAtISO = expirationDate.toISOString();
+
+        // description: 카테고리 + 설명
+        const descriptionWithCategory = `${category} ${description}`;
+
         const data = {
-            challengeName,
-            description,
-            memberCount: memberCountNum,
+            updatedAt: updatedAtISO, // 챌린지 만료 기한 (이벤트 종료일)
+            challengeName, // 챌린지명은 자유롭게 입력한 그대로 전송
+            description: descriptionWithCategory, // 카테고리 + 설명
             success: successNum,
             pointAmount: pointAmountNum,
             deadline: deadlineNum,
@@ -99,34 +74,19 @@ const ChallengeForm = () => {
         setIsLoading(true);
 
         try {
-            const res = await api.post('/chalregis', data);
-            console.log('챌린지 추가 응답:', res.data);
-
-            if (res.data.status === 'SUCCESS') {
-                alert('✅ 챌린지가 성공적으로 등록되었습니다!');
-                // 폼 초기화
-                document.getElementById('challengeName').value = '';
-                document.getElementById('description').value = '';
-                document.getElementById('memberCount').value = '0';
-                document.getElementById('success').value = '50';
-                document.getElementById('pointAmount').value = '500';
-                document.getElementById('deadline').value = '7';
-                setDescriptionError('');
-            } else {
-                setError(res.data.message || '챌린지 추가에 실패했습니다.');
-            }
+            await createChallenge(data);
+            alert('✅ 챌린지가 성공적으로 등록되었습니다!');
+            // 폼 초기화
+            setCategory('');
+            document.getElementById('challengeName').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('success').value = '50';
+            document.getElementById('pointAmount').value = '500';
+            document.getElementById('deadline').value = '7';
+            document.getElementById('updatedAt').value = '';
         } catch (err) {
-            console.error('챌린지 추가 실패', err.response || err);
-
-            if (err.response?.status === 401) {
-                setError('❌ 인증이 필요합니다. 다시 로그인해주세요.');
-            } else if (err.response?.status === 400) {
-                setError('❌ 입력 형식이 올바르지 않습니다.');
-            } else if (err.response?.data?.message) {
-                setError(`❌ ${err.response.data.message}`);
-            } else {
-                setError('❌ 챌린지 추가 중 오류가 발생했습니다.');
-            }
+            console.error('챌린지 추가 실패', err);
+            setError(err.message || '❌ 챌린지 추가 중 오류가 발생했습니다.');
         } finally {
             setIsLoading(false);
         }
@@ -148,17 +108,41 @@ const ChallengeForm = () => {
             <form className='space-y-4'>
                 <div>
                     <label className='block font-medium text-gray-700 mb-1'>
-                        챌린지명
+                        카테고리 <span className='text-red-500'>*</span>
+                    </label>
+                    <select
+                        id='category'
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
+                    >
+                        <option value=''>카테고리를 선택하세요</option>
+                        {VALID_CHALLENGE_TYPES.map((type) => (
+                            <option key={type} value={type}>
+                                {type}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div>
+                    <label className='block font-medium text-gray-700 mb-1'>
+                        챌린지명 <span className='text-red-500'>*</span>
                     </label>
                     <input
                         type='text'
-                        maxLength='16'
+                        maxLength='50'
                         required
                         id='challengeName'
-                        placeholder='일주일 따릉이 타기'
+                        placeholder='100km 달성하기'
                         disabled={isLoading}
                         className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
                     />
+                    <p className='text-xs text-gray-500 mt-1'>
+                        챌린지 이름을 자유롭게 입력하세요.
+                    </p>
                 </div>
 
                 <div>
@@ -167,31 +151,16 @@ const ChallengeForm = () => {
                     </label>
                     <input
                         type='text'
-                        maxLength='32'
+                        maxLength='100'
                         required
                         id='description'
-                        placeholder='따릉이 50km 이상 타기'
-                        onChange={handleDescriptionChange}
+                        placeholder='50km 이상 이용하기'
                         disabled={isLoading}
-                        className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                            descriptionError
-                                ? 'border-red-300 focus:ring-red-400'
-                                : 'border-gray-300 focus:ring-green-400'
-                        }`}
+                        className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
                     />
-                    {/* Description 규칙 안내 */}
                     <p className='text-xs text-gray-500 mt-1'>
-                        💡 설명은 <strong>따릉이</strong>,{' '}
-                        <strong>전기차</strong>, <strong>수소차</strong>,{' '}
-                        <strong>재활용센터</strong>,{' '}
-                        <strong>제로웨이스트</strong> 중 하나로 시작해야 합니다.
+                        챌린지 설명을 입력하세요.
                     </p>
-                    {/* Description 에러 메시지 */}
-                    {descriptionError && (
-                        <p className='text-xs text-red-600 mt-1'>
-                            {descriptionError}
-                        </p>
-                    )}
                 </div>
 
                 <div>
@@ -268,11 +237,27 @@ const ChallengeForm = () => {
                     </div>
                 </div>
 
+                <div>
+                    <label className='block font-medium text-gray-700 mb-1'>
+                        만료 기한 <span className='text-red-500'>*</span>
+                    </label>
+                    <input
+                        type='datetime-local'
+                        id='updatedAt'
+                        required
+                        disabled={isLoading}
+                        className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
+                    />
+                    <p className='text-xs text-gray-500 mt-1'>
+                        챌린지 이벤트 종료일을 선택해주세요.
+                    </p>
+                </div>
+
                 <div className='pt-4'>
                     <button
                         type='button'
                         onClick={handleAddChallenge}
-                        disabled={isLoading || descriptionError}
+                        disabled={isLoading || !category}
                         className='w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-md shadow-md transition disabled:bg-gray-400 disabled:cursor-not-allowed'
                     >
                         {isLoading ? (
