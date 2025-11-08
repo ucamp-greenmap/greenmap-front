@@ -455,7 +455,11 @@ function ChallengeCard({
                                 <Calendar className='w-3.5 h-3.5 text-gray-400' />
                                 <span className='font-medium'>완료일:</span>
                                 <span className='font-semibold text-gray-700'>
-                                    {createdAt}
+                                    {
+                                        new Date(createdAt)
+                                            .toISOString()
+                                            .split('T')[0]
+                                    }
                                 </span>
                             </div>
                         )}
