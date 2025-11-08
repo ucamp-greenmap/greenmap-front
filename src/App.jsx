@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from './store/slices/appSlice';
+import { fetchMyPageData } from './store/slices/userSlice';
 import {
     BrowserRouter,
     Routes,
@@ -56,6 +57,13 @@ export default function App() {
     const activeTab = useSelector((state) => state.app.activeTab);
     const dispatch = useDispatch();
     // removed top-level navigate; navigation is handled inside AppContent via react-router
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            dispatch(fetchMyPageData());
+        }
+    }, [dispatch]);
 
     if (appState === 'splash') return <SplashScreen />;
     if (appState === 'onboarding') return <OnboardingScreen />;

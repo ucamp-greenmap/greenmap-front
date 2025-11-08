@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import { fetchPointInfo } from '../../store/slices/userSlice';
+import { fetchPointInfo, fetchMyPageData } from '../../store/slices/userSlice';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
@@ -66,7 +66,7 @@ export default function HomeScreen({ onNavigate }) {
     }, [currentLocation, isLocationLoading, fetchCurrentLocation]);
 
     useEffect(() => {
-        const onFocus = () => dispatch(fetchPointInfo());
+        const onFocus = () => dispatch( fetchMyPageData());
         window.addEventListener('focus', onFocus);
         return () => window.removeEventListener('focus', onFocus);
     }, [dispatch]);
@@ -310,18 +310,8 @@ export default function HomeScreen({ onNavigate }) {
                         <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-3xl p-6 text-white shadow-xl border-0'>
                             {/* 사용자 이름 표시 */}
                             <div className='flex items-center gap-2 mb-4'>
-                                {profile.avatar && (
-                                    <img
-                                        src={profile.avatar}
-                                        alt='프로필'
-                                        className='w-10 h-10 rounded-full'
-                                    />
-                                )}
-                                <p className='text-white/90 text-sm'>
-                                    {profile.nickname || profile.name}님의 그린
-                                    활동
-                                </p>
-                            </div>
+                                 {profile.avatar && ( <img src={profile.avatar} alt='프로필' className='w-10 h-10 rounded-full' /> )}
+                                  <p className='text-white font-medium text-base sm:text-lg tracking-wide'>{profile.nickname || profile.name}님의 그린 활동</p> </div>
 
                             <div className='flex items-center justify-between mb-4'>
                                 <div>
@@ -365,11 +355,13 @@ export default function HomeScreen({ onNavigate }) {
                             </div>
 
                             <button
-                                onClick={() => navigate('cert')}
-                                className='w-full bg-white text-[#4CAF50] py-3 rounded-[20px] text-center transition-transform hover:scale-105'
-                            >
-                                활동 인증하고 포인트 받기
-                            </button>
+  onClick={() => navigate('cert')}
+  className='w-full bg-white text-[#4CAF50] py-3 rounded-[20px] text-center font-semibold 
+             shadow-md border border-[#4CAF50]/20 transition-transform duration-200 
+             hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]'
+>
+  활동 인증하고 포인트 받기
+</button>
                         </div>
                     </div>
                 )}
