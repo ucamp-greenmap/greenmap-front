@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import { fetchPointInfo } from '../../store/slices/userSlice';
+import {
+    fetchPointInfo,
+    login,
+    updateProfile,
+} from '../../store/slices/userSlice';
+import api from '../../api/axios';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
@@ -65,17 +70,56 @@ export default function HomeScreen({ onNavigate }) {
         }
     }, [currentLocation, isLocationLoading, fetchCurrentLocation]);
 
-    useEffect(() => {
-        const onFocus = () => dispatch(fetchPointInfo());
-        window.addEventListener('focus', onFocus);
-        return () => window.removeEventListener('focus', onFocus);
-    }, [dispatch]);
-
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
+    // 초기 마운트 시 토큰이 있으면 로그인 상태 확인
     useEffect(() => {
-        dispatch(fetchPointInfo());
-    }, [dispatch]);
+        const token = localStorage.getItem('token');
+        if (token && !isLoggedIn) {
+            // 토큰이 있지만 Redux 상태가 업데이트되지 않은 경우
+            api.get('/member/me', {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+                .then((res) => {
+                    // Redux 상태 업데이트
+                    dispatch(login({ token }));
+                    dispatch(
+                        updateProfile({
+                            name: res.data.data.nickname,
+                            email: res.data.data.email,
+                            nickname: res.data.data.nickname,
+                            avatar: res.data.data.imageUrl,
+                            memberId: res.data.data.memberId,
+                        })
+                    );
+                    // 포인트 정보 가져오기
+                    dispatch(fetchPointInfo());
+                })
+                .catch(() => {
+                    // 토큰이 유효하지 않으면 제거
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('memberId');
+                });
+        }
+    }, [dispatch, isLoggedIn]);
+
+    useEffect(() => {
+        const onFocus = () => {
+            // 로그인 상태일 때만 포인트 정보 가져오기
+            if (isLoggedIn) {
+                dispatch(fetchPointInfo());
+            }
+        };
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
+    }, [dispatch, isLoggedIn]);
+
+    useEffect(() => {
+        // 로그인 상태일 때만 포인트 정보 가져오기
+        if (isLoggedIn) {
+            dispatch(fetchPointInfo());
+        }
+    }, [dispatch, isLoggedIn]);
 
     const randomTip = useMemo(() => {
         const randomIndex = Math.floor(Math.random() * ECO_TIPS.length);
