@@ -3,11 +3,12 @@ import { Calendar, Plus, Award, Target, TrendingUp } from 'lucide-react';
 import api from '../../api/axios';
 import CertModal from '../cert/CertModal';
 import { certTypes } from '../../util/certConfig';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 
 export default function ChallengeScreen({ onNavigate }) {
     const dispatch = useDispatch();
+    const { isLoggedIn } = useSelector((state) => state.user);
 
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
@@ -145,7 +146,26 @@ export default function ChallengeScreen({ onNavigate }) {
 
             {/* 콘텐츠 영역 */}
             <div className='flex-1 max-w-3xl mx-auto w-full px-4 py-6 pb-32'>
-                {loading ? (
+                {!isLoggedIn ? (
+                    <div className='flex flex-col items-center justify-center py-20'>
+                        <div className='bg-white rounded-3xl p-8 shadow-xl max-w-md w-full text-center'>
+                            <div className='text-6xl mb-4'>🔒</div>
+                            <h2 className='text-2xl font-bold text-gray-900 mb-2'>
+                                로그인이 필요해요
+                            </h2>
+                            <p className='text-gray-600 mb-6'>
+                                챌린지에 참여하고 포인트를 받으려면
+                                로그인해주세요
+                            </p>
+                            <button
+                                onClick={() => navigate('login')}
+                                className='w-full bg-gradient-to-r from-[#4CAF50] to-[#66BB6A] text-white py-3 rounded-2xl hover:from-[#45a049] hover:to-[#5a9f5d] transition-all shadow-lg font-semibold'
+                            >
+                                로그인하러 가기
+                            </button>
+                        </div>
+                    </div>
+                ) : loading ? (
                     <div className='flex flex-col items-center justify-center py-20'>
                         <div className='relative'>
                             <div className='w-16 h-16 border-4 border-gray-200 rounded-full'></div>
