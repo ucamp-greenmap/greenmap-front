@@ -29,7 +29,7 @@ import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
 import AddChallengeScreen from './components/screens/AddChallengeScreen';
-
+import AdminScreen from './components/screens/AdminScreen';
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
 const TAB_TO_PATH = {
@@ -41,6 +41,7 @@ const TAB_TO_PATH = {
     mypage: '/mypage',
     points: '/points',
     'point-exchange': '/point-exchange',
+    admin: '/admin',
     ranking: '/ranking',
     login: '/login',
     badge: '/badge',
@@ -148,6 +149,10 @@ export default function App() {
                     <Route
                         path='/addChallenge'
                         element={<AddChallengeScreen onNavigate={navigate} />}
+                    />
+                    <Route
+                        path='/admin'
+                        element={<AdminScreen onNavigate={navigate} />}
                     />
                     {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
                     <Route path='*' element={<Navigate to='/' replace />} />
