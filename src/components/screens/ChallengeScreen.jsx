@@ -402,9 +402,10 @@ function ChallengeCard({
             expiryDate = new Date(startDate);
             expiryDate.setDate(startDate.getDate() + deadline);
         } else if (filterType === 'available') {
-            // 참여 가능: updatedAt 사용
-            if (!updatedAt) return null;
-            expiryDate = new Date(updatedAt);
+            // 참여 가능: 현재 날짜 + deadline으로 만료일 계산
+            if (!deadline) return null;
+            expiryDate = new Date(now);
+            expiryDate.setDate(now.getDate() + deadline);
         } else {
             return null;
         }
@@ -653,25 +654,49 @@ function ChallengeCard({
                                     expiryDateStr = expiryDate
                                         .toISOString()
                                         .split('T')[0];
-                                } else if (
-                                    filter === 'available' &&
-                                    updatedAt
-                                ) {
-                                    // 참여 가능: updatedAt 사용
-                                    expiryDateStr = new Date(updatedAt)
+                                } else if (filter === 'available' && deadline) {
+                                    // 참여 가능: 현재 날짜 + deadline으로 만료일 계산
+                                    const now = new Date();
+                                    const expiryDate = new Date(now);
+                                    expiryDate.setDate(
+                                        now.getDate() + deadline
+                                    );
+                                    expiryDateStr = expiryDate
                                         .toISOString()
                                         .split('T')[0];
                                 }
 
                                 return expiryDateStr ? (
-                                    <div className='flex items-center gap-2 text-xs text-gray-500 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-2.5 mt-3 border border-gray-200'>
-                                        <Calendar className='w-3.5 h-3.5 text-gray-400' />
-                                        <span className='font-medium'>
-                                            만료일:
-                                        </span>
-                                        <span className='font-semibold text-gray-700'>
-                                            {expiryDateStr}
-                                        </span>
+                                    <div
+                                        className={`flex items-center ${
+                                            filter === 'available'
+                                                ? 'justify-between'
+                                                : 'gap-2'
+                                        } text-xs bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-2.5 mt-3 border border-gray-200`}
+                                    >
+                                        <div className='flex items-center gap-2 text-gray-500'>
+                                            <Calendar className='w-3.5 h-3.5 text-gray-400' />
+                                            <span className='font-medium'>
+                                                만료일:
+                                            </span>
+                                            <span className='font-semibold text-gray-700'>
+                                                {expiryDateStr}
+                                            </span>
+                                        </div>
+                                        {filter === 'available' &&
+                                            daysStyle &&
+                                            remainingDays !== null && (
+                                                <div
+                                                    className={`${daysStyle.bg} ${daysStyle.text} px-2.5 py-1 rounded-md text-[10px] font-bold ${daysStyle.shadow} flex items-center gap-1`}
+                                                >
+                                                    <Clock className='w-3 h-3' />
+                                                    <span>
+                                                        {remainingDays > 0
+                                                            ? `남은 ${remainingDays}일`
+                                                            : '만료됨'}
+                                                    </span>
+                                                </div>
+                                            )}
                                     </div>
                                 ) : null;
                             })()}
