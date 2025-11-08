@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import BadgeForm from '../badge/BadgeForm';
 import ChallengeForm from '../challenge/ChallengeForm';
+import ShopForm from '../shop/ShopForm';
 
 const AdminScreen = ({ onNavigate }) => {
     const dispatch = useDispatch();
@@ -70,8 +71,24 @@ const AdminScreen = ({ onNavigate }) => {
                     >
                         챌린지 추가
                     </button>
+                    <button
+                        className={`px-4 py-2 rounded ${
+                            activeTab === 'shop'
+                                ? 'bg-primary text-white'
+                                : 'bg-gray-200'
+                        }`}
+                        onClick={() => setActiveTab('shop')}
+                    >
+                        상품 추가
+                    </button>
                 </div>
-                {activeTab === 'badge' ? <BadgeForm /> : <ChallengeForm />}
+                {activeTab === 'badge' ? (
+                    <BadgeForm />
+                ) : activeTab === 'challenge' ? (
+                    <ChallengeForm />
+                ) : (
+                    <ShopForm />
+                )}
             </div>
         </>
     );
