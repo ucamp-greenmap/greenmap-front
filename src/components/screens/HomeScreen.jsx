@@ -305,66 +305,79 @@ export default function HomeScreen({ onNavigate }) {
                 )}
 
                 {/* ✅ 로그인 됨 - 포인트 카드 */}
-                {!loading && isLoggedIn && (
-                    <div className='mt-4'>
-                        <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-3xl p-6 text-white shadow-xl border-0'>
-                            {/* 사용자 이름 표시 */}
-                            <div className='flex items-center gap-2 mb-4'>
-                                 {profile.avatar && ( <img src={profile.avatar} alt='프로필' className='w-10 h-10 rounded-full' /> )}
-                                  <p className='text-white font-medium text-base sm:text-lg tracking-wide'>{profile.nickname || profile.name}님의 그린 활동</p> </div>
+                {/* ✅ 로그인 됨 - 포인트 카드 */}
+{!loading && isLoggedIn && (
+  <div className='mt-4'>
+    <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-3xl p-6 text-white shadow-xl border-0'>
+      
+      {/* 사용자 이름 + 프로필 */}
+      <div className='flex items-center gap-4 mb-4'>
+        {/* 프로필 이미지 영역 */}
+        <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
+          {profile.avatar ? (
+            <img
+              src={profile.avatar}
+              alt='프로필'
+              className='w-full h-full object-cover'
+            />
+          ) : (
+            <span className='text-3xl'>👤</span>
+          )}
+        </div>
 
-                            <div className='flex items-center justify-between mb-4'>
-                                <div>
-                                    <p className='text-white/90 mb-1'>
-                                        나의 그린 포인트
-                                    </p>
-                                    <div className='flex items-baseline gap-2'>
-                                        <span className='text-4xl font-bold'>
-                                            {Number(
-                                                stats.point
-                                            ).toLocaleString()}
-                                        </span>
-                                        <span className='text-lg'>P</span>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => navigate('badge')}
-                                    className='bg-white/20 p-3 rounded-2xl backdrop-blur-sm hover:bg-white/30 transition-colors'
-                                >
-                                    <TrophyIcon className='w-6 h-6 text-white' />
-                                </button>
-                            </div>
+        {/* 닉네임 */}
+        <p className='text-white font-semibold text-lg sm:text-xl tracking-wide'>
+          {profile.nickname || profile.name}님의 그린 활동
+        </p>
+      </div>
 
-                            <div className='bg-white/20 rounded-2xl p-3 backdrop-blur-sm mb-4'>
-                                <div className='flex items-center justify-between mb-2'>
-                                    <span className='text-white/90'>
-                                        탄소 감축량
-                                    </span>
-                                    {stats.rank && (
-                                        <span className='text-white/90 text-sm'>
-                                            🏆 {stats.rank}위
-                                        </span>
-                                    )}
-                                </div>
-                                <div className='flex items-baseline gap-2'>
-                                    <span className='text-2xl font-semibold'>
-                                        {stats.carbonReduction}
-                                    </span>
-                                    <span className='text-sm'>kg CO₂</span>
-                                </div>
-                            </div>
+      {/* 포인트 영역 */}
+      <div className='flex items-center justify-between mb-4'>
+        <div>
+          <p className='text-white/90 mb-1'>나의 그린 포인트</p>
+          <div className='flex items-baseline gap-2'>
+            <span className='text-4xl font-bold'>
+              {Number(stats.point).toLocaleString()}
+            </span>
+            <span className='text-lg'>P</span>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate('badge')}
+          className='bg-white/20 p-3 rounded-2xl backdrop-blur-sm hover:bg-white/30 transition-colors'
+        >
+          <TrophyIcon className='w-6 h-6 text-white' />
+        </button>
+      </div>
 
-                            <button
-  onClick={() => navigate('cert')}
-  className='w-full bg-white text-[#4CAF50] py-3 rounded-[20px] text-center font-semibold 
-             shadow-md border border-[#4CAF50]/20 transition-transform duration-200 
-             hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]'
->
-  활동 인증하고 포인트 받기
-</button>
-                        </div>
-                    </div>
-                )}
+      {/* 탄소 감축량 */}
+      <div className='bg-white/20 rounded-2xl p-3 backdrop-blur-sm mb-4'>
+        <div className='flex items-center justify-between mb-2'>
+          <span className='text-white/90'>탄소 감축량</span>
+          {stats.rank && (
+            <span className='text-white/90 text-sm'>🏆 {stats.rank}위</span>
+          )}
+        </div>
+        <div className='flex items-baseline gap-2'>
+          <span className='text-2xl font-semibold'>
+            {stats.carbonReduction}
+          </span>
+          <span className='text-sm'>kg CO₂</span>
+        </div>
+      </div>
+
+      {/* 활동 인증 버튼 */}
+      <button
+        onClick={() => navigate('cert')}
+        className='w-full bg-white text-[#4CAF50] py-3 rounded-[20px] text-center font-semibold 
+                   shadow-md border border-[#4CAF50]/20 transition-transform duration-200 
+                   hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]'
+      >
+        활동 인증하고 포인트 받기
+      </button>
+    </div>
+  </div>
+)}
 
                 {/* Sections */}
                 <div className='mt-6 space-y-6'>
