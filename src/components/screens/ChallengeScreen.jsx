@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Calendar,UsersRound, Plus, Award, Target, TrendingUp, Clock } from 'lucide-react';
+import { Calendar, UsersRound, Plus, Award, Target, TrendingUp, Clock } from 'lucide-react';
 import CertModal from '../cert/CertModal';
 import { certTypes } from '../../util/certConfig';
 import { useDispatch, useSelector } from 'react-redux';
@@ -153,16 +153,16 @@ export default function ChallengeScreen({ onNavigate }) {
                                 key={key}
                                 onClick={() => setFilter(key)}
                                 className={`flex-1 relative px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${filter === key
-                                        ? 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white shadow-lg shadow-green-500/30 scale-105'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-102'
+                                    ? 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white shadow-lg shadow-green-500/30 scale-105'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-102'
                                     }`}
                             >
                                 <span className='text-sm'>{label}</span>
                                 {count > 0 && (
                                     <span
                                         className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${filter === key
-                                                ? 'bg-white text-[#4CAF50]'
-                                                : 'bg-[#4CAF50] text-white'
+                                            ? 'bg-white text-[#4CAF50]'
+                                            : 'bg-[#4CAF50] text-white'
                                             }`}
                                     >
                                         {count}
@@ -507,8 +507,8 @@ function ChallengeCard({
                             : undefined
                 }
                 className={`group relative bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 ${filter !== 'completed'
-                        ? 'cursor-pointer hover:scale-[1.02]'
-                        : ''
+                    ? 'cursor-pointer hover:scale-[1.02]'
+                    : ''
                     }`}
             >
                 {/* 카드 우측 상단 D-day 배지 (참여가능/진행중 탭에서만 표시) */}
@@ -516,8 +516,8 @@ function ChallengeCard({
                     daysStyle && (
                         <div
                             className={`absolute top-3 right-3 ${isExpired
-                                    ? 'bg-gray-500 text-white'
-                                    : 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white'
+                                ? 'bg-gray-500 text-white'
+                                : 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white'
                                 } px-4 py-2 rounded-xl text-sm font-bold shadow-xl flex items-center gap-2 border-2 border-white/80 z-20`}
                         >
                             <Clock className='w-4 h-4' />
@@ -666,29 +666,34 @@ function ChallengeCard({
                         {(filter === 'available' || filter === 'ongoing') &&
                             (() => {
                                 let expiryDateStr = null;
-                                if (
-                                    filter === 'ongoing' &&
-                                    createdAt &&
-                                    deadline
-                                ) {
-                                    // 진행 중: createdAt + deadline으로 만료일 계산
+
+                                if (filter === 'ongoing' && createdAt && deadline) {
+                                    // 진행 중: createdAt + deadline
                                     const startDate = new Date(createdAt);
+                                    startDate.setHours(startDate.getHours());
+
                                     const expiryDate = new Date(startDate);
-                                    expiryDate.setDate(
-                                        startDate.getDate() + deadline
-                                    );
-                                    expiryDateStr = expiryDate
-                                        .toISOString()
-                                        .split('T')[0];
-                                } else if (filter === 'available' && deadline) {
-                                    // 참여 가능: 관리자가 입력한 만료 기한
-                                    const expiryDate = updatedAt;
-                                    expiryDateStr = new Date(expiryDate)
-                                        .toISOString()
-                                        .split('T')[0];
+                                    expiryDate.setDate(startDate.getDate() + deadline);
+                                    expiryDate.setHours(expiryDate.getHours() + 9);
+
+                                    expiryDateStr = expiryDate.toISOString().split('T')[0];
+                                } else if (filter === 'available' && deadline && updatedAt) {
+                                    // 참여 가능: updatedAt 기준 만료일
+                                    const expiryDate = new Date(updatedAt);
+                                    expiryDate.setHours(expiryDate.getHours());
+
+                                    expiryDateStr = expiryDate.toISOString().split('T')[0];
                                 }
 
-                                return 
+                                return expiryDateStr ? (
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        만료일: {expiryDateStr}
+                                    </p>
+                                ) : null;
+                            })()}
+
+
+                        {/* return 
                                     // expiryDateStr ? (
                                 //     <div
                                 //         className={`flex items-center ${filter === 'available'
@@ -722,7 +727,7 @@ function ChallengeCard({
                                 //     </div>
                                 // ) : 
                                 null;
-                            })()}
+                            })()} */}
 
                         {/* 완료 날짜 (완료된 챌린지일 때) */}
                         {filter === 'completed' && createdAt && (
