@@ -67,6 +67,16 @@ export default function HomeScreen({ onNavigate }) {
 
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
+    // 회원탈퇴 플래그 확인 및 삭제 (회원탈퇴 직후 홈 화면 표시 유지)
+    useEffect(() => {
+        const accountDeactivated = localStorage.getItem('accountDeactivated');
+        if (accountDeactivated === 'true') {
+            // 회원탈퇴 직후임을 확인했으므로 플래그 삭제
+            // (다음 번 방문 시에는 정상적인 로그인 안 된 상태로 처리)
+            localStorage.removeItem('accountDeactivated');
+        }
+    }, []);
+
     // 토큰 확인 및 초기 데이터 로드
     const [isInitializing, setIsInitializing] = useState(true);
     const hasLoadedMyPageDataRef = useRef(false);
