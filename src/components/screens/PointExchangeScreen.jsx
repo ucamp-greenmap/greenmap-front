@@ -47,7 +47,7 @@ export default function PointExchangeScreen({ onNavigate }) {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-    // 계좌이체 상태
+    // 포인트전환 상태
     const [transferAmount, setTransferAmount] = useState('');
     const [bankName, setBankName] = useState('');
     const [accountNumber, setAccountNumber] = useState('');
@@ -140,12 +140,16 @@ export default function PointExchangeScreen({ onNavigate }) {
         }
     };
 
-    // 계좌이체 신청
+    // 포인트전환 신청
     const handleTransferSubmit = async () => {
         setShowTransferModal(false);
         try {
+            // 입력한 금액에 수수료 5%를 포함한 포인트 차감
+            const requestedAmount = parseInt(transferAmount);
+            const pointsToDeduct = Math.ceil(requestedAmount * 1.05);
+
             await spendPoint({
-                point: parseInt(transferAmount),
+                point: pointsToDeduct,
                 type: 'CASH',
             });
             setShowSuccessModal(true);
@@ -165,9 +169,9 @@ export default function PointExchangeScreen({ onNavigate }) {
             dispatch(fetchPointShop());
             dispatch(fetchUsedPointLogs());
         } catch (error) {
-            console.error('계좌이체 실패:', error);
+            console.error('포인트전환 실패:', error);
             alert(
-                '계좌이체 신청에 실패했습니다: ' +
+                '포인트전환 신청에 실패했습니다: ' +
                     (error.message || '알 수 없는 오류')
             );
         }
@@ -244,7 +248,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                     }`}
                 >
                     <Wallet className='w-5 h-5 inline-block mr-2' />
-                    계좌이체
+                    포인트전환
                 </button>
             </div>
 
@@ -456,14 +460,14 @@ export default function PointExchangeScreen({ onNavigate }) {
                                 </div>
                             )}
 
-                            {/* 계좌이체 폼 */}
+                            {/* 포인트전환 폼 */}
                             <div className='bg-white rounded-2xl p-6 shadow-sm mb-4'>
                                 <h3 className='font-bold text-lg mb-4'>
-                                    계좌이체 신청
+                                    포인트전환 신청
                                 </h3>
 
                                 {/* 금액 빠른 선택 */}
-                                <div className='mb-4'>
+                                <div className='mb-4 '>
                                     <label className='block text-sm font-medium text-gray-700 mb-2'>
                                         금액 선택
                                     </label>
@@ -494,10 +498,11 @@ export default function PointExchangeScreen({ onNavigate }) {
                                 {/* 금액 입력 */}
                                 <div className='mb-4'>
                                     <label className='block text-sm font-medium text-gray-700 mb-2'>
-                                        전환 포인트
+                                        전환 포인트 (입금받을 금액)
                                     </label>
                                     <input
                                         type='number'
+                                        step='1000'
                                         value={transferAmount}
                                         onChange={(e) =>
                                             setTransferAmount(e.target.value)
@@ -505,18 +510,30 @@ export default function PointExchangeScreen({ onNavigate }) {
                                         placeholder='포인트 입력'
                                         className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
                                     />
-                                    <div className='mt-2 text-sm text-gray-500'>
-                                        실제 입금액:{' '}
-                                        <span className='font-semibold text-gray-800'>
-                                            {(
-                                                parseInt(transferAmount || 0) *
-                                                0.95
-                                            ).toLocaleString()}
-                                            원
-                                        </span>
-                                        <span className='text-xs ml-2'>
-                                            (수수료 5% 제외)
-                                        </span>
+                                    <div className='mt-2 space-y-1'>
+                                        <div className='text-sm text-gray-500'>
+                                            실제 입금액:{' '}
+                                            <span className='font-semibold text-gray-800'>
+                                                {parseInt(
+                                                    transferAmount || 0
+                                                ).toLocaleString()}
+                                                원
+                                            </span>
+                                        </div>
+                                        <div className='text-sm text-red-600'>
+                                            차감 포인트:{' '}
+                                            <span className='font-semibold'>
+                                                {Math.ceil(
+                                                    parseInt(
+                                                        transferAmount || 0
+                                                    ) * 1.05
+                                                ).toLocaleString()}
+                                                P
+                                            </span>
+                                            <span className='text-xs ml-2 text-gray-500'>
+                                                (수수료 5% 포함)
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -576,25 +593,29 @@ export default function PointExchangeScreen({ onNavigate }) {
                                         !bankName ||
                                         !accountNumber ||
                                         !accountHolder ||
-                                        parseInt(transferAmount) > currentPoints
+                                        Math.ceil(
+                                            parseInt(transferAmount || 0) * 1.05
+                                        ) > currentPoints ||
+                                        parseInt(transferAmount || 0) < 1000
                                     }
                                     className='w-full py-4 bg-[#4CAF50] text-white rounded-xl font-bold text-lg hover:bg-[#45a049] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-md'
                                 >
-                                    계좌이체 신청
+                                    포인트전환 신청
                                 </button>
 
                                 {/* 안내사항 */}
                                 <div className='mt-4 p-4 bg-blue-50 rounded-xl'>
-                                    <div className='flex items-start gap-2'>
+                                    <div className='flex items-start justify-center gap-2'>
                                         <AlertCircle className='w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0' />
                                         <div className='text-sm text-blue-800'>
                                             <p className='font-medium mb-1'>
-                                                계좌이체 안내
+                                                포인트전환 안내
                                             </p>
-                                            <ul className='space-y-1 text-xs'>
+                                            <ul className='space-y-1 text-xs '>
                                                 <li>
-                                                    • 수수료 5%가 차감되어
-                                                    입금됩니다
+                                                    • 수수료 5%가 포인트에서
+                                                    차감됩니다 (입금액은 입력한
+                                                    금액 그대로)
                                                 </li>
                                                 <li>
                                                     • 영업일 기준 1~3일 내 입금
@@ -708,7 +729,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                             아직 사용 내역이 없습니다
                         </p>
                         <p className='text-sm text-gray-400 mt-1'>
-                            기프티콘을 구매하거나 계좌이체를 신청해보세요
+                            기프티콘을 구매하거나 포인트전환을 신청해보세요
                         </p>
                     </div>
                 )}
@@ -785,7 +806,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                 )}
             </AnimatePresence>
 
-            {/* 계좌이체 확인 모달 */}
+            {/* 포인트전환 확인 모달 */}
             <AnimatePresence>
                 {showTransferModal && (
                     <motion.div
@@ -807,7 +828,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                                     <Wallet className='w-8 h-8 text-blue-600' />
                                 </div>
                                 <h3 className='text-xl font-bold mb-2'>
-                                    계좌이체 신청 확인
+                                    포인트전환 신청 확인
                                 </h3>
                                 <p className='text-gray-600'>
                                     아래 계좌로 입금을 신청하시겠습니까?
@@ -839,11 +860,12 @@ export default function PointExchangeScreen({ onNavigate }) {
                                 <div className='border-t pt-2 mt-2'>
                                     <div className='flex justify-between mb-1'>
                                         <span className='text-gray-600'>
-                                            사용 포인트
+                                            차감 포인트
                                         </span>
-                                        <span className='font-semibold'>
-                                            {parseInt(
-                                                transferAmount
+                                        <span className='font-semibold text-red-600'>
+                                            {Math.ceil(
+                                                parseInt(transferAmount || 0) *
+                                                    1.05
                                             ).toLocaleString()}
                                             P
                                         </span>
@@ -853,11 +875,14 @@ export default function PointExchangeScreen({ onNavigate }) {
                                             입금 예정액
                                         </span>
                                         <span className='font-bold text-blue-600'>
-                                            {(
-                                                parseInt(transferAmount) * 0.95
+                                            {parseInt(
+                                                transferAmount || 0
                                             ).toLocaleString()}
                                             원
                                         </span>
+                                    </div>
+                                    <div className='text-xs text-gray-500 mt-1'>
+                                        (수수료 5% 포함)
                                     </div>
                                 </div>
                             </div>
@@ -915,7 +940,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                             <p className='text-gray-600 mb-6'>
                                 {activeTab === 'gifticon'
                                     ? '구매가 완료되었습니다. 등록하신 번호로 기프티콘이 발송되었습니다.'
-                                    : '계좌이체 신청이 완료되었습니다. 영업일 기준 1-3일 내 입금됩니다.'}
+                                    : '포인트전환 신청이 완료되었습니다. 영업일 기준 1-3일 내 입금됩니다.'}
                             </p>
                             <button
                                 onClick={() => setShowSuccessModal(false)}

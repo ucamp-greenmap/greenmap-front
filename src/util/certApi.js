@@ -5,9 +5,6 @@ async function sendVerification(url, body) {
     const token = localStorage.getItem('token');
 
     try {
-        console.log(`📤 API 요청: ${url}`);
-        console.log('📦 body:', body);
-
         const response = await api.post(url, body, {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -29,12 +26,6 @@ async function sendVerification(url, body) {
             };
         }
     } catch (error) {
-        const errorDetails = error.response?.data
-            ? JSON.stringify(error.response.data)
-            : error.message;
-
-        console.error('❌ API 요청 오류:', errorDetails);
-
         let message = '네트워크 오류가 발생했습니다.';
         if (error.response?.data?.message) {
             message = error.response.data.message;
@@ -103,8 +94,7 @@ export async function fetchMonthlyStats() {
                 message: result.message || '조회에 실패했습니다.',
             };
         }
-    } catch (error) {
-        console.error('API 요청 오류:', error.response?.data || error.message);
+    } catch (_) {
         return {
             success: false,
             data: { verifyTimes: 0, pointSum: 0 },
@@ -139,8 +129,7 @@ export async function fetchCertificationHistory() {
                 message: result.message || '조회에 실패했습니다.',
             };
         }
-    } catch (error) {
-        console.error('API 요청 오류:', error.response?.data || error.message);
+    } catch (_) {
         return {
             success: false,
             data: [],

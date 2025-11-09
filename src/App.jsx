@@ -28,8 +28,7 @@ import './App.css';
 import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
-import AddChallengeScreen from './components/screens/AddChallengeScreen';
-
+import AdminScreen from './components/screens/AdminScreen';
 // Onboarding, Home, Map, Certification components live in src/components/screens
 
 const TAB_TO_PATH = {
@@ -41,13 +40,13 @@ const TAB_TO_PATH = {
     mypage: '/mypage',
     points: '/points',
     'point-exchange': '/point-exchange',
+    admin: '/admin',
     ranking: '/ranking',
     login: '/login',
     badge: '/badge',
     FAQ: '/FAQ',
     'cert-history': '/cert-history',
     'carbon-info': '/carbon-info',
-    addChal: '/addChallenge',
 };
 
 export default function App() {
@@ -55,6 +54,9 @@ export default function App() {
     const activeTab = useSelector((state) => state.app.activeTab);
     const dispatch = useDispatch();
     // removed top-level navigate; navigation is handled inside AppContent via react-router
+
+    // 앱 초기화 시 마이페이지 데이터 로드는 각 화면에서 필요할 때 로드하도록 변경
+    // HomeScreen과 MyPageScreen에서 각각 필요 시 호출
 
     if (appState === 'splash') return <SplashScreen />;
     if (appState === 'onboarding') return <OnboardingScreen />;
@@ -146,20 +148,26 @@ export default function App() {
                         element={<FaqScreen onNavigate={navigate} />}
                     />
                     <Route
-                        path='/addChallenge'
-                        element={<AddChallengeScreen onNavigate={navigate} />}
+                        path='/admin'
+                        element={<AdminScreen onNavigate={navigate} />}
                     />
                     {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
                     <Route path='*' element={<Navigate to='/' replace />} />
                 </Routes>
 
-                {/* 하단 네비게이션 바 - addChallenge 페이지에서는 숨김 */}
-                {location.pathname !== '/addChallenge' && (
-                    <BottomNavigation
-                        active={activeTab}
-                        onChange={(tab) => navigate(tab)}
-                    />
-                )}
+                {/* 하단 네비게이션 바 숨김 경로 */}
+                {location.pathname !== '/addChallenge' &&
+                    location.pathname !== '/admin' &&
+                    location.pathname !== '/ranking' &&
+                    location.pathname !== '/points' &&
+                    location.pathname !== '/point-exchange' &&
+                    location.pathname !== '/badge' &&
+                    location.pathname !== '/cert-history' && (
+                        <BottomNavigation
+                            active={activeTab}
+                            onChange={(tab) => navigate(tab)}
+                        />
+                    )}
             </div>
         );
     }

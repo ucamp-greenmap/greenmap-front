@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import { fetchPointInfo } from '../../store/slices/userSlice';
+import { fetchPointInfo, fetchMyPageData } from '../../store/slices/userSlice';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
@@ -65,17 +65,71 @@ export default function HomeScreen({ onNavigate }) {
         }
     }, [currentLocation, isLocationLoading, fetchCurrentLocation]);
 
-    useEffect(() => {
-        const onFocus = () => dispatch(fetchPointInfo());
-        window.addEventListener('focus', onFocus);
-        return () => window.removeEventListener('focus', onFocus);
-    }, [dispatch]);
-
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
+    // 토큰 확인 및 초기 데이터 로드
+    const [isInitializing, setIsInitializing] = useState(true);
+    const hasLoadedMyPageDataRef = useRef(false);
+
     useEffect(() => {
-        dispatch(fetchPointInfo());
+        const token = localStorage.getItem('token');
+
+        if (token) {
+            // 토큰이 있으면 데이터 로드 시도
+            if (!hasLoadedMyPageDataRef.current) {
+                hasLoadedMyPageDataRef.current = true;
+                dispatch(fetchMyPageData())
+                    .then(() => {
+                        // 성공 시 초기화 완료
+                        setIsInitializing(false);
+                    })
+                    .catch(() => {
+                        // 실패 시에도 초기화 완료 (토큰이 유효하지 않을 수 있음)
+                        setIsInitializing(false);
+                    });
+            } else {
+                // 이미 로드 시도했으면, 로그인 상태 확인 후 초기화 완료
+                // 짧은 지연 후 초기화 완료 (Redux 상태 업데이트 대기)
+                const timer = setTimeout(() => {
+                    setIsInitializing(false);
+                }, 100);
+                return () => clearTimeout(timer);
+            }
+        } else {
+            // 토큰이 없으면 즉시 초기화 완료
+            setIsInitializing(false);
+        }
     }, [dispatch]);
+
+    // isLoggedIn이 변경되면 초기화 상태 업데이트 (데이터 로드 완료 신호)
+    useEffect(() => {
+        if (isLoggedIn) {
+            setIsInitializing(false);
+        }
+    }, [isLoggedIn]);
+
+    // 로딩이 완료되면 초기화 완료
+    useEffect(() => {
+        if (!loading && hasLoadedMyPageDataRef.current) {
+            // 로딩이 완료되고 데이터 로드를 시도했으면 초기화 완료
+            const timer = setTimeout(() => {
+                setIsInitializing(false);
+            }, 50);
+            return () => clearTimeout(timer);
+        }
+    }, [loading]);
+
+    // 윈도우 포커스 시 포인트 정보 새로고침 (로그인 상태일 때만)
+    useEffect(() => {
+        if (!isLoggedIn) return;
+
+        const onFocus = () => {
+            // 윈도우 포커스 시 포인트 정보만 새로고침
+            dispatch(fetchPointInfo());
+        };
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
+    }, [dispatch, isLoggedIn]);
 
     const randomTip = useMemo(() => {
         const randomIndex = Math.floor(Math.random() * ECO_TIPS.length);
@@ -278,15 +332,15 @@ export default function HomeScreen({ onNavigate }) {
 
             {/* Page content */}
             <div className='px-4'>
-                {/* ⏳ 로딩 중 */}
-                {loading && (
+                {/*  로딩 중 (초기화 중이거나 데이터 로딩 중) */}
+                {(loading || isInitializing) && (
                     <div className='mt-4 bg-white rounded-3xl p-6 text-center shadow-xl'>
                         <p className='text-gray-600'>정보를 불러오는 중...</p>
                     </div>
                 )}
 
-                {/* 🔒 로그인 안 됨 */}
-                {!loading && !isLoggedIn && (
+                {/* 로그인 안 됨 (초기화 완료 후에만 표시) */}
+                {!loading && !isInitializing && !isLoggedIn && (
                     <div className='mt-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl p-6 text-center shadow-xl'>
                         <div className='text-5xl mb-4'>🔒</div>
                         <h3 className='text-gray-900 text-xl font-bold mb-2'>
@@ -304,25 +358,41 @@ export default function HomeScreen({ onNavigate }) {
                     </div>
                 )}
 
-                {/* ✅ 로그인 됨 - 포인트 카드 */}
+                {/* 로그인 됨 - 포인트 카드 */}
                 {!loading && isLoggedIn && (
                     <div className='mt-4'>
                         <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-3xl p-6 text-white shadow-xl border-0'>
-                            {/* 사용자 이름 표시 */}
-                            <div className='flex items-center gap-2 mb-4'>
-                                {profile.avatar && (
-                                    <img
-                                        src={profile.avatar}
-                                        alt='프로필'
-                                        className='w-10 h-10 rounded-full'
-                                    />
-                                )}
-                                <p className='text-white/90 text-sm'>
+                            {/* 사용자 이름 + 프로필 */}
+                            <div className='flex items-center gap-4 mb-4'>
+                                {/* 프로필 이미지 영역 */}
+                                <div className='relative'>
+                                    <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
+                                        <img
+                                            src={profile.avatar}
+                                            alt='프로필'
+                                            className='w-full h-full object-cover'
+                                        />
+                                    </div>
+                                    {/* 뱃지 이미지 - 프로필 이미지 오른쪽 하단 */}
+                                    {profile.badgeUrl && (
+                                        <div className='absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg'>
+                                            <img
+                                                src={profile.badgeUrl}
+                                                alt='뱃지'
+                                                className='w-5 h-5 object-contain'
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* 닉네임 */}
+                                <p className='text-white font-semibold text-lg sm:text-xl tracking-wide'>
                                     {profile.nickname || profile.name}님의 그린
                                     활동
                                 </p>
                             </div>
 
+                            {/* 포인트 영역 */}
                             <div className='flex items-center justify-between mb-4'>
                                 <div>
                                     <p className='text-white/90 mb-1'>
@@ -345,6 +415,7 @@ export default function HomeScreen({ onNavigate }) {
                                 </button>
                             </div>
 
+                            {/* 탄소 감축량 */}
                             <div className='bg-white/20 rounded-2xl p-3 backdrop-blur-sm mb-4'>
                                 <div className='flex items-center justify-between mb-2'>
                                     <span className='text-white/90'>
@@ -364,9 +435,12 @@ export default function HomeScreen({ onNavigate }) {
                                 </div>
                             </div>
 
+                            {/* 활동 인증 버튼 */}
                             <button
                                 onClick={() => navigate('cert')}
-                                className='w-full bg-white text-[#4CAF50] py-3 rounded-[20px] text-center transition-transform hover:scale-105'
+                                className='w-full bg-white text-[#4CAF50] py-3 rounded-[20px] text-center font-semibold 
+                   shadow-md border border-[#4CAF50]/20 transition-transform duration-200 
+                   hover:scale-[1.01] hover:shadow-lg active:scale-[0.99]'
                             >
                                 활동 인증하고 포인트 받기
                             </button>

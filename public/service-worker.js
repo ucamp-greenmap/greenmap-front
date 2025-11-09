@@ -25,8 +25,13 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                const responseClone = response.clone();
-                if (event.request.method === 'GET') {
+                // 성공한 응답(200-299)만 캐싱, 404 등은 캐싱하지 않음
+                if (
+                    event.request.method === 'GET' &&
+                    response.status >= 200 &&
+                    response.status < 300
+                ) {
+                    const responseClone = response.clone();
                     caches
                         .open(CACHE_NAME)
                         .then((cache) =>

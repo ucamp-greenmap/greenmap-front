@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchMyPageData, logout } from '../../store/slices/userSlice';
-import { calculateEarnedBadges } from '../../store/slices/badgeSlice';
+import { getBadges } from '../../api/badgeApi';
+import api from '../../api/axios';
 
 const themeColor = '#96cb6f';
 
@@ -40,47 +41,107 @@ export default function MyPageScreen({ onNavigate }) {
     const { isLoggedIn, profile, stats, ranking, loading, error } = useSelector(
         (s) => s.user
     );
-    const { allBadges, earnedIds } = useSelector((state) => state.badge);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [myBadge, setMyBadge] = useState(null); // 초기값을 null로 변경
 
     const [showSetting, setShowSetting] = useState(false);
-    const [showLogoutModal, setShowLogoutModal] = useState(false); // 로그아웃 모달 상태
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-    //  현재 획득한 최고 레벨 뱃지 찾기
-    const myBadge = useMemo(() => {
-        const earnedBadges = allBadges.filter((badge) =>
-            earnedIds.includes(badge.id)
-        );
+    // 중복 호출 방지를 위한 ref
+    const hasFetchedDataRef = useRef(false);
+    const hasFetchedBadgeRef = useRef(false);
+    const hasCheckedAdminRef = useRef(false);
 
-        if (earnedBadges.length === 0) {
-            return allBadges[0] || { name: '첫 발자국' };
+    // 관리자 권한 확인
+    const checkAdminStatus = async () => {
+        // 이미 확인했으면 스킵
+        if (hasCheckedAdminRef.current) {
+            return;
         }
 
-        return earnedBadges.reduce((highest, current) =>
-            current.requiredPoint > highest.requiredPoint ? current : highest
-        );
-    }, [allBadges, earnedIds]);
+        const token = localStorage.getItem('token');
+        const memberId = localStorage.getItem('memberId');
 
+        if (!token || memberId !== '1') {
+            setIsAdmin(false);
+            hasCheckedAdminRef.current = true;
+            return;
+        }
+
+        try {
+            hasCheckedAdminRef.current = true;
+            const response = await api.get('/admin', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (
+                response.data.status === 'SUCCESS' &&
+                response.data.data.result
+            ) {
+                setIsAdmin(true);
+            } else {
+                setIsAdmin(false);
+            }
+        } catch (err) {
+            console.error('관리자 권한 확인 실패', err.response || err);
+            setIsAdmin(false);
+            hasCheckedAdminRef.current = true;
+        }
+    };
+
+    // 선택된 뱃지 가져오기
+    const fetchSelectedBadge = async () => {
+        // 이미 가져왔으면 스킵
+        if (hasFetchedBadgeRef.current) {
+            return;
+        }
+
+        try {
+            hasFetchedBadgeRef.current = true;
+            const badges = await getBadges();
+            const selected = badges.find((badge) => badge.isSelected);
+            // 선택된 뱃지가 있을 때만 설정
+            if (selected) {
+                setMyBadge(selected);
+            } else {
+                setMyBadge(null); // 선택된 뱃지가 없으면 null
+            }
+        } catch (err) {
+            console.error('선택된 뱃지 조회 실패', err);
+            setMyBadge(null);
+            hasFetchedBadgeRef.current = true;
+        }
+    };
+
+    // 마이페이지 데이터 로드 (컴포넌트 마운트 시 한 번만)
+    // App.jsx에서 이미 초기 로드를 했지만, 마이페이지 진입 시 최신 데이터로 업데이트
     useEffect(() => {
+        // 이미 이 컴포넌트에서 호출했으면 스킵 (중복 방지)
+        if (hasFetchedDataRef.current) {
+            return;
+        }
+
+        hasFetchedDataRef.current = true;
+        // 마이페이지 진입 시 최신 데이터로 새로고침
         dispatch(fetchMyPageData());
-    }, [dispatch]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // 마운트 시 한 번만 실행
 
+    // 뱃지와 관리자 상태는 마운트 시 한 번만
     useEffect(() => {
-        if (stats.totalPoint !== undefined && stats.totalPoint !== null) {
-            dispatch(calculateEarnedBadges(stats.totalPoint));
-        }
-    }, [dispatch, stats.totalPoint]);
+        fetchSelectedBadge();
+        checkAdminStatus();
+    }, []);
 
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
     };
 
-    //  로그아웃 모달 열기
     const handleLogout = () => {
         setShowLogoutModal(true);
     };
 
-    // 로그아웃 실행
     const confirmLogout = () => {
         dispatch(logout());
         navigate('home');
@@ -162,15 +223,30 @@ export default function MyPageScreen({ onNavigate }) {
                 {/* 프로필 영역 */}
                 <div className='bg-white rounded-3xl p-6 shadow-lg'>
                     <div className='flex items-center gap-7 mb-6'>
-                        <div className='w-20 h-20 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
-                            {profile.avatar ? (
-                                <img
-                                    src={profile.avatar}
-                                    alt='프로필'
-                                    className='w-full h-full object-cover'
-                                />
-                            ) : (
-                                <span className='text-4xl'>👤</span>
+                        <div className='relative'>
+                            <div className='w-20 h-20 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
+                                {profile.avatar ? (
+                                    <img
+                                        src={profile.avatar}
+                                        alt='프로필'
+                                        className='w-full h-full object-cover'
+                                    />
+                                ) : (
+                                    <span className='text-4xl'>👤</span>
+                                )}
+                            </div>
+                            {/* 뱃지 이미지 - 프로필 이미지 오른쪽 하단 */}
+                            {(profile.badgeUrl ||
+                                (myBadge && myBadge.imageUrl)) && (
+                                <div className='absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg'>
+                                    <img
+                                        src={
+                                            profile.badgeUrl || myBadge.imageUrl
+                                        }
+                                        alt='뱃지'
+                                        className='w-6 h-6 object-contain'
+                                    />
+                                </div>
                             )}
                         </div>
                         <div className='flex-1'>
@@ -180,13 +256,16 @@ export default function MyPageScreen({ onNavigate }) {
                             <p className='text-gray-600 text-sm text-left'>
                                 {profile.email || '이메일 없음'}
                             </p>
-                            <button
-                                onClick={() => navigate('badge')}
-                                className='flex items-center gap-2 mt-2 bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-3 py-1 rounded-full text-sm hover:bg-opacity-20 transition-colors'
-                            >
-                                <span>🌱 {myBadge.name}</span>
-                                <span>→</span>
-                            </button>
+                            {/* 선택된 뱃지 이름이 있을 때만 표시 (뱃지 이미지는 프로필에 표시됨) */}
+                            {myBadge && (
+                                <button
+                                    onClick={() => navigate('badge')}
+                                    className='flex items-center gap-2 mt-2 bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-3 py-1 rounded-full text-sm hover:bg-opacity-20 transition-colors'
+                                >
+                                    <span>🌱 {myBadge.name}</span>
+                                    <span>→</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                     <div className='border-t border-gray-200 my-4'></div>
@@ -237,6 +316,20 @@ export default function MyPageScreen({ onNavigate }) {
                         메뉴
                     </h3>
                     <ul className='space-y-10'>
+                        {isAdmin && (
+                            <li>
+                                <button
+                                    onClick={() => navigate('admin')}
+                                    className='w-full text-left px-4 py-4 rounded-xl hover:bg-green-50 transition-all text-green-700 flex items-center justify-between border border-green-200'
+                                >
+                                    <span className='flex items-center gap-3'>
+                                        <span className='text-xl'>🛡️</span>
+                                        <span>관리자</span>
+                                    </span>
+                                    <span className='text-green-400'>→</span>
+                                </button>
+                            </li>
+                        )}
                         <li>
                             <button
                                 onClick={() => navigate('point-exchange')}

@@ -31,8 +31,8 @@ export const EXCHANGE_HISTORY = [
     {
         id: 2,
         type: 'transfer',
-        name: '계좌이체',
-        brand: '계좌이체',
+        name: '포인트전환',
+        brand: '포인트전환',
         points: 10000,
         date: '2025-11-02',
     },
@@ -55,8 +55,8 @@ export const EXCHANGE_HISTORY = [
     {
         id: 5,
         type: 'transfer',
-        name: '계좌이체',
-        brand: '계좌이체',
+        name: '포인트전환',
+        brand: '포인트전환',
         points: 5000,
         date: '2025-10-28',
     },

@@ -8,7 +8,7 @@ const styles = `
   :root { --brand: ${themeColor}; }
   *{ box-sizing: border-box; }
   body{ background:#f6f9f2; }
-  .auth-wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .auth-wrap{ min-height:100vh; display:flex; justify-content: center;  padding:16px; overflow-y: auto; }
   .card{ width:100%; max-width:480px; background:#fff; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.08); padding:28px; text-align:center; }
   .title{ font-size:20px; font-weight:800; margin-bottom:6px; color:#1f2937; }
   .subtitle{ color:#6b7280; margin-bottom:14px; }
@@ -33,8 +33,14 @@ const styles = `
   }
 `;
 
-function Modal({ message, type = 'info', onClose }) {
-  const handleClick = () => onClose();
+function Modal({ message, type = 'info', onClose, action }) {
+   const navigate = useNavigate();
+  const handleClick = () => {
+    if (action === 'mypage') navigate('/mypage');
+  else if (action === 'home') navigate('/');
+    
+    onClose();
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
@@ -85,7 +91,8 @@ export default function EditProfileScreen({ onBack }) {
         setEmail(data.email);
         setAvatar(data.image?.imageUrl || data.avatarUrl || null);
       } catch {
-        setModal({ message: "로그인이 필요합니다 🍂", type: "error" });
+        setModal({ message: "로그인이 필요합니다 ", type: "error" });
+        navigate("/login")
       }
     };
     fetchMyInfo();
@@ -134,11 +141,32 @@ export default function EditProfileScreen({ onBack }) {
         { nickname },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setModal({ message: "회원정보 수정이 완료되었습니다 ", type: "success" });
+      setModal({ message: "회원정보 수정이 완료되었습니다 ", type: "success", action : "mypage" });
       setTimeout(() => {
+          console.log("아무거나----------------------")
         navigate("/mypage");
         onBack?.();
-      }, 1000);
+      }, 50000);
+    } catch {
+      setModal({ message: "다시 시도해주세요", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 4. 회원 탈퇴
+  const stopbeingmember = async () => {
+    try {
+      setLoading(true);
+      await api.put(
+        "/member/deactivate",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setModal({ message: "회원 탈퇴가 완료되었습니다 ", type: "success" , action :"home"});
+      localStorage.clear();
+      setTimeout(() => {
+        onBack?.();
+      }, 50000);
     } catch {
       setModal({ message: "다시 시도해주세요", type: "error" });
     } finally {
@@ -198,9 +226,11 @@ export default function EditProfileScreen({ onBack }) {
         </div>
 
         {/* 상태 메시지 */}
-        {nicknameValid && nickname === originNickname ? (
-          <span style={{ color: "#d33b3b" }}>현재 닉네임입니다</span>
-        ) : nicknameValid && nickAvailable === true ? (
+        {
+        // nicknameValid && nickname === originNickname ? (
+        //   <span style={{ color: "#d33b3b" }}>현재 닉네임입니다</span>
+        // ) :
+         nicknameValid && nickAvailable === true ? (
           <span style={{ color: "#3fa14a" }}>사용 가능한 닉네임입니다</span>
         ) : nicknameValid && nickAvailable === false ? (
           <span style={{ color: "#d33b3b" }}>이미 존재하는 닉네임입니다</span>
@@ -219,6 +249,15 @@ export default function EditProfileScreen({ onBack }) {
           onClick={handleSubmit}
         >
           {loading ? "저장 중..." : "저장"}
+        </button>
+
+        {/* 회원 탈퇴 */}
+        <button
+          className="btn"
+          style={{ background: "#f25c5c" }}
+          onClick={stopbeingmember}
+        >
+          회원 탈퇴
         </button>
 
         {/* 뒤로가기 */}
@@ -240,13 +279,13 @@ export default function EditProfileScreen({ onBack }) {
           뒤로가기
         </button>
       </div>
-
-      {/* ✅ 모달 표시 */}
+      
       {modal && (
         <Modal
           message={modal.message}
           type={modal.type}
           onClose={() => setModal(null)}
+           action={modal.action}
         />
       )}
     </div>

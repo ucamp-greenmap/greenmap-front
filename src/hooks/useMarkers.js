@@ -85,47 +85,112 @@ export const useMarkers = (
         [getMarkerImage]
     );
 
+    // 마커의 현재 표시 상태 추적 (깜빡임 방지)
+    const markerVisibilityRef = useRef(new Map());
+
+    // 업데이트 배치 처리 (깜빡임 방지)
+    const updateScheduleRef = useRef(null);
+
+    // bookmarkedIds를 ref로 관리하여 함수 재생성 방지
+    const bookmarkedIdsRef = useRef(bookmarkedIds || []);
+    useEffect(() => {
+        bookmarkedIdsRef.current = bookmarkedIds || [];
+    }, [bookmarkedIds]);
+
     // 지도 이동/줌 이벤트 시 마커 표시 업데이트 - 필터 적용
-    const updateVisibleMarkers = useCallback(() => {
-        if (!mapInstance || !window.kakao) return;
+    const updateVisibleMarkers = useCallback(
+        (immediate = false) => {
+            if (!mapInstance || !window.kakao) return;
 
-        const bounds = mapInstance.getBounds();
-        const currentLevel = mapInstance.getLevel();
-        const bookmarkSet = new Set(bookmarkedIds || []);
+            const performUpdate = () => {
+                const bounds = mapInstance.getBounds();
+                const currentLevel = mapInstance.getLevel();
+                // ref에서 최신 bookmarkedIds 가져오기 (함수 재생성 방지)
+                const bookmarkSet = new Set(bookmarkedIdsRef.current || []);
 
-        // 줌 레벨 5 이하(더 확대)일 때만 마커 표시
-        const shouldShowMarkers = currentLevel <= 5;
+                // 줌 레벨 6 이하(더 확대)일 때만 마커 표시
+                const shouldShowMarkers = currentLevel <= 6;
 
-        // 현재 화면에 표시되는 시설들을 추적
-        const currentlyVisible = [];
+                // 현재 화면에 표시되는 시설들을 추적
+                const currentlyVisible = [];
 
-        // 1단계: 모든 마커를 먼저 숨김
-        markersRef.current.forEach(({ marker }) => {
-            marker.setMap(null);
-        });
+                // 변경할 마커들을 수집 (배치 처리)
+                const markersToShow = [];
+                const markersToHide = [];
 
-        // 2단계: 조건에 맞는 마커만 표시
-        markersRef.current.forEach(({ id, category, marker, data }) => {
-            const isVisible = isMarkerInBounds(marker, bounds);
+                // 각 마커의 표시 여부를 결정
+                markersRef.current.forEach(({ id, category, marker, data }) => {
+                    const isVisible = isMarkerInBounds(marker, bounds);
 
-            // 필터 조건 확인
-            const shouldShow =
-                selectedFilter === 'all'
-                    ? true
-                    : selectedFilter === 'bookmark'
-                    ? bookmarkSet.has(id)
-                    : category === selectedFilter;
+                    // 필터 조건 확인
+                    const shouldShow =
+                        selectedFilter === 'all'
+                            ? true
+                            : selectedFilter === 'bookmark'
+                            ? bookmarkSet.has(id)
+                            : category === selectedFilter;
 
-            // 줌 레벨, 필터 조건, 영역 모두 만족해야 표시
-            if (shouldShowMarkers && isVisible && shouldShow) {
-                marker.setMap(mapInstance);
-                currentlyVisible.push(data);
+                    // 최종 표시 여부 결정
+                    const shouldDisplay =
+                        shouldShowMarkers && isVisible && shouldShow;
+
+                    // 이전 표시 상태와 비교
+                    const prevVisibility = markerVisibilityRef.current.get(id);
+                    const markerCurrentMap = marker.getMap();
+
+                    // 상태가 변경된 경우에만 마커 업데이트 (깜빡임 방지)
+                    if (prevVisibility !== shouldDisplay) {
+                        if (shouldDisplay) {
+                            // 표시해야 하는 경우
+                            if (!markerCurrentMap) {
+                                markersToShow.push(marker);
+                            }
+                        } else {
+                            // 숨겨야 하는 경우
+                            if (markerCurrentMap) {
+                                markersToHide.push(marker);
+                            }
+                        }
+                        // 상태 업데이트
+                        markerVisibilityRef.current.set(id, shouldDisplay);
+                    } else if (shouldDisplay && !markerCurrentMap) {
+                        // 상태는 같지만 실제로 지도에 없는 경우 (초기 로드 등)
+                        markersToShow.push(marker);
+                        markerVisibilityRef.current.set(id, true);
+                    }
+
+                    // BottomSheet용 시설 목록에 추가
+                    if (shouldDisplay && isVisible) {
+                        currentlyVisible.push(data);
+                    }
+                });
+
+                // 배치로 마커 업데이트 (한 번에 처리하여 깜빡임 최소화)
+                markersToHide.forEach((marker) => marker.setMap(null));
+                markersToShow.forEach((marker) => marker.setMap(mapInstance));
+
+                // BottomSheet에 표시할 시설 목록 업데이트
+                setVisibleFacilities(currentlyVisible);
+            };
+
+            // 즉시 실행이거나 requestAnimationFrame이 없으면 바로 실행
+            if (
+                immediate ||
+                typeof window.requestAnimationFrame === 'undefined'
+            ) {
+                performUpdate();
+            } else {
+                // 다음 프레임에 실행하여 깜빡임 최소화
+                if (updateScheduleRef.current) {
+                    cancelAnimationFrame(updateScheduleRef.current);
+                }
+                updateScheduleRef.current =
+                    requestAnimationFrame(performUpdate);
             }
-        });
-
-        // BottomSheet에 표시할 시설 목록 업데이트
-        setVisibleFacilities(currentlyVisible);
-    }, [mapInstance, isMarkerInBounds, selectedFilter, bookmarkedIds]);
+        },
+        [mapInstance, isMarkerInBounds, selectedFilter]
+        // bookmarkedIds는 ref로 관리하므로 의존성에서 제외 (함수 재생성 방지)
+    );
 
     // Create/update markers based on facilities
     useEffect(() => {
@@ -149,6 +214,9 @@ export const useMarkers = (
                 markersRef.current.forEach((m) => {
                     if (m.marker) m.marker.setMap(null);
                 });
+
+                // 마커 재생성 시 visibility 상태 초기화
+                markerVisibilityRef.current.clear();
 
                 const newMarkers = [];
                 const chunkSize = 200;
@@ -205,7 +273,8 @@ export const useMarkers = (
                 if (!abortController.signal.aborted) {
                     markersRef.current = newMarkers;
                     isCreatingMarkersRef.current = false;
-                    updateVisibleMarkers();
+                    // 마커 생성 후 즉시 업데이트 (다음 프레임에)
+                    updateVisibleMarkers(false);
                 }
             } catch (error) {
                 if (error.name !== 'AbortError') {
@@ -238,14 +307,21 @@ export const useMarkers = (
     useEffect(() => {
         if (!mapInstance || !window.kakao || !window.kakao.maps) return;
 
-        // 지도가 움직일 때마다 마커 업데이트
+        // 지도가 움직일 때마다 마커 업데이트 (즉시 실행)
+        const handleIdle = () => updateVisibleMarkers(true);
         const idleListener = window.kakao.maps.event.addListener(
             mapInstance,
             'idle',
-            updateVisibleMarkers
+            handleIdle
         );
 
         return () => {
+            // 스케줄된 업데이트 취소
+            if (updateScheduleRef.current) {
+                cancelAnimationFrame(updateScheduleRef.current);
+                updateScheduleRef.current = null;
+            }
+
             if (
                 idleListener &&
                 window.kakao &&
@@ -264,7 +340,7 @@ export const useMarkers = (
         };
     }, [mapInstance, updateVisibleMarkers]);
 
-    // 필터나 북마크 변경 시 마커 업데이트
+    // 필터 변경 시 마커 업데이트 (즉시 실행)
     useEffect(() => {
         // 마커가 생성 중이거나 아직 생성되지 않았으면 스킵
         if (
@@ -274,9 +350,49 @@ export const useMarkers = (
         ) {
             return;
         }
-        updateVisibleMarkers();
+        // 필터 변경은 즉시 반영
+        updateVisibleMarkers(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedFilter, bookmarkedIds]);
+    }, [selectedFilter]);
+
+    // 북마크 변경 시 마커 업데이트 (북마크 필터일 때만, 그리고 실제 변경이 있을 때만)
+    const prevBookmarkedIdsRef = useRef(bookmarkedIds || []);
+    useEffect(() => {
+        // 마커가 생성 중이거나 아직 생성되지 않았으면 스킵
+        if (
+            isCreatingMarkersRef.current ||
+            !mapInstance ||
+            markersRef.current.length === 0
+        ) {
+            prevBookmarkedIdsRef.current = bookmarkedIds || [];
+            return;
+        }
+
+        // 북마크 필터가 활성화된 경우에만 업데이트
+        if (selectedFilter === 'bookmark') {
+            // 이전 북마크 목록과 비교하여 실제로 변경된 마커만 업데이트
+            const prevSet = new Set(prevBookmarkedIdsRef.current);
+            const currentSet = new Set(bookmarkedIds || []);
+
+            // 변경 사항이 있는지 확인
+            const hasChanges =
+                prevBookmarkedIdsRef.current.length !==
+                    (bookmarkedIds || []).length ||
+                [...prevSet].some((id) => !currentSet.has(id)) ||
+                [...currentSet].some((id) => !prevSet.has(id));
+
+            if (hasChanges) {
+                // 배치 처리로 깜빡임 최소화 (약간의 지연으로 DOM 업데이트와 분리)
+                setTimeout(() => {
+                    updateVisibleMarkers(false);
+                }, 0);
+            }
+        }
+
+        // 이전 상태 업데이트
+        prevBookmarkedIdsRef.current = bookmarkedIds || [];
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [bookmarkedIds, selectedFilter]);
 
     // Cleanup markers on unmount - 최소한의 작업만 수행
     useEffect(() => {

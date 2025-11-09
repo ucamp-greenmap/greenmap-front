@@ -19,7 +19,7 @@ const Progress = ({ value, className }) => {
             className={`bg-gray-200 rounded-full overflow-hidden ${className}`}
         >
             <div
-                className='bg-[#4CAF50] h-full transition-all'
+                className='h-full transition-all duration-700 ease-out bg-gradient-to-r from-emerald-400 to-[#4CAF50]'
                 style={{ width: `${value}%` }}
             />
         </div>
@@ -91,45 +91,47 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
     const powerSaved = (totalCarbon * 2.096).toFixed(0);
     const recycleEffect = (totalCarbon * 10).toFixed(0);
 
-    // 지난 달 데이터 (고정값)
-    const lastMonthCarbon = 109;
-
-    // 증감률 계산
-    const carbonChange = (
-        ((totalCarbon - lastMonthCarbon) / lastMonthCarbon) *
-        100
-    ).toFixed(1);
-    const isIncrease = carbonChange > 0;
-
     const impactData = [
         {
             icon: TreePine,
             label: '나무 심기 효과',
             value: treeEffect,
             unit: '그루',
-            description: `약 ${treeEffect}그루의 나무를 심은 효과`,
+            description: `약 나무 ${treeEffect}그루를 심는 것과 같은 효과`,
             color: 'text-green-600',
-            bgColor: 'bg-green-50',
+            bgGradient: 'from-emerald-50 via-green-50 to-teal-50',
+            iconBg: 'bg-emerald-200/50',
+            iconColor: 'text-emerald-700',
+            gradient: 'from-emerald-600 to-green-600',
+            shadow: 'shadow-md shadow-emerald-200',
         },
         {
             icon: Zap,
             label: '절약한 전력',
             value: powerSaved,
             unit: 'kWh',
-            description: `일반 가정 약 ${(powerSaved / 9).toFixed(
+            description: `약 일반 가정 ${(powerSaved / 9).toFixed(
                 0
-            )}일치 전력 소비량`,
+            )}일분의 전력량`,
             color: 'text-yellow-600',
-            bgColor: 'bg-yellow-50',
+            bgGradient: 'from-amber-50 via-yellow-50 to-orange-50',
+            iconBg: 'bg-amber-200/50',
+            iconColor: 'text-amber-700',
+            gradient: 'from-amber-600 to-yellow-600',
+            shadow: 'shadow-md shadow-amber-200',
         },
         {
             icon: Recycle,
             label: '재활용 효과',
             value: recycleEffect,
             unit: 'kg',
-            description: '재활용을 통한 탄소 절감',
+            description: `약 재활용 ${recycleEffect}kg과 동일한 효과`,
             color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
+            bgGradient: 'from-blue-50 via-cyan-50 to-sky-50',
+            iconBg: 'bg-blue-200/50',
+            iconColor: 'text-blue-700',
+            gradient: 'from-blue-600 to-cyan-600',
+            shadow: 'shadow-md shadow-blue-200',
         },
     ];
 
@@ -170,7 +172,7 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
 
     return (
         <div className='min-h-screen bg-gray-50 pb-24'>
-            {/* Header */}
+            {/* Header*/}
             <div className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] px-6 py-8'>
                 <div className='flex items-center gap-3 mb-6'>
                     <button
@@ -182,63 +184,84 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
                     <h1 className='text-white text-xl font-bold'>탄소 중립</h1>
                 </div>
 
-                {/* Main Carbon Card */}
-                <Card className='bg-white rounded-3xl p-6 shadow-lg'>
-                    <div className='text-center mb-6'>
-                        <div className='bg-[#4CAF50] bg-opacity-10 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center'>
-                            <TrendingDown className='w-12 h-12 text-[#4CAF50]' />
-                        </div>
-                        <p className='text-gray-600 mb-2'>
+                <Card className='bg-white rounded-3xl p-8 shadow-2xl shadow-emerald-500/20 border border-emerald-100'>
+                    <div className='text-center'>
+                        <p className='text-gray-500 text-lg font-medium mb-2 uppercase tracking-wider'>
                             이번 달 탄소 감축량
                         </p>
-                        <div className='flex items-baseline justify-center gap-2'>
-                            <span className='text-5xl font-bold text-[#4CAF50]'>
+                        <div className='flex items-baseline justify-center gap-2 mb-8'>
+                            <span className='text-6xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent'>
                                 {totalCarbon}
                             </span>
-                            <span className='text-2xl text-gray-600'>
+                            <span className='text-2xl text-gray-400 font-semibold'>
                                 kg CO₂
                             </span>
+                        </div>
+
+                        {/* 탄소 중립 설명 */}
+                        <div className='bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl p-6 text-left border border-gray-100'>
+                            <div className='flex items-center gap-2 mb-3'>
+                                <Leaf className='w-5 h-5 text-emerald-600' />
+                                <h3 className='text-gray-800 font-bold text-lg'>
+                                    탄소 중립이란?
+                                </h3>
+                            </div>
+                            <p className='text-gray-600 leading-relaxed'>
+                                온실가스 배출량과 흡수량이 균형을 이루어
+                                순배출량이{' '}
+                                <span className='font-bold text-emerald-600'>
+                                    '0'
+                                </span>
+                                이 되는 상태를 의미합니다.
+                            </p>
                         </div>
                     </div>
                 </Card>
             </div>
 
             {/* Content */}
-            <div className='px-6 py-6 space-y-6'>
+            <div className='px-6 py-6 space-y-8'>
                 {/* Impact Equivalents */}
                 <div>
-                    <h3 className='text-lg font-bold text-gray-900 mb-4'>
-                        🌍 환경 영향
-                    </h3>
-                    <div className='space-y-3'>
-                        {impactData.map((item) => {
+                    {/* 1. 상위 flex div 제거 및 h2에 text-center 클래스 추가 */}
+                    <h2 className='text-2xl font-extrabold text-gray-900 mb-6 tracking-tight text-center'>
+                        🌍 환경 기여도
+                    </h2>
+                    <div className='space-y-4'>
+                        {impactData.map((item, index) => {
                             const Icon = item.icon;
                             return (
                                 <Card
                                     key={item.label}
-                                    className={`${item.bgColor} rounded-2xl p-5 shadow`}
+                                    className={`bg-gradient-to-br ${item.bgGradient} rounded-3xl p-6 ${item.shadow} hover:shadow-xl hover:shadow-opacity-30 transition-all duration-500 border border-white/50 transform hover:scale-[1.01]`}
+                                    style={{
+                                        animationDelay: `${index * 100}ms`,
+                                    }}
                                 >
-                                    <div className='flex items-center gap-4'>
-                                        <div className='bg-white rounded-xl p-3'>
+                                    <div className='flex items-center gap-5'>
+                                        {/* 아이콘 컨테이너 개선: 더 부드러운 배경, 미세한 애니메이션 효과 */}
+                                        <div
+                                            className={`${item.iconBg} rounded-2xl p-4 shadow-lg transform hover:rotate-3 transition-transform duration-300`}
+                                        >
                                             <Icon
-                                                className={`w-6 h-6 ${item.color}`}
+                                                className={`w-12 h-12 ${item.iconColor}`}
                                             />
                                         </div>
                                         <div className='flex-1'>
-                                            <p className='text-gray-600 text-sm mb-1'>
+                                            <p className='text-gray-700 font-extrabold text-lg mb-2'>
                                                 {item.label}
                                             </p>
-                                            <div className='flex items-baseline gap-2'>
+                                            <div className='flex items-baseline gap-2 mb-2'>
                                                 <span
-                                                    className={`text-2xl font-bold ${item.color}`}
+                                                    className={`text-5xl font-black bg-gradient-to-r ${item.gradient} bg-clip-text text-transparent`}
                                                 >
                                                     {item.value}
                                                 </span>
-                                                <span className='text-gray-600'>
+                                                <span className='text-xl text-gray-600 font-bold'>
                                                     {item.unit}
                                                 </span>
                                             </div>
-                                            <p className='text-gray-500 text-xs mt-1'>
+                                            <p className='text-gray-600 text-sm font-medium border-t border-gray-200 pt-2'>
                                                 {item.description}
                                             </p>
                                         </div>
@@ -248,109 +271,43 @@ export default function CarbonInfoScreen({ onBack, navigation }) {
                         })}
                     </div>
                 </div>
-
+                {/* --- (분리선은 필요에 따라 추가/삭제 가능) */}
                 {/* Activity Breakdown */}
                 <div>
-                    <h3 className='text-lg font-bold text-gray-900 mb-4'>
-                        📊 활동별 기여도
-                    </h3>
-                    <Card className='bg-white rounded-2xl p-5 shadow'>
-                        <div className='space-y-4'>
+                    {/* 2. 활동별 기여도 h2에도 text-center 클래스 추가 */}
+                    <h2 className='text-2xl font-extrabold text-gray-900 mb-6 tracking-tight text-center'>
+                        📈 활동별 감축 기여도
+                    </h2>
+                    {/* 카드 디자인 개선: 더 부드러운 모서리, 강조된 그림자 */}
+                    <Card className='bg-white rounded-3xl p-6 shadow-xl border border-gray-100'>
+                        <div className='space-y-6'>
                             {activitiesContribution.map((item, index) => (
-                                <div key={index}>
+                                <div
+                                    key={index}
+                                    className='p-3 rounded-xl hover:bg-emerald-50 transition-colors'
+                                >
                                     <div className='flex items-center justify-between mb-2'>
-                                        <span className='text-gray-900'>
+                                        <span className='text-gray-900 font-semibold text-lg'>
                                             {item.activity}
                                         </span>
-                                        <span className='text-[#4CAF50] font-semibold'>
-                                            {item.reduction}kg CO₂
+                                        <span className='text-2xl text-emerald-600 font-extrabold'>
+                                            {item.reduction}
+                                            <span className='text-sm font-medium ml-1 text-gray-500'>
+                                                kg CO₂
+                                            </span>
                                         </span>
                                     </div>
                                     <div className='flex items-center gap-3'>
                                         <Progress
                                             value={item.percentage}
-                                            className='flex-1 h-2'
+                                            className='flex-1 h-3.5'
                                         />
-                                        <span className='text-sm text-gray-500 w-12 text-right'>
+                                        <span className='text-base text-gray-700 font-bold w-10 text-right'>
                                             {item.percentage}%
                                         </span>
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    </Card>
-                </div>
-
-                {/* What is Carbon Neutral */}
-                <Card className='bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] rounded-2xl p-6 text-white shadow-lg'>
-                    <Leaf className='w-8 h-8 flex-shrink-0' />
-                    <div className='flex flex-col items-center justify-center gap-3 mb-4 text-center'>
-                        <div>
-                            <h3 className='text-white text-lg font-bold mb-2 text-center'>
-                                탄소 중립이란? 탄소 중립(Carbon Neutral)은
-                                온실가스 배출량과 흡수량이 균형을 이루어
-                                순배출량이 '0'이 되는 상태를 의미합니다.
-                            </h3>
-                        </div>
-                    </div>
-
-                    <div className='bg-white/20 rounded-xl p-4 backdrop-blur-sm space-y-2 **text-center**'>
-                        <h4 className='text-white text-lg font-bold text-center'>
-                            💡 탄소 감축 실천 방법
-                        </h4>
-                        <ul className='space-y-1 text-white/90 text-base **list-none p-0** '>
-                            <li> 대중교통 및 친환경 이동수단 이용 </li>
-                            <li> 전기차 충전 및 에너지 효율적 사용 </li>
-                            <li> 재활용 및 분리배출 실천 </li>
-                            <li> 제로웨이스트 생활 습관 </li>
-                        </ul>
-                    </div>
-                </Card>
-
-                {/* Monthly Comparison */}
-                <div>
-                    <h3 className='text-lg font-bold text-gray-900 mb-4'>
-                        📈 월별 비교
-                    </h3>
-                    <Card className='bg-white rounded-2xl p-5 shadow'>
-                        <div className='space-y-3'>
-                            <div className='flex items-center justify-between p-3 bg-[#4CAF50] bg-opacity-10 rounded-xl'>
-                                <span className='text-gray-900 font-semibold'>
-                                    11월 (현재)
-                                </span>
-                                <span className='text-[#4CAF50] font-bold'>
-                                    {totalCarbon} kg CO₂
-                                </span>
-                            </div>
-                            <div className='flex items-center justify-between p-3 bg-gray-50 rounded-xl'>
-                                <span className='text-gray-600'>10월</span>
-                                <span className='text-gray-600'>
-                                    {lastMonthCarbon} kg CO₂
-                                </span>
-                            </div>
-                            <div className='flex items-center justify-between p-3 bg-gray-50 rounded-xl'>
-                                <span className='text-gray-600'>9월</span>
-                                <span className='text-gray-600'>
-                                    35.8 kg CO₂
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className='mt-4 pt-4 border-t border-gray-100 text-center'>
-                            <p className='text-sm text-gray-600'>
-                                지난 달 대비{' '}
-                                <span
-                                    className={`font-semibold ${
-                                        isIncrease
-                                            ? 'text-[#4CAF50]'
-                                            : 'text-red-500'
-                                    }`}
-                                >
-                                    {isIncrease ? '+' : ''}
-                                    {carbonChange}%
-                                </span>{' '}
-                                {isIncrease ? '증가' : '감소'}
-                            </p>
                         </div>
                     </Card>
                 </div>

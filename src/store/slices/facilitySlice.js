@@ -21,6 +21,9 @@ const facilitySlice = createSlice({
                 state.bookmarkedIds.push(id);
             }
         },
+        setBookmarkedIds: (state, action) => {
+            state.bookmarkedIds = action.payload;
+        },
         selectFacility: (state, action) => {
             state.selectedFacility = action.payload;
         },
@@ -30,6 +33,11 @@ const facilitySlice = createSlice({
     },
 });
 
-export const { setFacilities, toggleBookmark, selectFacility, setFilter } =
-    facilitySlice.actions;
+export const {
+    setFacilities,
+    toggleBookmark,
+    setBookmarkedIds,
+    selectFacility,
+    setFilter,
+} = facilitySlice.actions;
 export default facilitySlice.reducer;
