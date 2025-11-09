@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from './store/slices/appSlice';
+import { login } from './store/slices/userSlice'; 
 import {
     BrowserRouter,
     Routes,
@@ -29,7 +30,6 @@ import FaqScreen from './components/screens/FaqScreen';
 import CertificationHistoryScreen from './components/screens/CertificationHistoryScreen';
 import CarbonInfoScreen from './components/screens/CarbonInfoScreen';
 import AdminScreen from './components/screens/AdminScreen';
-// Onboarding, Home, Map, Certification components live in src/components/screens
 
 const TAB_TO_PATH = {
     home: '/',
@@ -53,10 +53,15 @@ export default function App() {
     const appState = useSelector((state) => state.app.appState);
     const activeTab = useSelector((state) => state.app.activeTab);
     const dispatch = useDispatch();
-    // removed top-level navigate; navigation is handled inside AppContent via react-router
 
-    // 앱 초기화 시 마이페이지 데이터 로드는 각 화면에서 필요할 때 로드하도록 변경
-    // HomeScreen과 MyPageScreen에서 각각 필요 시 호출
+    // 👇 추가: 앱 시작 시 토큰으로 로그인 상태 복구
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            // localStorage에 토큰이 있으면 Redux에 로그인 상태 복구
+            dispatch(login({ token }));
+        }
+    }, [dispatch]);
 
     if (appState === 'splash') return <SplashScreen />;
     if (appState === 'onboarding') return <OnboardingScreen />;
@@ -95,7 +100,6 @@ export default function App() {
                         path='/map'
                         element={<MapScreen onNavigate={navigate} />}
                     />
-                    {/* 인증 */}
                     <Route
                         path='/verification'
                         element={<CertificationScreen onNavigate={navigate} />}
@@ -151,11 +155,9 @@ export default function App() {
                         path='/admin'
                         element={<AdminScreen onNavigate={navigate} />}
                     />
-                    {/* 404: 알 수 없는 경로는 홈으로 리디렉션 */}
                     <Route path='*' element={<Navigate to='/' replace />} />
                 </Routes>
 
-                {/* 하단 네비게이션 바 숨김 경로 */}
                 {location.pathname !== '/addChallenge' &&
                     location.pathname !== '/admin' &&
                     location.pathname !== '/ranking' &&
