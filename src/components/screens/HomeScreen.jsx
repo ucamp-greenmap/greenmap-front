@@ -365,12 +365,24 @@ export default function HomeScreen({ onNavigate }) {
                             {/* 사용자 이름 + 프로필 */}
                             <div className='flex items-center gap-4 mb-4'>
                                 {/* 프로필 이미지 영역 */}
-                                <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
-                                    <img
-                                        src={profile.avatar}
-                                        alt='프로필'
-                                        className='w-full h-full object-cover'
-                                    />
+                                <div className='relative'>
+                                    <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
+                                        <img
+                                            src={profile.avatar}
+                                            alt='프로필'
+                                            className='w-full h-full object-cover'
+                                        />
+                                    </div>
+                                    {/* 뱃지 이미지 - 프로필 이미지 오른쪽 하단 */}
+                                    {profile.badgeUrl && (
+                                        <div className='absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg'>
+                                            <img
+                                                src={profile.badgeUrl}
+                                                alt='뱃지'
+                                                className='w-5 h-5 object-contain'
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* 닉네임 */}

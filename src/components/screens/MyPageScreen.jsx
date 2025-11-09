@@ -131,7 +131,6 @@ export default function MyPageScreen({ onNavigate }) {
     useEffect(() => {
         fetchSelectedBadge();
         checkAdminStatus();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const navigate = (tab) => {
@@ -224,15 +223,30 @@ export default function MyPageScreen({ onNavigate }) {
                 {/* 프로필 영역 */}
                 <div className='bg-white rounded-3xl p-6 shadow-lg'>
                     <div className='flex items-center gap-7 mb-6'>
-                        <div className='w-20 h-20 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
-                            {profile.avatar ? (
-                                <img
-                                    src={profile.avatar}
-                                    alt='프로필'
-                                    className='w-full h-full object-cover'
-                                />
-                            ) : (
-                                <span className='text-4xl'>👤</span>
+                        <div className='relative'>
+                            <div className='w-20 h-20 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
+                                {profile.avatar ? (
+                                    <img
+                                        src={profile.avatar}
+                                        alt='프로필'
+                                        className='w-full h-full object-cover'
+                                    />
+                                ) : (
+                                    <span className='text-4xl'>👤</span>
+                                )}
+                            </div>
+                            {/* 뱃지 이미지 - 프로필 이미지 오른쪽 하단 */}
+                            {(profile.badgeUrl ||
+                                (myBadge && myBadge.imageUrl)) && (
+                                <div className='absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg'>
+                                    <img
+                                        src={
+                                            profile.badgeUrl || myBadge.imageUrl
+                                        }
+                                        alt='뱃지'
+                                        className='w-6 h-6 object-contain'
+                                    />
+                                </div>
                             )}
                         </div>
                         <div className='flex-1'>
@@ -242,7 +256,7 @@ export default function MyPageScreen({ onNavigate }) {
                             <p className='text-gray-600 text-sm text-left'>
                                 {profile.email || '이메일 없음'}
                             </p>
-                            {/* 선택된 뱃지가 있을 때만 표시 */}
+                            {/* 선택된 뱃지 이름이 있을 때만 표시 (뱃지 이미지는 프로필에 표시됨) */}
                             {myBadge && (
                                 <button
                                     onClick={() => navigate('badge')}

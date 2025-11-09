@@ -272,6 +272,7 @@ const userSlice = createSlice({
             email: '',
             avatar: null,
             nickname: '',
+            badgeUrl: null,
         },
 
         ranking: {
@@ -299,6 +300,7 @@ const userSlice = createSlice({
                 email: '',
                 avatar: null,
                 nickname: '',
+                badgeUrl: null,
             };
             state.ranking = {
                 rank: null,
@@ -376,6 +378,7 @@ const userSlice = createSlice({
                         email: member.email,
                         avatar: member.image?.imageUrl || null,
                         nickname: member.nickname,
+                        badgeUrl: member.badgeUrl || state.profile.badgeUrl || null,
                     };
                 }
             })
@@ -402,6 +405,7 @@ const userSlice = createSlice({
                     email: member.email,
                     avatar: member.imageUrl,
                     nickname: member.nickname,
+                    badgeUrl: member.badgeUrl || null,
                 };
 
                 state.ranking = {
