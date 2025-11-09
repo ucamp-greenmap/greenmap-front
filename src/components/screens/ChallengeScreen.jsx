@@ -655,15 +655,9 @@ function ChallengeCard({
                                         .toISOString()
                                         .split('T')[0];
                                 } else if (filter === 'available' && deadline) {
-                                    // 참여 가능: 현재 날짜 + deadline으로 만료일 계산
-                                    const now = new Date();
-                                    const expiryDate = new Date(now);
-                                    expiryDate.setDate(
-                                        now.getDate() + deadline
-                                    );
-                                    expiryDateStr = expiryDate
-                                        .toISOString()
-                                        .split('T')[0];
+                                    // 참여 가능: 관리자가 입력한 만료 기한
+                                    const expiryDate = updatedAt;
+                                    expiryDateStr = new Date(expiryDate).toISOString().split('T')[0];
                                 }
 
                                 return expiryDateStr ? (
