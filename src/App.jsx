@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from './store/slices/appSlice';
-import { login } from './store/slices/userSlice'; 
+import { login } from './store/slices/userSlice';
 import {
     BrowserRouter,
     Routes,
@@ -56,6 +56,14 @@ export default function App() {
 
     // 👇 추가: 앱 시작 시 토큰으로 로그인 상태 복구
     useEffect(() => {
+        // 회원탈퇴 플래그가 있으면 로그인 상태를 복구하지 않음
+        const accountDeactivated = localStorage.getItem('accountDeactivated');
+        if (accountDeactivated === 'true') {
+            // 회원탈퇴 직후이므로 로그인 상태를 복구하지 않음
+            // 플래그는 HomeScreen에서 삭제됨
+            return;
+        }
+
         const token = localStorage.getItem('token');
         if (token) {
             // localStorage에 토큰이 있으면 Redux에 로그인 상태 복구
