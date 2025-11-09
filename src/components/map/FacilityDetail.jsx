@@ -56,7 +56,7 @@ export default function FacilityDetail({
 
             {/* Category */}
             <div className='mb-4'>
-                <span className='inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium'>
+                <span className="inline-block px-3 py-1 bg-[#F3F8EF] text-[#5B7A4F] rounded-full text-sm font-medium hover:bg-[#E6F1DF]">
                     {getCategoryLabel(facility.category)}
                 </span>
             </div>
@@ -102,7 +102,8 @@ export default function FacilityDetail({
                     </h4>
                     <a
                         href={`tel:${facility.telNum}`}
-                        className='text-blue-600 hover:underline'
+                        className="text-[#516b44] hover:text-[#3F5E34] hover:underline"
+
                     >
                         {facility.telNum}
                     </a>
@@ -114,7 +115,8 @@ export default function FacilityDetail({
                 onClick={() => onBookmarkToggle(facility.id)}
                 className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                     isBookmarked
-                        ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+  ? 'bg-[#F3F8EF] text-[#5B7A4F] border border-[#C8E2B4] hover:bg-[#E6F1DF]'
+
                         : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 }`}
             >
