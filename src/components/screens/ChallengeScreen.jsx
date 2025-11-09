@@ -687,7 +687,7 @@ function ChallengeCard({
                                                 >
                                                     <Clock className='w-3 h-3' />
                                                     <span>
-                                                        {remainingDays > 0
+                                                        {expiryDateStr.split('-')[2] - new Date().toISOString().split('T')[0].split('-')[2] > 0
                                                             ? `남은 ${expiryDateStr.split('-')[2] - new Date().toISOString().split('T')[0].split('-')[2]}일`
                                                             : '만료됨'}
                                                     </span>
