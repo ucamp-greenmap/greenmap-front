@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Award, Sparkles, Trophy, Target } from 'lucide-react';
-import { getBadges } from '../../api/badgeApi';
+import { ArrowLeft, Award, Sparkles, Trophy, Target, X } from 'lucide-react';
+import { getBadges, selectBadge } from '../../api/badgeApi';
 
 const DEFAULT_BADGE_IMAGE =
     'https://em-content.zobj.net/thumbs/120/apple/325/leaf-fluttering-in-wind_1f343.png';
@@ -10,6 +10,8 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filter, setFilter] = useState('all');
+    const [selectedBadgeForModal, setSelectedBadgeForModal] = useState(null);
+    const [isSelecting, setIsSelecting] = useState(false);
 
     const handleGoBack = () => {
         if (onBack) {
@@ -23,24 +25,57 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
         }
     };
 
+    const fetchBadges = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const badgesData = await getBadges();
+            setBadges(badgesData);
+        } catch (err) {
+            console.error('뱃지 조회 실패', err);
+            setError(err.message || '뱃지 정보를 불러오는데 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchBadges = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-
-                const badgesData = await getBadges();
-                setBadges(badgesData);
-            } catch (err) {
-                console.error('뱃지 조회 실패', err);
-                setError(err.message || '뱃지 정보를 불러오는데 실패했습니다.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchBadges();
     }, []);
+
+    // 뱃지 선택 핸들러
+    const handleBadgeClick = (badge) => {
+        // 획득한 뱃지만 선택 가능
+        if (badge.isAcquired) {
+            setSelectedBadgeForModal(badge);
+        }
+    };
+
+    // 뱃지 선택 확인
+    const handleConfirmSelect = async () => {
+        if (!selectedBadgeForModal) return;
+
+        try {
+            setIsSelecting(true);
+            await selectBadge(selectedBadgeForModal.name);
+            // 뱃지 목록 새로고침
+            await fetchBadges();
+            setSelectedBadgeForModal(null);
+        } catch (err) {
+            console.error('뱃지 선택 실패', err);
+            alert(err.message || '뱃지 선택에 실패했습니다.');
+        } finally {
+            setIsSelecting(false);
+        }
+    };
+
+    // 모달 닫기
+    const handleCloseModal = () => {
+        if (!isSelecting) {
+            setSelectedBadgeForModal(null);
+        }
+    };
 
     // 대표 뱃지 (isSelected가 true인 뱃지)
     const selectedBadge = useMemo(() => {
@@ -308,16 +343,108 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
                                 key={badge.name}
                                 badge={badge}
                                 index={index}
+                                onClick={() => handleBadgeClick(badge)}
                             />
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* 뱃지 선택 확인 모달 */}
+            {selectedBadgeForModal && (
+                <div
+                    className='fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+                    onClick={handleCloseModal}
+                >
+                    <div
+                        className='bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl transform transition-all'
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* 모달 헤더 */}
+                        <div className='flex items-center justify-between mb-4'>
+                            <h3 className='text-xl font-bold text-gray-900'>
+                                뱃지 선택
+                            </h3>
+                            <button
+                                onClick={handleCloseModal}
+                                disabled={isSelecting}
+                                className='p-1 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50'
+                            >
+                                <X className='w-5 h-5 text-gray-500' />
+                            </button>
+                        </div>
+
+                        {/* 뱃지 정보 */}
+                        <div className='text-center mb-6'>
+                            <div className='relative inline-block mb-4'>
+                                <div className='absolute inset-0 bg-green-400 rounded-full blur-xl opacity-30 animate-pulse'></div>
+                                <img
+                                    src={
+                                        selectedBadgeForModal.image_url ||
+                                        DEFAULT_BADGE_IMAGE
+                                    }
+                                    alt={selectedBadgeForModal.name}
+                                    className='relative w-24 h-24 rounded-full object-cover border-4 border-green-400 shadow-lg mx-auto'
+                                    onError={(e) => {
+                                        if (
+                                            e.target.src !== DEFAULT_BADGE_IMAGE
+                                        ) {
+                                            e.target.src = DEFAULT_BADGE_IMAGE;
+                                        }
+                                    }}
+                                />
+                            </div>
+                            <h4 className='text-lg font-bold text-gray-900 mb-2'>
+                                {selectedBadgeForModal.name}
+                            </h4>
+                            <p className='text-sm text-gray-600 mb-4'>
+                                이 뱃지를 대표 뱃지로 선택하시겠습니까?
+                            </p>
+                            {selectedBadgeForModal.isSelected && (
+                                <div className='inline-flex items-center gap-2 bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-full text-xs font-semibold mb-2'>
+                                    <Sparkles className='w-3 h-3' />
+                                    현재 대표 뱃지
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 버튼 */}
+                        <div className='flex gap-3'>
+                            <button
+                                onClick={handleCloseModal}
+                                disabled={isSelecting}
+                                className='flex-1 py-3 px-4 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={handleConfirmSelect}
+                                disabled={
+                                    isSelecting ||
+                                    selectedBadgeForModal.isSelected
+                                }
+                                className='flex-1 py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-[#4CAF50] to-[#66BB6A] hover:from-[#45a049] hover:to-[#5cb85c] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/30'
+                            >
+                                {isSelecting ? (
+                                    <span className='flex items-center justify-center gap-2'>
+                                        <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                                        선택 중...
+                                    </span>
+                                ) : selectedBadgeForModal.isSelected ? (
+                                    '이미 선택됨'
+                                ) : (
+                                    '선택하기'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-function BadgeCard({ badge, index }) {
+function BadgeCard({ badge, index, onClick }) {
     const progress =
         badge.standard > 0
             ? Math.min(((badge.progress || 0) / badge.standard) * 100, 100)
@@ -327,14 +454,15 @@ function BadgeCard({ badge, index }) {
 
     return (
         <div
-            className={`group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 ${
+            className={`group relative bg-white rounded-2xl shadow-md transition-all duration-300 overflow-hidden border-2 ${
                 badge.isAcquired
-                    ? 'border-green-400 shadow-green-100'
-                    : 'border-gray-200 hover:border-green-300'
-            } ${!badge.isAcquired ? 'opacity-75' : ''}`}
+                    ? 'border-green-400 shadow-green-100 hover:shadow-xl cursor-pointer hover:scale-105 active:scale-95'
+                    : 'border-gray-200 hover:border-green-300 opacity-75'
+            }`}
             style={{
                 animationDelay: `${index * 50}ms`,
             }}
+            onClick={badge.isAcquired ? onClick : undefined}
         >
             {/* 획득 배지 */}
             {badge.isAcquired && (
@@ -388,7 +516,9 @@ function BadgeCard({ badge, index }) {
                 {/* 설명 */}
                 <p className='text-xs text-gray-500 text-center mb-3 line-clamp-2'>
                     {/* description에서 첫 번째 띄어쓰기 이후(=설명)만 표시 */}
-                    {badge.description && badge.description.trim().split(' ').slice(1).join(' ') !== ''
+                    {badge.description &&
+                    badge.description.trim().split(' ').slice(1).join(' ') !==
+                        ''
                         ? badge.description.split(' ').slice(1).join(' ')
                         : '\u00A0'}
                 </p>
