@@ -33,8 +33,14 @@ const styles = `
   }
 `;
 
-function Modal({ message, type = 'info', onClose }) {
-  const handleClick = () => onClose();
+function Modal({ message, type = 'info', onClose, action }) {
+   const navigate = useNavigate();
+  const handleClick = () => {
+    if (action === 'mypage') navigate('/mypage');
+  else if (action === 'home') navigate('/');
+    
+    onClose();
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
@@ -85,7 +91,8 @@ export default function EditProfileScreen({ onBack }) {
         setEmail(data.email);
         setAvatar(data.image?.imageUrl || data.avatarUrl || null);
       } catch {
-        setModal({ message: "로그인이 필요합니다 🍂", type: "error" });
+        setModal({ message: "로그인이 필요합니다 ", type: "error" });
+        navigate("/login")
       }
     };
     fetchMyInfo();
@@ -134,11 +141,11 @@ export default function EditProfileScreen({ onBack }) {
         { nickname },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setModal({ message: "회원정보 수정이 완료되었습니다 ", type: "success" });
+      setModal({ message: "회원정보 수정이 완료되었습니다 ", type: "success", action : "mypage" });
       setTimeout(() => {
         navigate("/mypage");
         onBack?.();
-      }, 1000);
+      }, 50000);
     } catch {
       setModal({ message: "다시 시도해주세요", type: "error" });
     } finally {
@@ -154,12 +161,11 @@ export default function EditProfileScreen({ onBack }) {
         "/member/deactivate",
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setModal({ message: "회원 탈퇴가 완료되었습니다 ", type: "success" });
+      setModal({ message: "회원 탈퇴가 완료되었습니다 ", type: "success" , action :"home"});
       localStorage.clear();
       setTimeout(() => {
-        navigate("/mypage");
         onBack?.();
-      }, 1000);
+      }, 50000);
     } catch {
       setModal({ message: "다시 시도해주세요", type: "error" });
     } finally {
@@ -272,13 +278,13 @@ export default function EditProfileScreen({ onBack }) {
           뒤로가기
         </button>
       </div>
-
-      {/* ✅ 모달 표시 */}
+      
       {modal && (
         <Modal
           message={modal.message}
           type={modal.type}
           onClose={() => setModal(null)}
+           action={modal.action}
         />
       )}
     </div>

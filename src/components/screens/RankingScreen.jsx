@@ -132,206 +132,152 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                     <div className='grid grid-cols-3 gap-3'>
                                         {/* 2위 */}
                                         <div className='bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center relative overflow-hidden'>
-                                            <div className='flex items-center justify-center gap-1 text-gray-600 text-xs font-medium mb-3'>
-                                                <span className='inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold'>
-                                                    2
-                                                </span>
-                                                <span>2위</span>
-                                            </div>
-                                            <div className='relative mx-auto mb-2 w-14 h-14'>
-                                                {ranks[1]?.imageUrl ? (
-                                                    <img
-                                                        src={ranks[1].imageUrl}
-                                                        alt='2위 프로필'
-                                                        className='w-14 h-14 rounded-full ring-2 ring-gray-300 object-cover'
-                                                        referrerPolicy='no-referrer'
-                                                    />
-                                                ) : (
-                                                    <div className='w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-500'>
-                                                        <span>🙂</span>
-                                                    </div>
-                                                )}
-                                                {ranks[1]?.badgeUrl && (
-                                                    <img
-                                                        src={ranks[1].badgeUrl}
-                                                        alt='뱃지'
-                                                        className='absolute -bottom-1 -right-1 w-5 h-5 rounded-full border border-white shadow'
-                                                        referrerPolicy='no-referrer'
-                                                    />
-                                                )}
-                                            </div>
-                                            <div className='text-sm font-semibold text-gray-900 truncate mb-1'>
-                                                {ranks[1]?.nickname || '익명'}
-                                            </div>
-                                            <div className='text-xs text-gray-500'>
-                                                {(
-                                                    ranks[1]?.memberPoint ||
-                                                    ranks[1]?.point ||
-                                                    0
-                                                ).toLocaleString()}
-                                                P
-                                            </div>
-                                            <div className='mt-1 text-[11px] text-emerald-600 font-medium'>
-                                                탄소{' '}
-                                                {(
-                                                    ranks[1]?.carbonSave || 0
-                                                ).toFixed(1)}
-                                                kg
-                                            </div>
-                                            {/* 광택 오버레이 (2위 - gray tone)
-                                                - 얇은 대각선 하이라이트가 카드 상단을 스윕(animate-sheen)
-                                                - via-white/30 + mix-blend-screen으로 내용 가독성 유지 */}
-                                            <div className='pointer-events-none absolute inset-0 rounded-2xl'>
-                                                <div className='absolute top-[-30%] left-[-60%] w-[220%] h-[70%] rotate-[20deg] rounded-full mix-blend-screen bg-gradient-to-r from-transparent via-white/60 to-transparent animate-sheen'></div>
-                                                <div
-                                                    className='absolute top-[-40%] left-[-70%] w-[220%] h-[24px] rotate-[20deg] rounded-full mix-blend-screen bg-gradient-to-r from-transparent via-white/80 to-transparent animate-sheen'
-                                                    style={{
-                                                        animationDelay: '0.15s',
-                                                    }}
-                                                ></div>
-                                                <div
-                                                    className='absolute -top-6 -right-6 w-24 h-24 bg-gray-200/20 rounded-full blur-2xl animate-pulse'
-                                                    style={{
-                                                        animationDelay: '0.6s',
-                                                    }}
-                                                ></div>
+                                            <div className='mt-4'>
+                                                <div className='flex items-center justify-center gap-1 text-gray-600 text-xs font-medium mb-3'>
+                                                    <span>2위</span>
+                                                </div>
+                                                <div className='relative mx-auto mb-2 w-14 h-14'>
+                                                    {ranks[1]?.imageUrl ? (
+                                                        <img
+                                                            src={ranks[1].imageUrl}
+                                                            alt='2위 프로필'
+                                                            className='w-14 h-14 rounded-full ring-2 ring-gray-300 object-cover'
+                                                            referrerPolicy='no-referrer'
+                                                        />
+                                                    ) : (
+                                                        <div className='w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-500'>
+                                                            <span>🙂</span>
+                                                        </div>
+                                                    )}
+                                                    {ranks[1]?.badgeUrl && (
+                                                        <img
+                                                            src={ranks[1].badgeUrl}
+                                                            alt='뱃지'
+                                                            className='absolute -bottom-1 -right-1 w-5 h-5 rounded-full border border-white shadow'
+                                                            referrerPolicy='no-referrer'
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div className='text-sm font-semibold text-gray-900 truncate mb-1'>
+                                                    {ranks[1]?.nickname || '익명'}
+                                                </div>
+                                                <div className='text-xs text-gray-500'>
+                                                    {(
+                                                        ranks[1]?.memberPoint ||
+                                                        ranks[1]?.point ||
+                                                        0
+                                                    ).toLocaleString()}
+                                                    P
+                                                </div>
+                                                <div className='mt-1 text-[11px] text-emerald-600 font-medium'>
+                                                    탄소{' '}
+                                                    {(
+                                                        ranks[1]?.carbonSave || 0
+                                                    ).toFixed(1)}
+                                                    kg
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* 1위 */}
-                                        <div className='bg-white rounded-2xl border border-emerald-100 shadow p-4 text-center relative overflow-hidden'>
+                                        {/* 1위 (👑 중심 강조) */}
+                                        <motion.div
+                                            initial={{ scale: 0.95, opacity: 0 }}
+                                            animate={{ scale: 1.05, opacity: 1 }}
+                                            transition={{ duration: 0.6, ease: 'easeOut' }}
+                                            className='bg-white ml-1 rounded-2xl border border-emerald-200 shadow-lg p-5 text-center relative overflow-hidden w-[95%] ring-2 ring-emerald-200'
+                                        >
                                             <div className='flex items-center justify-center gap-1 text-emerald-700 text-xs font-semibold mb-3'>
-                                                <span className='inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold'>
-                                                    1
-                                                </span>
                                                 <span>1위</span>
                                             </div>
-                                            <div className='relative mx-auto mb-2 w-16 h-16'>
-                                                {ranks[0]?.imageUrl ? (
-                                                    <img
-                                                        src={ranks[0].imageUrl}
-                                                        alt='1위 프로필'
-                                                        className='w-16 h-16 rounded-full ring-2 ring-emerald-400 object-cover'
-                                                        referrerPolicy='no-referrer'
-                                                    />
-                                                ) : (
-                                                    <div className='w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600'>
-                                                        <span>🙂</span>
+
+                                            {/* ✅ 프로필 중앙 정렬만 적용 */}
+                                            <div className='flex justify-center mb-3'>
+                                                <div className='relative w-20 h-20'>
+                                                    {ranks[0]?.imageUrl ? (
+                                                        <img
+                                                            src={ranks[0].imageUrl}
+                                                            alt='1위 프로필'
+                                                            className='w-20 h-20 rounded-full ring-2 ring-emerald-400 object-cover shadow-md'
+                                                            referrerPolicy='no-referrer'
+                                                        />
+                                                    ) : (
+                                                        <div className='w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600'>
+                                                            <span>🙂</span>
+                                                        </div>
+                                                    )}
+
+                                                    {ranks[0]?.badgeUrl && (
+                                                        <img
+                                                            src={ranks[0].badgeUrl}
+                                                            alt='뱃지'
+                                                            className='absolute -bottom-1 -right-1 w-6 h-6 rounded-full border border-white shadow'
+                                                            referrerPolicy='no-referrer'
+                                                        />
+                                                    )}
+                                                    <div className='absolute -top-1 -right-1 text-[11px] bg-amber-300 text-white rounded-full px-1.5 py-0.5 font-semibold'>
+                                                        👑
                                                     </div>
-                                                )}
-                                                {ranks[0]?.badgeUrl && (
-                                                    <img
-                                                        src={ranks[0].badgeUrl}
-                                                        alt='뱃지'
-                                                        className='absolute -bottom-1 -right-1 w-5 h-5 rounded-full border border-white shadow'
-                                                        referrerPolicy='no-referrer'
-                                                    />
-                                                )}
-                                                <div className='absolute -top-1 -right-1 text-[11px] bg-amber-200 text-white rounded-full px-1.5 py-0.5 font-semibold'>
-                                                    👑
                                                 </div>
                                             </div>
+
                                             <div className='text-sm font-bold text-gray-900 truncate mb-1'>
                                                 {ranks[0]?.nickname || '익명'}
                                             </div>
-                                            <div className='text-sm font-extrabold text-gray-900'>
-                                                {(
-                                                    ranks[0]?.memberPoint ||
-                                                    ranks[0]?.point ||
-                                                    0
-                                                ).toLocaleString()}
-                                                P
+                                            <div className='text-lg font-extrabold text-gray-900'>
+                                                {(ranks[0]?.memberPoint || ranks[0]?.point || 0).toLocaleString()}P
                                             </div>
                                             <div className='mt-1 text-[11px] text-emerald-700 font-semibold'>
-                                                탄소{' '}
-                                                {(
-                                                    ranks[0]?.carbonSave || 0
-                                                ).toFixed(1)}
-                                                kg
+                                                탄소 {(ranks[0]?.carbonSave || 0).toFixed(1)}kg
                                             </div>
-                                            {/* 광택 오버레이 (1위 - emerald tone)
-                                                - emerald 색조의 하이라이트로 1위 카드 은은 강조 */}
-                                            <div className='pointer-events-none absolute inset-0 rounded-2xl'>
-                                                <div className='absolute top-[-30%] left-[-60%] w-[220%] h-[70%] rotate-[20deg] rounded-full mix-blend-screen bg-gradient-to-r from-transparent via-emerald-300/60 to-transparent animate-sheen'></div>
-                                                <div
-                                                    className='absolute top-[-40%] left-[-70%] w-[220%] h-[28px] rotate-[20deg] rounded-full mix-blend-screen bg-gradient-to-r from-transparent via-emerald-200/80 to-transparent animate-sheen'
-                                                    style={{
-                                                        animationDelay: '0.1s',
-                                                    }}
-                                                ></div>
-                                                <div
-                                                    className='absolute -top-8 -left-8 w-28 h-28 bg-emerald-300/15 rounded-full blur-2xl animate-pulse'
-                                                    style={{
-                                                        animationDelay: '0.4s',
-                                                    }}
-                                                ></div>
-                                            </div>
-                                        </div>
+                                        </motion.div>
+
 
                                         {/* 3위 */}
                                         <div className='bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center relative overflow-hidden'>
-                                            <div className='flex items-center justify-center gap-1 text-amber-700 text-xs font-medium mb-3'>
-                                                <span className='inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold'>
-                                                    3
-                                                </span>
-                                                <span>3위</span>
-                                            </div>
-                                            <div className='relative mx-auto mb-2 w-14 h-14'>
-                                                {ranks[2]?.imageUrl ? (
-                                                    <img
-                                                        src={ranks[2].imageUrl}
-                                                        alt='3위 프로필'
-                                                        className='w-14 h-14 rounded-full ring-2 ring-amber-300 object-cover'
-                                                        referrerPolicy='no-referrer'
-                                                    />
-                                                ) : (
-                                                    <div className='w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-600'>
-                                                        <span>🙂</span>
-                                                    </div>
-                                                )}
-                                                {ranks[2]?.badgeUrl && (
-                                                    <img
-                                                        src={ranks[2].badgeUrl}
-                                                        alt='뱃지'
-                                                        className='absolute -bottom-1 -right-1 w-5 h-5 rounded-full border border-white shadow'
-                                                        referrerPolicy='no-referrer'
-                                                    />
-                                                )}
-                                            </div>
-                                            <div className='text-sm font-semibold text-gray-900 truncate mb-1'>
-                                                {ranks[2]?.nickname || '익명'}
-                                            </div>
-                                            <div className='text-xs text-gray-700 font-semibold'>
-                                                {(
-                                                    ranks[2]?.memberPoint ||
-                                                    ranks[2]?.point ||
-                                                    0
-                                                ).toLocaleString()}
-                                                P
-                                            </div>
-                                            <div className='mt-1 text-[11px] text-amber-700 font-medium'>
-                                                탄소{' '}
-                                                {(
-                                                    ranks[2]?.carbonSave || 0
-                                                ).toFixed(1)}
-                                                kg
-                                            </div>
-                                            {/* 광택 오버레이 (3위 - amber tone)
-                                                - amber 색조 + 딜레이로 위계감 부여 */}
-                                            <div className='pointer-events-none absolute inset-0 rounded-2xl'>
-                                                <div className='absolute top-[-30%] left-[-60%] w-[220%] h-[70%] rotate-[20deg] rounded-full mix-blend-screen bg-gradient-to-r from-transparent via-amber-300/60 to-transparent animate-sheen'></div>
-                                                <div
-                                                    className='absolute top-[-40%] left-[-70%] w-[220%] h-[24px] rotate-[20deg] rounded-full mix-blend-screen bg-gradient-to-r from-transparent via-amber-200/80 to-transparent animate-sheen'
-                                                    style={{
-                                                        animationDelay: '0.2s',
-                                                    }}
-                                                ></div>
-                                                <div
-                                                    className='absolute -bottom-8 -right-8 w-28 h-28 bg-amber-300/15 rounded-full blur-2xl animate-pulse'
-                                                    style={{
-                                                        animationDelay: '0.8s',
-                                                    }}
-                                                ></div>
+                                            <div className='mt-4'>
+                                                <div className='flex items-center justify-center gap-1 text-amber-700 text-xs font-medium mb-3'>
+                                                    <span>3위</span>
+                                                </div>
+                                                <div className='relative mx-auto mb-2 w-14 h-14'>
+                                                    {ranks[2]?.imageUrl ? (
+                                                        <img
+                                                            src={ranks[2].imageUrl}
+                                                            alt='3위 프로필'
+                                                            className='w-14 h-14 rounded-full ring-2 ring-amber-300 object-cover'
+                                                            referrerPolicy='no-referrer'
+                                                        />
+                                                    ) : (
+                                                        <div className='w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-600'>
+                                                            <span>🙂</span>
+                                                        </div>
+                                                    )}
+                                                    {ranks[2]?.badgeUrl && (
+                                                        <img
+                                                            src={ranks[2].badgeUrl}
+                                                            alt='뱃지'
+                                                            className='absolute -bottom-1 -right-1 w-5 h-5 rounded-full border border-white shadow'
+                                                            referrerPolicy='no-referrer'
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div className='text-sm font-semibold text-gray-900 truncate mb-1'>
+                                                    {ranks[2]?.nickname || '익명'}
+                                                </div>
+                                                <div className='text-xs text-gray-700 font-semibold'>
+                                                    {(
+                                                        ranks[2]?.memberPoint ||
+                                                        ranks[2]?.point ||
+                                                        0
+                                                    ).toLocaleString()}
+                                                    P
+                                                </div>
+                                                <div className='mt-1 text-[11px] text-amber-700 font-medium'>
+                                                    탄소{' '}
+                                                    {(
+                                                        ranks[2]?.carbonSave || 0
+                                                    ).toFixed(1)}
+                                                    kg
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -369,20 +315,18 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                     transition={{
                                                         delay: index * 0.05,
                                                     }}
-                                                    className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between border ${
-                                                        isMe
-                                                            ? 'border-[#4CAF50]/60'
-                                                            : 'border-gray-100'
-                                                    } hover:border-[#4CAF50]/30 group`}
+                                                    className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between border ${isMe
+                                                        ? 'border-[#4CAF50]/60'
+                                                        : 'border-gray-100'
+                                                        } hover:border-[#4CAF50]/30 group`}
                                                 >
                                                     <div className='flex items-center gap-4 flex-1'>
                                                         {/* 순위 배지 */}
                                                         <div
-                                                            className={`flex items-center justify-center min-w-[44px] h-11 rounded-xl font-bold text-sm transition-all ${
-                                                                isTop10
-                                                                    ? 'bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] text-white shadow-md group-hover:scale-110'
-                                                                    : 'bg-gray-100 text-gray-600'
-                                                            }`}
+                                                            className={`flex items-center justify-center min-w-[44px] h-11 rounded-xl font-bold text-sm transition-all ${isTop10
+                                                                ? 'bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] text-white shadow-md group-hover:scale-110'
+                                                                : 'bg-gray-100 text-gray-600'
+                                                                }`}
                                                         >
                                                             {currentRank}
                                                         </div>
