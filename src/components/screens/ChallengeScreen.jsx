@@ -292,7 +292,7 @@ function ChallengeCard({
             else if (filter === 'available' && updatedAt && deadline) {
                 const start = new Date(updatedAt);
                 expiryDate = new Date(start);
-                expiryDate.setDate(start.getDate() + deadline);
+                expiryDate.setDate(start.getDate());
             }
 
             if (!expiryDate) {
@@ -688,38 +688,40 @@ function ChallengeCard({
                                         .split('T')[0];
                                 }
 
-                                return expiryDateStr ? (
-                                    <div
-                                        className={`flex items-center ${filter === 'available'
-                                                ? 'justify-between'
-                                                : 'gap-2'
-                                            } text-xs bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-2.5 mt-3 border border-gray-200`}
-                                    >
-                                        <div className='flex items-center gap-2 text-gray-500'>
-                                            <Calendar className='w-3.5 h-3.5 text-gray-400' />
-                                            <span className='font-medium'>
-                                                만료일:
-                                            </span>
-                                            <span className='font-semibold text-gray-700'>
-                                                {expiryDateStr}
-                                            </span>
-                                        </div>
-                                        {filter === 'available' &&
-                                            daysStyle &&
-                                            remainingDays !== null && (
-                                                <div
-                                                    className={`${daysStyle.bg} ${daysStyle.text} px-2.5 py-1 rounded-md text-[10px] font-bold ${daysStyle.shadow} flex items-center gap-1`}
-                                                >
-                                                    <Clock className='w-3 h-3' />
-                                                    <span>
-                                                        {expiryDateStr.split('-')[2] - new Date().toISOString().split('T')[0].split('-')[2] > 0
-                                                            ? `남은 ${expiryDateStr.split('-')[2] - new Date().toISOString().split('T')[0].split('-')[2]}일`
-                                                            : '만료됨'}
-                                                    </span>
-                                                </div>
-                                            )}
-                                    </div>
-                                ) : null;
+                                return 
+                                    // expiryDateStr ? (
+                                //     <div
+                                //         className={`flex items-center ${filter === 'available'
+                                //                 ? 'justify-between'
+                                //                 : 'gap-2'
+                                //             } text-xs bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-2.5 mt-3 border border-gray-200`}
+                                //     >
+                                //         <div className='flex items-center gap-2 text-gray-500'>
+                                //             <Calendar className='w-3.5 h-3.5 text-gray-400' />
+                                //             <span className='font-medium'>
+                                //                 만료일:
+                                //             </span>
+                                //             <span className='font-semibold text-gray-700'>
+                                //                 {expiryDateStr}
+                                //             </span>
+                                //         </div>
+                                //         {filter === 'available' &&
+                                //             daysStyle &&
+                                //             remainingDays !== null && (
+                                //                 <div
+                                //                     className={`${daysStyle.bg} ${daysStyle.text} px-2.5 py-1 rounded-md text-[10px] font-bold ${daysStyle.shadow} flex items-center gap-1`}
+                                //                 >
+                                //                     <Clock className='w-3 h-3' />
+                                //                     <span>
+                                //                         {expiryDateStr.split('-')[2] - new Date().toISOString().split('T')[0].split('-')[2] > 0
+                                //                             ? `남은 ${expiryDateStr.split('-')[2] - new Date().toISOString().split('T')[0].split('-')[2]}일`
+                                //                             : '만료됨'}
+                                //                     </span>
+                                //                 </div>
+                                //             )}
+                                //     </div>
+                                // ) : 
+                                null;
                             })()}
 
                         {/* 완료 날짜 (완료된 챌린지일 때) */}
