@@ -143,6 +143,7 @@ export default function EditProfileScreen({ onBack }) {
       );
       setModal({ message: "회원정보 수정이 완료되었습니다 ", type: "success", action : "mypage" });
       setTimeout(() => {
+          console.log("아무거나----------------------")
         navigate("/mypage");
         onBack?.();
       }, 50000);
