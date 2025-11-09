@@ -201,7 +201,7 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
                                             {selectedBadge.name}
                                         </h2>
                                     </div>
-                                    <p className='text-white/80 text-sm mb-2'>
+                                    <p className='text-white/80 text-sm mb-2 text-left'>
                                         {selectedBadge.description}
                                     </p>
                                     {selectedBadge.isAcquired && (
