@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from './store/slices/appSlice';
-import { fetchMyPageData } from './store/slices/userSlice';
 import {
     BrowserRouter,
     Routes,
@@ -56,12 +55,8 @@ export default function App() {
     const dispatch = useDispatch();
     // removed top-level navigate; navigation is handled inside AppContent via react-router
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            dispatch(fetchMyPageData());
-        }
-    }, [dispatch]);
+    // 앱 초기화 시 마이페이지 데이터 로드는 각 화면에서 필요할 때 로드하도록 변경
+    // HomeScreen과 MyPageScreen에서 각각 필요 시 호출
 
     if (appState === 'splash') return <SplashScreen />;
     if (appState === 'onboarding') return <OnboardingScreen />;

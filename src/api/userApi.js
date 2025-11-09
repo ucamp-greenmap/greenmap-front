@@ -36,6 +36,7 @@ export async function getMyProfile() {
     const response = await api.get('/member/me', {
         headers: { Authorization: `Bearer ${token}` },
     });
+
     const result = response.data;
     if (result.status && result.status !== 'SUCCESS') {
         throw new Error(result.message || '프로필을 가져올 수 없습니다');

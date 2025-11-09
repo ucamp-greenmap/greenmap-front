@@ -1,12 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import {
-    fetchPointInfo,
-    login,
-    updateProfile,
-} from '../../store/slices/userSlice';
-import { getMyProfile } from '../../api/userApi';
+import { fetchPointInfo, fetchMyPageData } from '../../store/slices/userSlice';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
@@ -72,51 +67,68 @@ export default function HomeScreen({ onNavigate }) {
 
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
-    // 초기 마운트 시 토큰이 있으면 로그인 상태 확인
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token && !isLoggedIn) {
-            // 토큰이 있지만 Redux 상태가 업데이트되지 않은 경우
-            getMyProfile()
-                .then((me) => {
-                    // Redux 상태 업데이트
-                    dispatch(login({ token }));
-                    dispatch(
-                        updateProfile({
-                            name: me.nickname,
-                            email: me.email,
-                            nickname: me.nickname,
-                            avatar: me.imageUrl,
-                            memberId: me.memberId,
-                        })
-                    );
-                    // 포인트 정보 가져오기
-                    dispatch(fetchPointInfo());
-                })
-                .catch(() => {
-                    // 토큰이 유효하지 않으면 제거
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('memberId');
-                });
-        }
-    }, [dispatch, isLoggedIn]);
+    // 토큰 확인 및 초기 데이터 로드
+    const [isInitializing, setIsInitializing] = useState(true);
+    const hasLoadedMyPageDataRef = useRef(false);
 
     useEffect(() => {
-        const onFocus = () => {
-            // 로그인 상태일 때만 포인트 정보 가져오기
-            if (isLoggedIn) {
-                dispatch(fetchPointInfo());
+        const token = localStorage.getItem('token');
+
+        if (token) {
+            // 토큰이 있으면 데이터 로드 시도
+            if (!hasLoadedMyPageDataRef.current) {
+                hasLoadedMyPageDataRef.current = true;
+                dispatch(fetchMyPageData())
+                    .then(() => {
+                        // 성공 시 초기화 완료
+                        setIsInitializing(false);
+                    })
+                    .catch(() => {
+                        // 실패 시에도 초기화 완료 (토큰이 유효하지 않을 수 있음)
+                        setIsInitializing(false);
+                    });
+            } else {
+                // 이미 로드 시도했으면, 로그인 상태 확인 후 초기화 완료
+                // 짧은 지연 후 초기화 완료 (Redux 상태 업데이트 대기)
+                const timer = setTimeout(() => {
+                    setIsInitializing(false);
+                }, 100);
+                return () => clearTimeout(timer);
             }
+        } else {
+            // 토큰이 없으면 즉시 초기화 완료
+            setIsInitializing(false);
+        }
+    }, [dispatch]);
+
+    // isLoggedIn이 변경되면 초기화 상태 업데이트 (데이터 로드 완료 신호)
+    useEffect(() => {
+        if (isLoggedIn) {
+            setIsInitializing(false);
+        }
+    }, [isLoggedIn]);
+
+    // 로딩이 완료되면 초기화 완료
+    useEffect(() => {
+        if (!loading && hasLoadedMyPageDataRef.current) {
+            // 로딩이 완료되고 데이터 로드를 시도했으면 초기화 완료
+            const timer = setTimeout(() => {
+                setIsInitializing(false);
+            }, 50);
+            return () => clearTimeout(timer);
+        }
+    }, [loading]);
+
+    // 윈도우 포커스 시 포인트 정보 새로고침 (로그인 상태일 때만)
+    useEffect(() => {
+        if (!isLoggedIn) return;
+
+        const onFocus = () => {
+            // 윈도우 포커스 시 포인트 정보만 새로고침
+            dispatch(fetchPointInfo());
         };
         window.addEventListener('focus', onFocus);
         return () => window.removeEventListener('focus', onFocus);
-    }, [dispatch, isLoggedIn]);
-
-    useEffect(() => {
-        // 로그인 상태일 때만 포인트 정보 가져오기
-        if (isLoggedIn) {
-            dispatch(fetchPointInfo());
-        }
     }, [dispatch, isLoggedIn]);
 
     const randomTip = useMemo(() => {
@@ -320,15 +332,15 @@ export default function HomeScreen({ onNavigate }) {
 
             {/* Page content */}
             <div className='px-4'>
-                {/*  로딩 중 */}
-                {loading && (
+                {/*  로딩 중 (초기화 중이거나 데이터 로딩 중) */}
+                {(loading || isInitializing) && (
                     <div className='mt-4 bg-white rounded-3xl p-6 text-center shadow-xl'>
                         <p className='text-gray-600'>정보를 불러오는 중...</p>
                     </div>
                 )}
 
-                {/* 로그인 안 됨 */}
-                {!loading && !isLoggedIn && (
+                {/* 로그인 안 됨 (초기화 완료 후에만 표시) */}
+                {!loading && !isInitializing && !isLoggedIn && (
                     <div className='mt-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl p-6 text-center shadow-xl'>
                         <div className='text-5xl mb-4'>🔒</div>
                         <h3 className='text-gray-900 text-xl font-bold mb-2'>
@@ -353,12 +365,24 @@ export default function HomeScreen({ onNavigate }) {
                             {/* 사용자 이름 + 프로필 */}
                             <div className='flex items-center gap-4 mb-4'>
                                 {/* 프로필 이미지 영역 */}
-                                <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
-                                    <img
-                                        src={profile.avatar}
-                                        alt='프로필'
-                                        className='w-full h-full object-cover'
-                                    />
+                                <div className='relative'>
+                                    <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
+                                        <img
+                                            src={profile.avatar}
+                                            alt='프로필'
+                                            className='w-full h-full object-cover'
+                                        />
+                                    </div>
+                                    {/* 뱃지 이미지 - 프로필 이미지 오른쪽 하단 */}
+                                    {profile.badgeUrl && (
+                                        <div className='absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg'>
+                                            <img
+                                                src={profile.badgeUrl}
+                                                alt='뱃지'
+                                                className='w-5 h-5 object-contain'
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* 닉네임 */}

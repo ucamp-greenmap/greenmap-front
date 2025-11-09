@@ -247,6 +247,18 @@ export const fetchMyPageData = createAsyncThunk(
 
             return rejectWithValue(message);
         }
+    },
+    {
+        // 이미 진행 중인 요청이 있으면 새로운 요청을 스킵
+        condition: (_, { getState }) => {
+            const state = getState();
+            const { loading } = state.user;
+            // 이미 로딩 중이면 새로운 요청을 스킵
+            if (loading) {
+                return false;
+            }
+            return true;
+        },
     }
 );
 
@@ -260,6 +272,7 @@ const userSlice = createSlice({
             email: '',
             avatar: null,
             nickname: '',
+            badgeUrl: null,
         },
 
         ranking: {
@@ -277,6 +290,9 @@ const userSlice = createSlice({
     },
     reducers: {
         logout: (state) => {
+            // 로그아웃 전 memberId 저장 (sessionStorage 정리용)
+            const currentMemberId = state.profile?.memberId;
+
             state.isLoggedIn = false;
             state.profile = {
                 memberId: null,
@@ -284,6 +300,7 @@ const userSlice = createSlice({
                 email: '',
                 avatar: null,
                 nickname: '',
+                badgeUrl: null,
             };
             state.ranking = {
                 rank: null,
@@ -297,6 +314,31 @@ const userSlice = createSlice({
             state.error = null;
             localStorage.removeItem('token');
             localStorage.removeItem('memberId');
+
+            // 뉴스 상태 sessionStorage 정리 (모든 사용자 데이터 삭제)
+            try {
+                // 현재 사용자의 뉴스 상태 삭제
+                if (currentMemberId) {
+                    sessionStorage.removeItem(
+                        `ecoNewsState_${currentMemberId}`
+                    );
+                }
+                // 게스트 데이터도 삭제
+                sessionStorage.removeItem('ecoNewsState_guest');
+
+                // 혹시 남아있을 수 있는 다른 사용자 데이터도 정리
+                // (모든 ecoNewsState_로 시작하는 키 삭제)
+                const keysToRemove = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key && key.startsWith('ecoNewsState_')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach((key) => sessionStorage.removeItem(key));
+            } catch (e) {
+                console.error('뉴스 상태 정리 실패:', e);
+            }
         },
 
         // 로그인 처리 (토큰 저장)
@@ -336,6 +378,7 @@ const userSlice = createSlice({
                         email: member.email,
                         avatar: member.image?.imageUrl || null,
                         nickname: member.nickname,
+                        badgeUrl: member.badgeUrl || state.profile.badgeUrl || null,
                     };
                 }
             })
@@ -362,6 +405,7 @@ const userSlice = createSlice({
                     email: member.email,
                     avatar: member.imageUrl,
                     nickname: member.nickname,
+                    badgeUrl: member.badgeUrl || null,
                 };
 
                 state.ranking = {
