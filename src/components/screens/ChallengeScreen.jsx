@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Calendar, Plus, Award, Target, TrendingUp, Clock } from 'lucide-react';
+import { UsersRound, Plus, Award, Target, TrendingUp, Clock } from 'lucide-react';
 import CertModal from '../cert/CertModal';
 import { certTypes } from '../../util/certConfig';
 import { useDispatch, useSelector } from 'react-redux';
@@ -649,7 +649,7 @@ function ChallengeCard({
                                 <div className='absolute inset-0 bg-gradient-to-br from-orange-400/0 to-orange-400/10 opacity-0 group-hover/card:opacity-100 transition-opacity'></div>
                                 <div className='relative'>
                                     <div className='text-[10px] text-orange-600 font-semibold mb-0.5 flex items-center justify-center gap-1'>
-                                        <Calendar className='w-3 h-3' />
+                                        <UsersRound className='w-3 h-3' />
                                         참여자
                                     </div>
                                     <div className='text-base font-bold text-orange-700'>
