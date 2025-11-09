@@ -1,27 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
-// ↓ redux 안 쓰면 이 부분 제거해도됨
 import { useDispatch } from 'react-redux';
 import { updateProfile, login, fetchPointInfo } from '../../store/slices/userSlice';
 import kakaoBtn from '../../assets/kakao_login_medium_wide.png';
 import HomeScreen from './HomeScreen';
 
-// 테마 컬러
 const themeColor = '#96cb6f';
 
-//  검증 함수
+//  유효성 검증 함수
 const validateEmail = (email) => /[^@\s]+@[^@\s]+\.[^@\s]+/.test(email);
 const validatePassword = (password) => password.length >= 6;
 
-//  카카오 로그인 버튼 클릭 시 이동
+//  카카오 로그인
 const kakaoLogin = () => {
   window.location.href = `${
     import.meta.env.VITE_APP_SERVER_URL
   }/oauth2/authorization/kakao`;
 };
 
-
-//  전역 스타일 그대로 유지
+//  스타일
 const styles = `
   :root { --brand: ${themeColor}; }
   *{ box-sizing: border-box; }
@@ -33,47 +31,28 @@ const styles = `
   .tabs{ display:flex; gap:8px; border-bottom:1px solid #eaeaea; margin-bottom:18px; }
   .tab{ flex:1; padding:12px 8px; text-align:center; font-weight:700; border:0; background:transparent; cursor:pointer; border-bottom:3px solid transparent; transition:all .2s ease; }
   .tab.active{ color:var(--brand); border-bottom-color:var(--brand); }
-  .button.focus{ outline : none ,box-shadow:none }
   .field{ margin:14px 0; }
-  .label{ display:block; font-weight:600; color:#333; margin-bottom:6px; transition:color .2s ease; }
-  .input{ width:100%; padding:12px 14px; border-radius:12px; border:2px solid #e5e7eb; outline:none;
-          transition:border-color .15s ease, box-shadow .15s ease, background .15s ease; }
+  .label{ display:block; font-weight:600; color:#333; margin-bottom:6px; }
+  .input{ width:100%; padding:12px 14px; border-radius:12px; border:2px solid #e5e7eb; outline:none; transition:border-color .15s ease, box-shadow .15s ease, background .15s ease; }
   .input:focus{ border-color:var(--brand); box-shadow:0 0 0 4px rgba(133,193,75,.15); }
   .input.filled{ background:#f9fff2; border-color:#cfe8ae; }
   .input.valid{ border-color:var(--brand); }
   .input.invalid{ border-color:#e11d48; box-shadow:0 0 0 4px rgba(225,29,72,.10); }
-  .hint{ font-size:.85rem; color:#6b7280; margin-top:6px; }
-  .error{ font-size:.85rem; color:#e11d48; margin-top:6px; }
   .btn{ width:100%; padding:12px 14px; border-radius:12px; border:0; background:var(--brand); color:#fff; font-weight:800; cursor:pointer; margin-top:6px;}
-  button:focus{ outline:none; box-shadow:none; }
   .btn:disabled{ opacity:.5; cursor:not-allowed; }
-  .kakao{ width:100%; margin-top:12px; padding:12px 14px; border-radius:12px; border:0;
-          background:#FEE500; color:#3C1E1E; font-weight:700; cursor:pointer; }
-  .valid-text {
-      display: block;
-      margin-top: 6px;
-      margin-left: 4px;
-      font-size: 0.88rem;
-      color: #3fa14a;  
-      transition: color 0.2s ease;
-  }
-  .invalid-text {
-      display: block;
-      margin-top: 6px;
-      margin-left: 4px;
-      font-size: 0.88rem;
-      color: #d33b3b; 
-      transition: color 0.2s ease;
-  }
+  .valid-text{ font-size:.88rem; color:#3fa14a; margin-top:6px; margin-left:4px; }
+  .invalid-text{ font-size:.88rem; color:#d33b3b; margin-top:6px; margin-left:4px; }
 `;
 
-function Modal({ message, type = 'info', onClose }) {
+/*  모달 */
+function Modal({ message, type = 'info', onClose, action }) {
+  const navigate = useNavigate();
+
   const handleClick = () => {
-    if (type === 'success') {
-      onClose();
-    } else {
-      onClose();
-    }
+    if (action === 'mypage') navigate('/mypage');
+    else if (action === 'home') navigate('/');
+    else if (action === 'login') navigate('/login');
+    onClose();
   };
 
   return (
@@ -101,25 +80,23 @@ function Modal({ message, type = 'info', onClose }) {
   );
 }
 
-/* ------------------ 로그인 / 회원가입 통합 ------------------ */
+/*  로그인 / 회원가입 통합 화면 */
 export default function LoginSignupScreen({ onNavigate }) {
   const [page, setPage] = useState('login');
   const [userInfo, setUserInfo] = useState(null);
-  const [modal, setModal] = useState(null); 
-  const dispatch = useDispatch(); // redux없는 사람은 제거 가능
+  const [modal, setModal] = useState(null);
+  const dispatch = useDispatch();
 
-  //  로그인 유지
+  // 로그인 유지
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
-
     api
       .get('/member/me', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
         setUserInfo(res.data.data);
-        // Redux 상태 업데이트
         dispatch(login({ token }));
         dispatch(
           updateProfile({
@@ -130,7 +107,6 @@ export default function LoginSignupScreen({ onNavigate }) {
             memberId: res.data.data.memberId,
           })
         );
-        // 포인트 정보 가져오기
         dispatch(fetchPointInfo());
       })
       .catch(() => {
@@ -143,7 +119,6 @@ export default function LoginSignupScreen({ onNavigate }) {
     <>
       <div className="auth-wrap">
         <style>{styles}</style>
-
         <div className="card">
           <div className="title">GreenMap</div>
           <div className="subtitle">그린맵</div>
@@ -164,7 +139,11 @@ export default function LoginSignupScreen({ onNavigate }) {
 
           {!userInfo ? (
             page === 'login' ? (
-              <LoginForm setUserInfo={setUserInfo} setModal={setModal} onNavigate={onNavigate} />
+              <LoginForm
+                setUserInfo={setUserInfo}
+                setModal={setModal}
+                onNavigate={onNavigate}
+              />
             ) : (
               <SignupForm setPage={setPage} setModal={setModal} />
             )
@@ -172,34 +151,32 @@ export default function LoginSignupScreen({ onNavigate }) {
             <HomeScreen onNavigate={onNavigate} />
           )}
 
-          
-{!userInfo && page === 'login' && (
-  <button
-    onClick={kakaoLogin}
-    style={{
-      width: '100%',
-      marginTop: '12px',
-      borderRadius: '12px',
-      overflow: 'hidden',
-      padding: 0,
-    }}
-  >
-    <img
-      src={kakaoBtn}
-      alt="카카오 로그인"
-      style={{ width: '100%', display: 'block' }}
-    />
-  </button>
-)}
-
+          {!userInfo && page === 'login' && (
+            <button
+              onClick={kakaoLogin}
+              style={{
+                width: '100%',
+                marginTop: '12px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                padding: 0,
+              }}
+            >
+              <img
+                src={kakaoBtn}
+                alt="카카오 로그인"
+                style={{ width: '100%', display: 'block' }}
+              />
+            </button>
+          )}
         </div>
-
 
         {modal && (
           <Modal
             message={modal.message}
             type={modal.type}
             onClose={() => setModal(null)}
+            action={modal.action}
           />
         )}
       </div>
@@ -207,7 +184,7 @@ export default function LoginSignupScreen({ onNavigate }) {
   );
 }
 
-/* ------------------ 로그인 ------------------ */
+
 function LoginForm({ setUserInfo, setModal, onNavigate }) {
   const dispatch = useDispatch();
   const [email, setEmail] = useState('');
@@ -224,15 +201,14 @@ function LoginForm({ setUserInfo, setModal, onNavigate }) {
       const res = await api.post('/member/login', { email, password });
       const token = res.data.data.accessToken;
       const memberId = res.data.data.memberId;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('memberId', memberId);
 
       const info = await api.get('/member/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
-      // Redux 상태 업데이트
+
       dispatch(login({ token }));
       dispatch(
         updateProfile({
@@ -243,20 +219,10 @@ function LoginForm({ setUserInfo, setModal, onNavigate }) {
           memberId: info.data.data.memberId,
         })
       );
-      // 포인트 정보 가져오기
       dispatch(fetchPointInfo());
-      
+
       setUserInfo(info.data.data);
-      setModal({ message: '로그인 성공!', type: 'success' });
-      
-      // 네비게이션 처리 - 새로고침 없이 이동
-      setTimeout(() => {
-        if (onNavigate) {
-          onNavigate('home');
-        } else if (window.location.pathname === '/login') {
-          window.location.href = '/';
-        }
-      }, 800);
+      setModal({ message: '로그인 성공!', type: 'success', action: 'home' });
     } catch {
       setModal({
         message: '이메일 또는 비밀번호를 확인해주세요.',
@@ -300,8 +266,8 @@ function LoginForm({ setUserInfo, setModal, onNavigate }) {
   );
 }
 
-/* ------------------ 회원가입 ------------------ */
 function SignupForm({ setPage, setModal }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [emailAvailable, setEmailAvailable] = useState(null);
   const [password, setPassword] = useState('');
@@ -364,10 +330,10 @@ function SignupForm({ setPage, setModal }) {
     try {
       await api.post('/member', { email, password, nickname });
       setModal({
-        message: '회원가입 성공 로그인해주세요',
+        message: '회원가입 성공! 로그인해주세요',
         type: 'success',
+        action: 'login',
       });
-      setTimeout(() => setPage('login'), 1000);
     } catch {
       setModal({
         message: '다시 시도해주세요',
@@ -438,7 +404,7 @@ function SignupForm({ setPage, setModal }) {
   );
 }
 
-/* ------------------ 재사용 Input ------------------ */
+
 function InputField({ label, type, value, onChange, onBlur, isValid, touched }) {
   const filled = value?.length > 0;
   const showInvalid = touched && !isValid && filled;
