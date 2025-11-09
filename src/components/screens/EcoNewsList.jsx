@@ -8,7 +8,7 @@ import news4 from '../../assets/news4.png';
 import api from '../../api/axios';
 
 /**
- * @param {object} propsgit
+ * @param {object} props
  * @param {string} props.placeholder
  */
 export default function EcoNewsList() {
