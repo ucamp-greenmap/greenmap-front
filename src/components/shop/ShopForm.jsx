@@ -116,7 +116,7 @@ const ShopForm = () => {
         }
 
         const shopData = {
-            imageUrl: imageUrl.trim() || undefined,
+            imageUrl: imageUrl !== null ? imageUrl.trim() : undefined,
             price: priceNum,
             name: name.trim(),
             category: category.trim() || undefined,
