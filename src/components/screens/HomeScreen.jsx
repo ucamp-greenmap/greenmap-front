@@ -1,12 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
-import {
-    fetchPointInfo,
-    login,
-    updateProfile,
-} from '../../store/slices/userSlice';
-import { getMyProfile } from '../../api/userApi';
+import { fetchPointInfo, fetchMyPageData } from '../../store/slices/userSlice';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
@@ -72,51 +67,27 @@ export default function HomeScreen({ onNavigate }) {
 
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
-    // 초기 마운트 시 토큰이 있으면 로그인 상태 확인
+    // 로그인 상태일 때 마이페이지 데이터 로드 (한 번만)
+    const hasLoadedMyPageDataRef = useRef(false);
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (token && !isLoggedIn) {
-            // 토큰이 있지만 Redux 상태가 업데이트되지 않은 경우
-            getMyProfile()
-                .then((me) => {
-                    // Redux 상태 업데이트
-                    dispatch(login({ token }));
-                    dispatch(
-                        updateProfile({
-                            name: me.nickname,
-                            email: me.email,
-                            nickname: me.nickname,
-                            avatar: me.imageUrl,
-                            memberId: me.memberId,
-                        })
-                    );
-                    // 포인트 정보 가져오기
-                    dispatch(fetchPointInfo());
-                })
-                .catch(() => {
-                    // 토큰이 유효하지 않으면 제거
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('memberId');
-                });
+        if (token && isLoggedIn && !hasLoadedMyPageDataRef.current) {
+            hasLoadedMyPageDataRef.current = true;
+            dispatch(fetchMyPageData());
         }
-    }, [dispatch, isLoggedIn]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLoggedIn]); // isLoggedIn이 변경될 때만 체크
 
+    // 윈도우 포커스 시 포인트 정보 새로고침 (로그인 상태일 때만)
     useEffect(() => {
+        if (!isLoggedIn) return;
+
         const onFocus = () => {
-            // 로그인 상태일 때만 포인트 정보 가져오기
-            if (isLoggedIn) {
-                dispatch(fetchPointInfo());
-            }
+            // 윈도우 포커스 시 포인트 정보만 새로고침
+            dispatch(fetchPointInfo());
         };
         window.addEventListener('focus', onFocus);
         return () => window.removeEventListener('focus', onFocus);
-    }, [dispatch, isLoggedIn]);
-
-    useEffect(() => {
-        // 로그인 상태일 때만 포인트 정보 가져오기
-        if (isLoggedIn) {
-            dispatch(fetchPointInfo());
-        }
     }, [dispatch, isLoggedIn]);
 
     const randomTip = useMemo(() => {

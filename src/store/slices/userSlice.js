@@ -247,6 +247,18 @@ export const fetchMyPageData = createAsyncThunk(
 
             return rejectWithValue(message);
         }
+    },
+    {
+        // 이미 진행 중인 요청이 있으면 새로운 요청을 스킵
+        condition: (_, { getState }) => {
+            const state = getState();
+            const { loading } = state.user;
+            // 이미 로딩 중이면 새로운 요청을 스킵
+            if (loading) {
+                return false;
+            }
+            return true;
+        },
     }
 );
 

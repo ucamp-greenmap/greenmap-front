@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchMyPageData, logout } from '../../store/slices/userSlice';
@@ -47,17 +47,29 @@ export default function MyPageScreen({ onNavigate }) {
     const [showSetting, setShowSetting] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+    // 중복 호출 방지를 위한 ref
+    const hasFetchedDataRef = useRef(false);
+    const hasFetchedBadgeRef = useRef(false);
+    const hasCheckedAdminRef = useRef(false);
+
     // 관리자 권한 확인
     const checkAdminStatus = async () => {
+        // 이미 확인했으면 스킵
+        if (hasCheckedAdminRef.current) {
+            return;
+        }
+
         const token = localStorage.getItem('token');
         const memberId = localStorage.getItem('memberId');
 
         if (!token || memberId !== '1') {
             setIsAdmin(false);
+            hasCheckedAdminRef.current = true;
             return;
         }
 
         try {
+            hasCheckedAdminRef.current = true;
             const response = await api.get('/admin', {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -73,12 +85,19 @@ export default function MyPageScreen({ onNavigate }) {
         } catch (err) {
             console.error('관리자 권한 확인 실패', err.response || err);
             setIsAdmin(false);
+            hasCheckedAdminRef.current = true;
         }
     };
 
     // 선택된 뱃지 가져오기
     const fetchSelectedBadge = async () => {
+        // 이미 가져왔으면 스킵
+        if (hasFetchedBadgeRef.current) {
+            return;
+        }
+
         try {
+            hasFetchedBadgeRef.current = true;
             const badges = await getBadges();
             const selected = badges.find((badge) => badge.isSelected);
             // 선택된 뱃지가 있을 때만 설정
@@ -90,16 +109,29 @@ export default function MyPageScreen({ onNavigate }) {
         } catch (err) {
             console.error('선택된 뱃지 조회 실패', err);
             setMyBadge(null);
+            hasFetchedBadgeRef.current = true;
         }
     };
 
+    // 마이페이지 데이터 로드 (컴포넌트 마운트 시 한 번만)
+    // App.jsx에서 이미 초기 로드를 했지만, 마이페이지 진입 시 최신 데이터로 업데이트
     useEffect(() => {
-        dispatch(fetchMyPageData());
-        fetchSelectedBadge();
-    }, [dispatch]);
+        // 이미 이 컴포넌트에서 호출했으면 스킵 (중복 방지)
+        if (hasFetchedDataRef.current) {
+            return;
+        }
 
+        hasFetchedDataRef.current = true;
+        // 마이페이지 진입 시 최신 데이터로 새로고침
+        dispatch(fetchMyPageData());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // 마운트 시 한 번만 실행
+
+    // 뱃지와 관리자 상태는 마운트 시 한 번만
     useEffect(() => {
+        fetchSelectedBadge();
         checkAdminStatus();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const navigate = (tab) => {

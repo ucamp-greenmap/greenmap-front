@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchPointInfo } from '../../store/slices/pointSlice';
 import news1 from '../../assets/news1.png';
@@ -29,6 +29,10 @@ export default function EcoNewsList() {
         setError(null);
         try {
             const response = await api.get('/news');
+            console.log(
+                'fetchNews response.data',
+                JSON.stringify(response.data, null, 2)
+            );
             const result = response.data;
 
             if (result.status !== 'SUCCESS') {
@@ -39,29 +43,33 @@ export default function EcoNewsList() {
 
             if (result.data) {
                 console.log('📡 서버 응답:', result.data);
-                
+
                 // ✅ leftTimes 추출 (배열의 첫 번째 객체에 있음)
-                console.log('Array.isArray(result.data) : ', Array.isArray(result.data.items))
-                console.log('result.data.length > 0 : ', result.data.items.length > 0)
-                if (Array.isArray(result.data.items) && result.data.items.length > 0) {
-                    const firstItem = result.data.items[0];
-
-                    console.log('firstItem : ', firstItem)
-
-                    console.log('leftTimes : ', firstItem.leftTimes)
-                    
+                console.log(
+                    'Array.isArray(result.data) : ',
+                    Array.isArray(result.data.items)
+                );
+                console.log(
+                    'result.data.length > 0 : ',
+                    result.data.items.length > 0
+                );
+                if (
+                    Array.isArray(result.data.items) &&
+                    result.data.items.length > 0
+                ) {
                     // leftTimes가 있으면 설정
                     if (typeof result.data.leftTimes === 'number') {
                         setLeftTimes(result.data.leftTimes);
                     }
-                    
+
                     // 나머지는 뉴스 목록 (첫 번째 항목 제외)
                     // ✅ read를 isRead로 변환
-                    const newsItems = result.data.items.map(article => ({
+                    const newsItems = result.data.items.map((article) => ({
                         ...article,
-                        isRead: article.read === true || article.isRead === true
+                        isRead:
+                            article.read === true || article.isRead === true,
                     }));
-                    console.log('📰 뉴스 목록:', newsItems);
+                    // console.log('📰 뉴스 목록:', newsItems);
                     setNewsList(newsItems);
                 } else {
                     console.log('⚠️ data가 배열이 아니거나 비어있음');
@@ -121,7 +129,6 @@ export default function EcoNewsList() {
                     })
                 );
 
-    
                 dispatch(fetchPointInfo());
 
                 setToast('+5P 획득');
@@ -136,10 +143,20 @@ export default function EcoNewsList() {
         }
     };
 
+    // 뉴스 로드 (마운트 시 한 번만)
+    const hasFetchedNewsRef = useRef(false);
+
     useEffect(() => {
+        // 이미 로드했으면 스킵
+        if (hasFetchedNewsRef.current) {
+            return;
+        }
+
+        hasFetchedNewsRef.current = true;
         fetchNews();
-        dispatch(fetchPointInfo()); 
-    }, [fetchNews, dispatch]);
+        // 포인트 정보는 HomeScreen에서 관리하므로 여기서는 호출하지 않음
+        // dispatch(fetchPointInfo());
+    }, [fetchNews]);
 
     if (isLoading) {
         return (
@@ -186,9 +203,6 @@ export default function EcoNewsList() {
                             /<[^>]*>/g,
                             ''
                         );
-
-                    
-                        console.log(`📄 ${cleanTitle.substring(0, 20)}... → isRead: ${isRead}`);
 
                         return (
                             <a

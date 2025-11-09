@@ -15,7 +15,10 @@ export async function getMyPageData() {
             Authorization: `Bearer ${token}`,
         },
     });
-
+    console.log(
+        'getMyPageData response.data',
+        JSON.stringify(response.data, null, 2)
+    );
     const result = response.data;
     if (result.status !== 'SUCCESS') {
         throw new Error(result.message || '정보를 가져올 수 없습니다');
@@ -36,6 +39,10 @@ export async function getMyProfile() {
     const response = await api.get('/member/me', {
         headers: { Authorization: `Bearer ${token}` },
     });
+    console.log(
+        'getMyProfile response.data',
+        JSON.stringify(response.data, null, 2)
+    );
     const result = response.data;
     if (result.status && result.status !== 'SUCCESS') {
         throw new Error(result.message || '프로필을 가져올 수 없습니다');
