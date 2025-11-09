@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { addShopVoucher } from '../../util/pointApi';
+import { uploadImageToFirebase } from '../../util/imageUpload';
+import { Upload, X } from 'lucide-react';
 
 const ShopForm = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState('');
     const [imageUrl, setImageUrl] = useState('');
     const [price, setPrice] = useState('');
@@ -10,6 +13,78 @@ const ShopForm = () => {
     const [category, setCategory] = useState('');
     const [brand, setBrand] = useState('');
     const [popular, setPopular] = useState(false);
+    const [previewImage, setPreviewImage] = useState('');
+    const [selectedFile, setSelectedFile] = useState(null);
+    const fileInputRef = useRef(null);
+
+    // 파일 선택 핸들러
+    const handleFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // 파일 크기 검증 (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError('이미지 파일은 5MB 이하여야 합니다.');
+            return;
+        }
+
+        // 파일 타입 검증
+        if (!file.type.startsWith('image/')) {
+            setError('이미지 파일만 업로드 가능합니다.');
+            return;
+        }
+
+        setSelectedFile(file);
+        setError('');
+
+        // 미리보기 생성
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setPreviewImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // 이미지 업로드 핸들러
+    const handleImageUpload = async () => {
+        if (!selectedFile) {
+            setError('이미지 파일을 선택해주세요.');
+            return;
+        }
+
+        setIsUploading(true);
+        setError('');
+
+        try {
+            // Firebase Storage에 업로드하고 URL 받기
+            const uploadedUrl = await uploadImageToFirebase(selectedFile, 'shop');
+            
+            // 받은 URL을 imageUrl state에 저장 (이 URL이 서버로 전달됨!)
+            setImageUrl(uploadedUrl);
+            
+            alert('✅ 이미지가 성공적으로 업로드되었습니다!');
+        } catch (err) {
+            console.error('이미지 업로드 실패', err);
+            setError('❌ 이미지 업로드 중 오류가 발생했습니다: ' + err.message);
+            setSelectedFile(null);
+            setPreviewImage('');
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    // 이미지 제거 핸들러
+    const handleRemoveImage = () => {
+        setSelectedFile(null);
+        setPreviewImage('');
+        setImageUrl('');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -51,6 +126,11 @@ const ShopForm = () => {
             setCategory('');
             setBrand('');
             setPopular(false);
+            setSelectedFile(null);
+            setPreviewImage('');
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         } catch (err) {
             console.error('상품 추가 실패', err);
 
@@ -119,20 +199,99 @@ const ShopForm = () => {
                     </p>
                 </div>
 
+                {/* 이미지 업로드 섹션 */}
                 <div>
                     <label className='block font-medium text-gray-700 mb-1'>
-                        이미지 URL
+                        상품 이미지 <span className='text-gray-400'>(선택사항)</span>
                     </label>
-                    <input
-                        type='url'
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
-                        disabled={isLoading}
-                        className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
-                        placeholder='https://example.com/image.png'
-                    />
+                    
+                    <div className='space-y-3'>
+                        {/* 파일 선택 */}
+                        <div>
+                            <input
+                                ref={fileInputRef}
+                                type='file'
+                                accept='image/*'
+                                onChange={handleFileSelect}
+                                disabled={isLoading || isUploading}
+                                className='hidden'
+                                id='shop-image-upload'
+                            />
+                            <label
+                                htmlFor='shop-image-upload'
+                                className={`flex items-center justify-center w-full border-2 border-dashed rounded-lg p-4 cursor-pointer transition ${
+                                    isUploading || isLoading
+                                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
+                                        : 'border-green-400 hover:border-green-500 hover:bg-green-50'
+                                }`}
+                            >
+                                <Upload className='w-5 h-5 mr-2 text-green-500' />
+                                <span className='text-gray-700'>
+                                    {isUploading ? '업로드 중...' : '이미지 파일 선택'}
+                                </span>
+                            </label>
+                        </div>
+
+                        {/* 업로드 버튼 (파일 선택 후) */}
+                        {selectedFile && !imageUrl && (
+                            <button
+                                type='button'
+                                onClick={handleImageUpload}
+                                disabled={isUploading || isLoading}
+                                className='w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition disabled:bg-gray-400 disabled:cursor-not-allowed'
+                            >
+                                {isUploading ? 'Firebase에 업로드 중...' : '이미지 업로드'}
+                            </button>
+                        )}
+
+                        {/* 이미지 미리보기 */}
+                        {(previewImage || imageUrl) && (
+                            <div className='relative inline-block'>
+                                <img
+                                    src={previewImage || imageUrl}
+                                    alt='미리보기'
+                                    className='w-32 h-32 object-cover rounded-lg border-2 border-gray-200'
+                                />
+                                <button
+                                    type='button'
+                                    onClick={handleRemoveImage}
+                                    disabled={isLoading || isUploading}
+                                    className='absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 disabled:bg-gray-400'
+                                >
+                                    <X className='w-4 h-4' />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* 업로드 완료 메시지 */}
+                        {imageUrl && imageUrl.startsWith('https://firebasestorage.googleapis.com') && (
+                            <div className='text-sm text-green-600 bg-green-50 p-2 rounded'>
+                                ✅ Firebase Storage에 업로드 완료
+                            </div>
+                        )}
+
+                        {/* 또는 URL 직접 입력 */}
+                        <div className='relative'>
+                            <div className='absolute inset-0 flex items-center'>
+                                <div className='w-full border-t border-gray-300'></div>
+                            </div>
+                            <div className='relative flex justify-center text-sm'>
+                                <span className='px-2 bg-white text-gray-500'>또는 URL 직접 입력</span>
+                            </div>
+                        </div>
+
+                        <input
+                            type='text'
+                            value={imageUrl}
+                            onChange={(e) => setImageUrl(e.target.value)}
+                            disabled={isLoading || isUploading}
+                            className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
+                            placeholder='https://firebasestorage.googleapis.com/... 또는 다른 URL'
+                        />
+                    </div>
+                    
                     <p className='text-xs text-gray-500 mt-1'>
-                        상품 이미지의 URL을 입력하세요. (선택사항)
+                        상품 이미지를 업로드하거나 URL을 직접 입력하세요. (최대 5MB, 선택사항)
                     </p>
                 </div>
 
@@ -191,7 +350,7 @@ const ShopForm = () => {
                 <div className='pt-4'>
                     <button
                         type='submit'
-                        disabled={isLoading}
+                        disabled={isLoading || isUploading}
                         className='w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-md shadow-md transition disabled:bg-gray-400 disabled:cursor-not-allowed'
                     >
                         {isLoading ? (
