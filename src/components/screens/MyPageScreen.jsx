@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchMyPageData, logout } from '../../store/slices/userSlice';
-import { calculateEarnedBadges } from '../../store/slices/badgeSlice';
+import { getBadges } from '../../api/badgeApi';
 import api from '../../api/axios';
 
 const themeColor = '#96cb6f';
@@ -41,18 +41,17 @@ export default function MyPageScreen({ onNavigate }) {
     const { isLoggedIn, profile, stats, ranking, loading, error } = useSelector(
         (s) => s.user
     );
-    const { allBadges, earnedIds } = useSelector((state) => state.badge);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [myBadge, setMyBadge] = useState(null); // 초기값을 null로 변경
 
     const [showSetting, setShowSetting] = useState(false);
-    const [showLogoutModal, setShowLogoutModal] = useState(false); // 로그아웃 모달 상태
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     // 관리자 권한 확인
     const checkAdminStatus = async () => {
         const token = localStorage.getItem('token');
         const memberId = localStorage.getItem('memberId');
 
-        // memberId가 1인 경우만 API 호출
         if (!token || memberId !== '1') {
             setIsAdmin(false);
             return;
@@ -77,47 +76,41 @@ export default function MyPageScreen({ onNavigate }) {
         }
     };
 
-    //  현재 획득한 최고 레벨 뱃지 찾기
-    const myBadge = useMemo(() => {
-        const earnedBadges = allBadges.filter((badge) =>
-            earnedIds.includes(badge.id)
-        );
-
-        if (earnedBadges.length === 0) {
-            return allBadges[0] || { name: '첫 발자국' };
+    // 선택된 뱃지 가져오기
+    const fetchSelectedBadge = async () => {
+        try {
+            const badges = await getBadges();
+            const selected = badges.find((badge) => badge.isSelected);
+            // 선택된 뱃지가 있을 때만 설정
+            if (selected) {
+                setMyBadge(selected);
+            } else {
+                setMyBadge(null); // 선택된 뱃지가 없으면 null
+            }
+        } catch (err) {
+            console.error('선택된 뱃지 조회 실패', err);
+            setMyBadge(null);
         }
-
-        return earnedBadges.reduce((highest, current) =>
-            current.requiredPoint > highest.requiredPoint ? current : highest
-        );
-    }, [allBadges, earnedIds]);
+    };
 
     useEffect(() => {
         dispatch(fetchMyPageData());
+        fetchSelectedBadge();
     }, [dispatch]);
 
-    // 컴포넌트 마운트 시 관리자 권한 확인
     useEffect(() => {
         checkAdminStatus();
     }, []);
-
-    useEffect(() => {
-        if (stats.totalPoint !== undefined && stats.totalPoint !== null) {
-            dispatch(calculateEarnedBadges(stats.totalPoint));
-        }
-    }, [dispatch, stats.totalPoint]);
 
     const navigate = (tab) => {
         if (typeof onNavigate === 'function') return onNavigate(tab);
         dispatch(setActiveTab(tab));
     };
 
-    //  로그아웃 모달 열기
     const handleLogout = () => {
         setShowLogoutModal(true);
     };
 
-    // 로그아웃 실행
     const confirmLogout = () => {
         dispatch(logout());
         navigate('home');
@@ -217,13 +210,16 @@ export default function MyPageScreen({ onNavigate }) {
                             <p className='text-gray-600 text-sm text-left'>
                                 {profile.email || '이메일 없음'}
                             </p>
-                            <button
-                                onClick={() => navigate('badge')}
-                                className='flex items-center gap-2 mt-2 bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-3 py-1 rounded-full text-sm hover:bg-opacity-20 transition-colors'
-                            >
-                                <span>🌱 {myBadge.name}</span>
-                                <span>→</span>
-                            </button>
+                            {/* 선택된 뱃지가 있을 때만 표시 */}
+                            {myBadge && (
+                                <button
+                                    onClick={() => navigate('badge')}
+                                    className='flex items-center gap-2 mt-2 bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] px-3 py-1 rounded-full text-sm hover:bg-opacity-20 transition-colors'
+                                >
+                                    <span>🌱 {myBadge.name}</span>
+                                    <span>→</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                     <div className='border-t border-gray-200 my-4'></div>
