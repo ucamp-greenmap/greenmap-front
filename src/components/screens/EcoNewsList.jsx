@@ -7,10 +7,6 @@ import news3 from '../../assets/news3.png';
 import news4 from '../../assets/news4.png';
 import api from '../../api/axios';
 
-/**
- * @param {object} props
- * @param {string} props.placeholder
- */
 export default function EcoNewsList() {
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(true);
@@ -21,9 +17,6 @@ export default function EcoNewsList() {
     const [leftTimes, setLeftTimes] = useState(3);
     const [toast, setToast] = useState(null);
 
-    // ------------------------------------
-    // 서버에서 뉴스 목록을 불러오는 함수 (GET /news)
-    // ------------------------------------
     const fetchNews = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -37,23 +30,21 @@ export default function EcoNewsList() {
                 );
             }
 
-            if (result.data) {
+            if (result.data && Array.isArray(result.data)) {
                 console.log('📡 서버 응답:', result.data);
                 
-                // leftTimes 추출
-                if (typeof result.data.leftTimes === 'number') {
-                    setLeftTimes(result.data.leftTimes);
+        
+                const newsItems = result.data.filter(item => item.title);
+                const leftTimesItem = result.data.find(item => item.leftTimes !== undefined);
+                
+                if (leftTimesItem && typeof leftTimesItem.leftTimes === 'number') {
+                    setLeftTimes(leftTimesItem.leftTimes);
                 }
 
-                
-                if (result.data.items && Array.isArray(result.data.items)) {
-                    console.log('📰 뉴스 목록:', result.data.items);
-                    setNewsList(result.data.items);
-                } else {
-                    console.log('⚠️ items가 배열이 아니거나 없음');
-                    setNewsList([]);
-                }
+                console.log('📰 뉴스 목록:', newsItems);
+                setNewsList(newsItems);
             } else {
+                console.log('⚠️ data가 배열이 아니거나 없음');
                 setNewsList([]);
             }
         } catch (err) {
@@ -68,9 +59,6 @@ export default function EcoNewsList() {
         }
     }, []);
 
-    // ------------------------------------
-    // 뉴스 읽기 처리 및 포인트 적립 (POST /news)
-    // ------------------------------------
     const handleReadArticle = async (articleTitle) => {
         if (leftTimes <= 0) {
             setToast('오늘의 뉴스 보상 한도에 도달했습니다');
@@ -92,22 +80,9 @@ export default function EcoNewsList() {
             }
 
             if (result.status === 'SUCCESS') {
-                setLeftTimes((prev) => Math.max(0, prev - 1));
-
-                setNewsList((prev) =>
-                    prev.map((article) => {
-                        const articleCleanTitle = article.title.replace(
-                            /<[^>]*>/g,
-                            ''
-                        );
-                        if (articleCleanTitle === articleTitle) {
-                            return { ...article, isRead: true };
-                        }
-                        return article;
-                    })
-                );
-
-    
+                // 서버에서 최신 뉴스 목록 다시 가져오기 (isRead 상태 포함)
+                await fetchNews();
+                
                 dispatch(fetchPointInfo());
 
                 setToast('+5P 획득');
@@ -145,7 +120,6 @@ export default function EcoNewsList() {
 
     return (
         <div className='space-y-6'>
-            {/*헤더 */}
             <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
                     <div className='text-[#4CAF50] text-xl'>📰</div>
@@ -158,7 +132,6 @@ export default function EcoNewsList() {
                 </div>
             </div>
 
-            {/* 리스트 */}
             <div className='space-y-3'>
                 {newsList.length === 0 ? (
                     <div className='text-center py-8 text-gray-500'>
@@ -173,7 +146,6 @@ export default function EcoNewsList() {
                             ''
                         );
 
-                    
                         console.log(`📄 ${cleanTitle.substring(0, 20)}... → isRead: ${isRead}`);
 
                         return (
@@ -235,7 +207,6 @@ export default function EcoNewsList() {
                 )}
             </div>
 
-            {/** Toast 알림 */}
             {toast && (
                 <div
                     className='fixed left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg shadow z-50 transition-opacity duration-300'
