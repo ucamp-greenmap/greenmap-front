@@ -7,6 +7,10 @@ import news3 from '../../assets/news3.png';
 import news4 from '../../assets/news4.png';
 import api from '../../api/axios';
 
+/**
+ * @param {object} props
+ * @param {string} props.placeholder
+ */
 export default function EcoNewsList() {
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(true);
@@ -17,6 +21,9 @@ export default function EcoNewsList() {
     const [leftTimes, setLeftTimes] = useState(3);
     const [toast, setToast] = useState(null);
 
+    // ------------------------------------
+    // 서버에서 뉴스 목록을 불러오는 함수 (GET /news)
+    // ------------------------------------
     const fetchNews = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -30,26 +37,37 @@ export default function EcoNewsList() {
                 );
             }
 
-            if (result.data && Array.isArray(result.data)) {
+            if (result.data) {
                 console.log('📡 서버 응답:', result.data);
+                
+                // ✅ leftTimes 추출 (배열의 첫 번째 객체에 있음)
+                console.log('Array.isArray(result.data) : ', Array.isArray(result.data.items))
+                console.log('result.data.length > 0 : ', result.data.items.length > 0)
+                if (Array.isArray(result.data.items) && result.data.items.length > 0) {
+                    const firstItem = result.data.items[0];
 
-                const newsItems = result.data
-                    .filter(item => typeof item === 'object' && item.title)
-                    .map(item => ({
-                        ...item,
-                        isRead: Boolean(item.read),
+                    console.log('firstItem : ', firstItem)
+
+                    console.log('leftTimes : ', firstItem.leftTimes)
+                    
+                    // leftTimes가 있으면 설정
+                    if (typeof result.data.leftTimes === 'number') {
+                        setLeftTimes(result.data.leftTimes);
+                    }
+                    
+                    // 나머지는 뉴스 목록 (첫 번째 항목 제외)
+                    // ✅ read를 isRead로 변환
+                    const newsItems = result.data.items.map(article => ({
+                        ...article,
+                        isRead: article.read === true || article.isRead === true
                     }));
-
-                const leftTimesItem = result.data.find(item => item.leftTimes !== undefined);
-
-                if (leftTimesItem && typeof leftTimesItem.leftTimes === 'number') {
-                    setLeftTimes(leftTimesItem.leftTimes);
+                    console.log('📰 뉴스 목록:', newsItems);
+                    setNewsList(newsItems);
+                } else {
+                    console.log('⚠️ data가 배열이 아니거나 비어있음');
+                    setNewsList([]);
                 }
-
-                console.log('📰 뉴스 목록:', newsItems);
-                setNewsList(newsItems);
             } else {
-                console.log('⚠️ data가 배열이 아니거나 없음');
                 setNewsList([]);
             }
         } catch (err) {
@@ -64,6 +82,9 @@ export default function EcoNewsList() {
         }
     }, []);
 
+    // ------------------------------------
+    // 뉴스 읽기 처리 및 포인트 적립 (POST /news)
+    // ------------------------------------
     const handleReadArticle = async (articleTitle) => {
         if (leftTimes <= 0) {
             setToast('오늘의 뉴스 보상 한도에 도달했습니다');
@@ -85,8 +106,24 @@ export default function EcoNewsList() {
             }
 
             if (result.status === 'SUCCESS') {
-                await fetchNews();
+                setLeftTimes((prev) => Math.max(0, prev - 1));
+
+                setNewsList((prev) =>
+                    prev.map((article) => {
+                        const articleCleanTitle = article.title.replace(
+                            /<[^>]*>/g,
+                            ''
+                        );
+                        if (articleCleanTitle === articleTitle) {
+                            return { ...article, isRead: true };
+                        }
+                        return article;
+                    })
+                );
+
+    
                 dispatch(fetchPointInfo());
+
                 setToast('+5P 획득');
             }
         } catch (err) {
@@ -101,7 +138,7 @@ export default function EcoNewsList() {
 
     useEffect(() => {
         fetchNews();
-        dispatch(fetchPointInfo());
+        dispatch(fetchPointInfo()); 
     }, [fetchNews, dispatch]);
 
     if (isLoading) {
@@ -122,6 +159,7 @@ export default function EcoNewsList() {
 
     return (
         <div className='space-y-6'>
+            {/*헤더 */}
             <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
                     <div className='text-[#4CAF50] text-xl'>📰</div>
@@ -134,6 +172,7 @@ export default function EcoNewsList() {
                 </div>
             </div>
 
+            {/* 리스트 */}
             <div className='space-y-3'>
                 {newsList.length === 0 ? (
                     <div className='text-center py-8 text-gray-500'>
@@ -143,8 +182,13 @@ export default function EcoNewsList() {
                     newsList.map((article, index) => {
                         const isRead = article.isRead === true;
                         const canEarnPoints = !isRead && leftTimes > 0;
+                        const cleanTitle = article.title.replace(
+                            /<[^>]*>/g,
+                            ''
+                        );
 
-                        console.log(`📄 ${article.title.substring(0, 20)}... → isRead: ${isRead}`);
+                    
+                        console.log(`📄 ${cleanTitle.substring(0, 20)}... → isRead: ${isRead}`);
 
                         return (
                             <a
@@ -154,7 +198,7 @@ export default function EcoNewsList() {
                                 rel='noopener noreferrer'
                                 onClick={() => {
                                     if (canEarnPoints) {
-                                        handleReadArticle(article.title);
+                                        handleReadArticle(cleanTitle);
                                     } else if (leftTimes <= 0 && !isRead) {
                                         setToast(
                                             '오늘의 뉴스 보상 한도에 도달했습니다. '
@@ -170,7 +214,7 @@ export default function EcoNewsList() {
                             >
                                 <img
                                     src={newsImages[index % 4]}
-                                    alt={article.title}
+                                    alt={cleanTitle}
                                     loading='lazy'
                                     className='w-20 h-20 object-cover rounded-xl flex-shrink-0 mr-3'
                                 />
@@ -186,10 +230,13 @@ export default function EcoNewsList() {
                                         )}
                                     </div>
                                     <h3 className='text-gray-900 text-sm mb-1 line-clamp-2'>
-                                        {article.title}
+                                        {cleanTitle}
                                     </h3>
                                     <p className='text-gray-500 text-xs mb-2 line-clamp-1'>
-                                        {article.description}
+                                        {article.description.replace(
+                                            /<[^>]*>/g,
+                                            ''
+                                        )}
                                     </p>
                                     <div className='flex items-center justify-between text-gray-400 text-xs'>
                                         <span>출처: 네이버 뉴스</span>
@@ -202,6 +249,7 @@ export default function EcoNewsList() {
                 )}
             </div>
 
+            {/** Toast 알림 */}
             {toast && (
                 <div
                     className='fixed left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg shadow z-50 transition-opacity duration-300'
