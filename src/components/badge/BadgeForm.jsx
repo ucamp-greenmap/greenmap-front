@@ -131,9 +131,8 @@ const BadgeForm = () => {
                     </label>
                     <input
                         type='text'
-                        value={name}
+                        value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        required
                         disabled={isLoading}
                         className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
                         placeholder='예: 누적 따릉이 100km  (선택사항)'
