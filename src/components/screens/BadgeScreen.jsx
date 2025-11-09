@@ -387,7 +387,10 @@ function BadgeCard({ badge, index }) {
 
                 {/* 설명 */}
                 <p className='text-xs text-gray-500 text-center mb-3 line-clamp-2'>
-                    {badge.description}
+                    {/* description에서 첫 번째 띄어쓰기 이후(=설명)만 표시 */}
+                    {badge.description && badge.description.trim().split(' ').slice(1).join(' ') !== ''
+                        ? badge.description.split(' ').slice(1).join(' ')
+                        : '\u00A0'}
                 </p>
 
                 {/* 진행 바 */}
