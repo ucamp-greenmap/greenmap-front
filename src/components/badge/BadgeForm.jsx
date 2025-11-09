@@ -14,10 +14,10 @@ const BadgeForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
     const [icon, setIcon] = useState('');
     const [category, setCategory] = useState('');
     const [requirement, setRequirement] = useState('');
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -39,7 +39,7 @@ const BadgeForm = () => {
         const badgeData = {
             name: name.trim(),
             requirement: requirementNum,
-            description: category.trim(),
+            description: category.trim() + ' ' + description.trim(),
             image_url: icon.trim(),
         };
 
@@ -52,6 +52,7 @@ const BadgeForm = () => {
             alert('✅ 뱃지가 성공적으로 등록되었습니다!');
             // 폼 초기화
             setName('');
+            setDescription('');
             setIcon('');
             setCategory('');
             setRequirement('');
@@ -111,7 +112,7 @@ const BadgeForm = () => {
 
                 <div>
                     <label className='block font-medium text-gray-700 mb-1'>
-                        뱃지 이름
+                        뱃지 이름 <span className='text-red-500'>*</span>
                     </label>
                     <input
                         type='text'
@@ -126,7 +127,20 @@ const BadgeForm = () => {
 
                 <div>
                     <label className='block font-medium text-gray-700 mb-1'>
-                        요구 포인트
+                        뱃지 설명 <span className='text-white'>*</span>
+                    </label>
+                    <input
+                        type='text'
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        disabled={isLoading}
+                        className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
+                        placeholder='예: 누적 따릉이 100km  (선택사항)'
+                    />
+                </div>
+                <div>
+                    <label className='block font-medium text-gray-700 mb-1'>
+                        요구 포인트 <span className='text-red-500'>*</span>
                     </label>
                     <input
                         type='number'
