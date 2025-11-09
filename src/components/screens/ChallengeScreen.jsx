@@ -657,7 +657,9 @@ function ChallengeCard({
                                 } else if (filter === 'available' && deadline) {
                                     // 참여 가능: 관리자가 입력한 만료 기한
                                     const expiryDate = updatedAt;
-                                    expiryDateStr = new Date(expiryDate).toISOString().split('T')[0];
+                                    expiryDateStr = new Date(expiryDate)
+                                        .toISOString()
+                                        .split('T')[0];
                                 }
 
                                 return expiryDateStr ? (
@@ -686,7 +688,7 @@ function ChallengeCard({
                                                     <Clock className='w-3 h-3' />
                                                     <span>
                                                         {remainingDays > 0
-                                                            ? `남은 ${remainingDays}일`
+                                                            ? `남은 ${expiryDateStr.split('-')[2] - new Date().toISOString().split('T')[0].split('-')[2]}일`
                                                             : '만료됨'}
                                                     </span>
                                                 </div>
