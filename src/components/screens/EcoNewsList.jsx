@@ -24,13 +24,22 @@ export default function EcoNewsList() {
         return userId ? `ecoNewsState_${userId}` : 'ecoNewsState_guest';
     };
 
-    // sessionStorage에서 상태 복원 (사용자별로 구분, 비로그인 사용자도 지원)
-    const getStoredNewsState = (userId) => {
+    // sessionStorage에서 상태 복원 (로그인 사용자만 사용, 현재는 사용하지 않음)
+    // 참고: 로그인 사용자는 서버의 read 상태를 사용하므로 sessionStorage 복원이 불필요
+    const _getStoredNewsState = (userId) => {
         try {
             const storageKey = getStorageKey(userId);
             const stored = sessionStorage.getItem(storageKey);
             if (stored) {
                 const parsed = JSON.parse(stored);
+                // 저장된 memberId와 현재 memberId가 일치하는지 확인 (다른 사용자 데이터 방지)
+                const storedMemberId = parsed.memberId;
+                const currentMemberId = userId || 'guest';
+                if (storedMemberId !== currentMemberId) {
+                    // 다른 사용자의 데이터이므로 삭제
+                    sessionStorage.removeItem(storageKey);
+                    return null;
+                }
                 // 1시간 이내의 데이터만 유효 (세션 유지)
                 if (Date.now() - parsed.timestamp < 60 * 60 * 1000) {
                     return parsed.data;
@@ -69,24 +78,37 @@ export default function EcoNewsList() {
     // 컴포넌트 레벨에서 한 번만 호출되도록 추적
     const hasFetchedNewsRef = useRef(false);
 
-    // 사용자 변경 시 ref 초기화 (다른 사용자로 로그인했을 때)
+    // 사용자 변경 시 ref 초기화 및 상태 초기화 (다른 사용자로 로그인했을 때)
     const prevMemberIdRef = useRef(memberId);
     useEffect(() => {
-        if (prevMemberIdRef.current !== memberId) {
-            // 사용자가 변경되었으면 ref 초기화하여 새로 API 호출
+        const prevMemberId = prevMemberIdRef.current;
+        if (prevMemberId !== memberId) {
+            // 사용자가 변경되었으면 이전 사용자의 sessionStorage 데이터 정리
+            if (prevMemberId) {
+                try {
+                    const prevStorageKey = getStorageKey(prevMemberId);
+                    sessionStorage.removeItem(prevStorageKey);
+                } catch (e) {
+                    console.error('이전 사용자 데이터 정리 실패:', e);
+                }
+            }
+
+            // ref 초기화하여 새로 API 호출
             hasFetchedNewsRef.current = false;
             prevMemberIdRef.current = memberId;
             // 상태도 초기화
             setNewsList([]);
             setLeftTimes(3);
+            setIsLoading(true);
+            setError(null);
         }
     }, [memberId]);
 
-    // 상태가 변경될 때마다 sessionStorage에 저장 (읽은 상태 유지용, 비로그인 사용자도 지원)
+    // 상태가 변경될 때마다 sessionStorage에 저장 (로그인 사용자만)
     useEffect(() => {
-        if (newsList.length > 0) {
-            // memberId가 있으면 사용자별로, 없으면 guest로 저장
-            saveNewsState(newsList, leftTimes, memberId || 'guest');
+        if (newsList.length > 0 && memberId) {
+            // 로그인 사용자만 sessionStorage에 저장
+            saveNewsState(newsList, leftTimes, memberId);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [newsList, leftTimes, memberId]);
@@ -95,21 +117,8 @@ export default function EcoNewsList() {
     // 뉴스 읽기 처리 및 포인트 적립 (POST /news)
     // ------------------------------------
     const handleReadArticle = async (articleTitle) => {
-        // 로그인하지 않은 사용자는 포인트를 받을 수 없지만, 뉴스는 읽을 수 있음
+        // 비로그인 사용자는 읽기만 가능 (읽음 처리 및 포인트 적립 불가)
         if (!memberId) {
-            // 비로그인 사용자: 읽은 상태만 업데이트 (포인트 없음)
-            setNewsList((prev) =>
-                prev.map((article) => {
-                    const articleCleanTitle = article.title.replace(
-                        /<[^>]*>/g,
-                        ''
-                    );
-                    if (articleCleanTitle === articleTitle) {
-                        return { ...article, isRead: true };
-                    }
-                    return article;
-                })
-            );
             return;
         }
 
@@ -180,11 +189,19 @@ export default function EcoNewsList() {
         const loadNews = async () => {
             try {
                 const response = await api.get('/news');
-                console.log(
-                    'fetchNews response.data',
-                    JSON.stringify(response.data, null, 2)
-                );
                 const result = response.data;
+
+                // 디버깅: 서버 응답 확인 (사용자별 read 상태 확인용)
+                console.log('[뉴스 API 응답]', {
+                    memberId: memberId || 'guest',
+                    items: result.data?.items?.map((item) => ({
+                        title: item.title
+                            ?.replace(/<[^>]*>/g, '')
+                            .substring(0, 30),
+                        read: item.read,
+                        isRead: item.isRead,
+                    })),
+                });
 
                 if (result.status !== 'SUCCESS') {
                     throw new Error(
@@ -193,8 +210,6 @@ export default function EcoNewsList() {
                 }
 
                 if (result.data) {
-                    console.log('📡 서버 응답:', result.data);
-
                     if (
                         Array.isArray(result.data.items) &&
                         result.data.items.length > 0
@@ -205,40 +220,28 @@ export default function EcoNewsList() {
                                 ? result.data.leftTimes
                                 : 3;
 
-                        // 저장된 읽은 상태 가져오기 (sessionStorage에서, 현재 사용자 또는 guest)
-                        const currentUserId = memberId || 'guest';
-                        const storedState = getStoredNewsState(currentUserId);
-                        const storedReadTitles = new Set();
-                        if (storedState?.newsList) {
-                            storedState.newsList.forEach((article) => {
-                                if (article.isRead) {
-                                    const cleanTitle = article.title.replace(
-                                        /<[^>]*>/g,
-                                        ''
-                                    );
-                                    storedReadTitles.add(cleanTitle);
-                                }
-                            });
-                        }
-
                         // 서버에서 받은 뉴스에 읽은 상태 적용
-                        // 서버의 read 값 또는 저장된 읽은 상태 중 하나라도 true면 읽은 것으로 표시
-                        const newsItems = result.data.items.map((article) => {
-                            const cleanTitle = article.title.replace(
-                                /<[^>]*>/g,
-                                ''
-                            );
-                            // 서버에서 read: true로 오거나, sessionStorage에 읽은 상태가 저장되어 있으면 읽은 것으로 표시
-                            const isReadByServer =
-                                article.read === true ||
-                                article.isRead === true;
-                            const isReadByStorage =
-                                storedReadTitles.has(cleanTitle);
+                        // 로그인 사용자: 서버의 read 값만 사용 (서버가 사용자별 읽은 상태를 관리)
+                        // 비로그인 사용자: 읽은 상태 없음 (항상 false, 읽기만 가능)
 
-                            return {
-                                ...article,
-                                isRead: isReadByServer || isReadByStorage,
-                            };
+                        const newsItems = result.data.items.map((article) => {
+                            // 로그인 사용자: 서버 값만 사용
+                            if (memberId) {
+                                const isReadByServer =
+                                    article.read === true ||
+                                    article.isRead === true;
+                                return {
+                                    ...article,
+                                    isRead: Boolean(isReadByServer),
+                                };
+                            }
+                            // 비로그인 사용자: 읽은 상태 없음 (읽기만 가능)
+                            else {
+                                return {
+                                    ...article,
+                                    isRead: false,
+                                };
+                            }
                         });
 
                         setNewsList(newsItems);
@@ -271,7 +274,6 @@ export default function EcoNewsList() {
         };
 
         loadNews();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [memberId]); // memberId가 변경될 때마다 실행 (다른 사용자로 로그인 시)
 
     if (isLoading) {
@@ -329,17 +331,14 @@ export default function EcoNewsList() {
                                 target='_blank'
                                 rel='noopener noreferrer'
                                 onClick={() => {
-                                    // 비로그인 사용자도 뉴스를 읽을 수 있음
-                                    if (!memberId) {
-                                        // 비로그인: 읽은 상태만 업데이트
-                                        handleReadArticle(cleanTitle);
-                                    } else if (canEarnPoints) {
+                                    // 로그인 사용자만 포인트 적립 가능
+                                    if (memberId && canEarnPoints) {
                                         // 로그인: 포인트 적립 가능
                                         handleReadArticle(cleanTitle);
                                     } else if (
+                                        memberId &&
                                         leftTimes <= 0 &&
-                                        !isRead &&
-                                        memberId
+                                        !isRead
                                     ) {
                                         // 로그인했지만 한도 초과
                                         setToast(
@@ -347,6 +346,7 @@ export default function EcoNewsList() {
                                         );
                                         setTimeout(() => setToast(null), 2500);
                                     }
+                                    // 비로그인 사용자는 클릭해도 아무 동작 없음 (링크만 열림)
                                 }}
                                 className={`flex items-start w-full bg-white rounded-2xl overflow-hidden p-3 shadow-sm hover:shadow-md transition-all border-2 ${
                                     isRead
