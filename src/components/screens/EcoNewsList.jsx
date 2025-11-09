@@ -32,11 +32,16 @@ export default function EcoNewsList() {
 
             if (result.data && Array.isArray(result.data)) {
                 console.log('📡 서버 응답:', result.data);
-                
-        
-                const newsItems = result.data.filter(item => item.title);
+
+                const newsItems = result.data
+                    .filter(item => typeof item === 'object' && item.title)
+                    .map(item => ({
+                        ...item,
+                        isRead: Boolean(item.read),
+                    }));
+
                 const leftTimesItem = result.data.find(item => item.leftTimes !== undefined);
-                
+
                 if (leftTimesItem && typeof leftTimesItem.leftTimes === 'number') {
                     setLeftTimes(leftTimesItem.leftTimes);
                 }
@@ -80,11 +85,8 @@ export default function EcoNewsList() {
             }
 
             if (result.status === 'SUCCESS') {
-                // 서버에서 최신 뉴스 목록 다시 가져오기 (isRead 상태 포함)
                 await fetchNews();
-                
                 dispatch(fetchPointInfo());
-
                 setToast('+5P 획득');
             }
         } catch (err) {
@@ -99,7 +101,7 @@ export default function EcoNewsList() {
 
     useEffect(() => {
         fetchNews();
-        dispatch(fetchPointInfo()); 
+        dispatch(fetchPointInfo());
     }, [fetchNews, dispatch]);
 
     if (isLoading) {
@@ -141,12 +143,8 @@ export default function EcoNewsList() {
                     newsList.map((article, index) => {
                         const isRead = article.isRead === true;
                         const canEarnPoints = !isRead && leftTimes > 0;
-                        const cleanTitle = article.title.replace(
-                            /<[^>]*>/g,
-                            ''
-                        );
 
-                        console.log(`📄 ${cleanTitle.substring(0, 20)}... → isRead: ${isRead}`);
+                        console.log(`📄 ${article.title.substring(0, 20)}... → isRead: ${isRead}`);
 
                         return (
                             <a
@@ -156,7 +154,7 @@ export default function EcoNewsList() {
                                 rel='noopener noreferrer'
                                 onClick={() => {
                                     if (canEarnPoints) {
-                                        handleReadArticle(cleanTitle);
+                                        handleReadArticle(article.title);
                                     } else if (leftTimes <= 0 && !isRead) {
                                         setToast(
                                             '오늘의 뉴스 보상 한도에 도달했습니다. '
@@ -172,7 +170,7 @@ export default function EcoNewsList() {
                             >
                                 <img
                                     src={newsImages[index % 4]}
-                                    alt={cleanTitle}
+                                    alt={article.title}
                                     loading='lazy'
                                     className='w-20 h-20 object-cover rounded-xl flex-shrink-0 mr-3'
                                 />
@@ -188,13 +186,10 @@ export default function EcoNewsList() {
                                         )}
                                     </div>
                                     <h3 className='text-gray-900 text-sm mb-1 line-clamp-2'>
-                                        {cleanTitle}
+                                        {article.title}
                                     </h3>
                                     <p className='text-gray-500 text-xs mb-2 line-clamp-1'>
-                                        {article.description.replace(
-                                            /<[^>]*>/g,
-                                            ''
-                                        )}
+                                        {article.description}
                                     </p>
                                     <div className='flex items-center justify-between text-gray-400 text-xs'>
                                         <span>출처: 네이버 뉴스</span>
