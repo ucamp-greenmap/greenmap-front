@@ -12,6 +12,9 @@ import {
 import { formatDistance, calculateDistance } from '../../util/location';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 
+const DEFAULT_BADGE_IMAGE =
+    'https://em-content.zobj.net/thumbs/120/apple/325/leaf-fluttering-in-wind_1f343.png';
+
 const ECO_TIPS = [
     {
         icon: '🛍️',
@@ -384,12 +387,27 @@ export default function HomeScreen({ onNavigate }) {
                                         />
                                     </div>
                                     {/* 뱃지 이미지 - 프로필 이미지 오른쪽 하단 */}
-                                    {profile.badgeUrl && (
-                                        <div className='absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg'>
+                                    {(profile.badgeUrl ||
+                                        profile.image?.imageUrl) && (
+                                        <div className='absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg overflow-hidden'>
                                             <img
-                                                src={profile.badgeUrl}
+                                                src={
+                                                    profile.badgeUrl ||
+                                                    profile.image?.imageUrl ||
+                                                    DEFAULT_BADGE_IMAGE
+                                                }
                                                 alt='뱃지'
-                                                className='w-5 h-5 object-contain'
+                                                className='w-5 h-5 object-cover'
+                                                onError={(e) => {
+                                                    // 이미지 로드 실패 시 기본 이미지로 설정
+                                                    if (
+                                                        e.target.src !==
+                                                        DEFAULT_BADGE_IMAGE
+                                                    ) {
+                                                        e.target.src =
+                                                            DEFAULT_BADGE_IMAGE;
+                                                    }
+                                                }}
                                             />
                                         </div>
                                     )}
