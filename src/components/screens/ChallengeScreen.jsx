@@ -273,7 +273,7 @@ function ChallengeCard({
 }) {
     const [showModal, setShowModal] = useState(false);
     const [selectedType, setSelectedType] = useState(null);
-    // ✅ 남은시간 계산 및 실시간 갱신 (진행중 + 참여가능)
+    //  남은시간 계산 및 실시간 갱신 (진행중 + 참여가능)
     const [remainingTime, setRemainingTime] = useState('');
     const [isExpired, setIsExpired] = useState(false);
 
@@ -312,7 +312,7 @@ function ChallengeCard({
             const minutes = Math.floor((diff / (1000 * 60)) % 60);
             const seconds = Math.floor((diff / 1000) % 60);
 
-            // ✅ 형식: “3일 4시간 22분 18초”
+            //  형식: “3일 4시간 22분 18초”
             setRemainingTime(`${days}일 ${hours}시간 ${minutes}분 ${seconds}초`);
             setIsExpired(false);
         };
