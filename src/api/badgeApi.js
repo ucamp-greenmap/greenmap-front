@@ -18,11 +18,11 @@ export async function getBadges() {
         }
     } catch (error) {
         console.error('뱃지 조회 실패', error);
-        
+
         if (error.response?.data?.message) {
             throw new Error(error.response.data.message);
         }
-        
+
         throw new Error('뱃지 정보를 불러오는데 실패했습니다.');
     }
 }
