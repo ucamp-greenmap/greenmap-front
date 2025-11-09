@@ -42,18 +42,23 @@ const styles = `
   .btn:disabled{ opacity:.5; cursor:not-allowed; }
   .valid-text{ font-size:.88rem; color:#3fa14a; margin-top:6px; margin-left:4px; }
   .invalid-text{ font-size:.88rem; color:#d33b3b; margin-top:6px; margin-left:4px; }
+    button:focus{ outline:none; box-shadow:none; }
 `;
 
 /*  모달 */
-function Modal({ message, type = 'info', onClose, action }) {
+function Modal({ message, type = 'info', onClose, action,setPage,setModal }) {
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    if (action === 'mypage') navigate('/mypage');
-    else if (action === 'home') navigate('/');
-    else if (action === 'login') navigate('/login');
-    onClose();
-  };
+const handleClick = () => {
+
+  if (action === 'mypage') navigate('/mypage');
+  else if (action === 'home') navigate('/');
+  else if (action === 'login') {
+    setModal(null); 
+    setPage('login');  
+  }
+  onClose();
+};
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
@@ -172,13 +177,16 @@ export default function LoginSignupScreen({ onNavigate }) {
         </div>
 
         {modal && (
-          <Modal
-            message={modal.message}
-            type={modal.type}
-            onClose={() => setModal(null)}
-            action={modal.action}
-          />
-        )}
+  <Modal
+    message={modal.message}
+    type={modal.type}
+    onClose={() => setModal(null)}
+    action={modal.action}
+    setPage={setPage} 
+    setModal={setModal}
+  />
+)}
+
       </div>
     </>
   );
@@ -266,7 +274,7 @@ function LoginForm({ setUserInfo, setModal, onNavigate }) {
   );
 }
 
-function SignupForm({ setPage, setModal }) {
+function SignupForm({ setPage, setModal,onBack }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [emailAvailable, setEmailAvailable] = useState(null);
@@ -327,20 +335,20 @@ function SignupForm({ setPage, setModal }) {
   }, [nickname]);
 
   const submitSignup = async () => {
-    try {
-      await api.post('/member', { email, password, nickname });
-      setModal({
-        message: '회원가입 성공! 로그인해주세요',
-        type: 'success',
-        action: 'login',
-      });
-    } catch {
-      setModal({
-        message: '다시 시도해주세요',
-        type: 'error',
-      });
-    }
-  };
+  try {
+    await api.post('/member', { email, password, nickname });
+    console.log("아무거나----------------------")
+    setModal({ message: '회원가입 성공', type: 'success', action: 'login' });
+     setTimeout(() => {
+      setPage('login');  
+    }, 1000);
+  } catch {
+    setModal({
+      message: '다시 시도해주세요',
+      type: 'error',
+    });
+  }
+};
 
   return (
     <form onSubmit={(e) => e.preventDefault()}>
