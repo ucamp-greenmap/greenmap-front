@@ -6,7 +6,10 @@ import React, {
     useCallback,
 } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleBookmark as toggleBookmarkAction } from '../../store/slices/facilitySlice';
+import {
+    toggleBookmark as toggleBookmarkAction,
+    setBookmarkedIds,
+} from '../../store/slices/facilitySlice';
 import { useKakaoMap } from '../../hooks/useKakaoMap';
 import { useMarkers } from '../../hooks/useMarkers';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
@@ -15,6 +18,7 @@ import {
     calculateDistancesForFacilities,
 } from '../../util/location';
 import { getPlaces, convertPlaceToFacility } from '../../util/placeApi';
+import { toggleBookmark, getMyBookmarks } from '../../api/userApi';
 import FilterBar from '../map/FilterBar';
 import CurrentLocationButton from '../map/CurrentLocationButton';
 import BottomSheet from '../map/BottomSheet';
@@ -92,6 +96,33 @@ export default function MapScreen() {
         KAKAO_KEY,
         handleMapClick
     );
+
+    // 북마크 목록 로드
+    useEffect(() => {
+        const loadBookmarks = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    // 로그인하지 않은 경우 북마크 목록 초기화
+                    dispatch(setBookmarkedIds([]));
+                    return;
+                }
+
+                const bookmarks = await getMyBookmarks();
+                // placeId를 facility id 형식으로 변환 (place-${placeId})
+                const bookmarkIds = bookmarks.map(
+                    (bookmark) => `place-${bookmark.placeId}`
+                );
+                dispatch(setBookmarkedIds(bookmarkIds));
+            } catch (error) {
+                console.error('북마크 목록 로드 실패:', error);
+                // 에러 발생 시 빈 배열로 설정
+                dispatch(setBookmarkedIds([]));
+            }
+        };
+
+        loadBookmarks();
+    }, [dispatch]);
 
     // 장소 데이터 로드
     useEffect(() => {
@@ -283,8 +314,46 @@ export default function MapScreen() {
         }
     };
 
-    const toggleBookmarkLocal = (id) => {
-        dispatch(toggleBookmarkAction(id));
+    // facility.id에서 placeId 추출 (place-${placeId} 형식)
+    const getPlaceIdFromFacilityId = (facilityId) => {
+        if (typeof facilityId === 'string' && facilityId.startsWith('place-')) {
+            return parseInt(facilityId.replace('place-', ''), 10);
+        }
+        return null;
+    };
+
+    const toggleBookmarkLocal = async (facilityId) => {
+        try {
+            // 로그인 체크
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('북마크 기능을 사용하려면 로그인이 필요합니다.');
+                return;
+            }
+
+            // facilityId에서 placeId 추출
+            const placeId = getPlaceIdFromFacilityId(facilityId);
+            if (!placeId) {
+                console.error('유효하지 않은 facility ID:', facilityId);
+                return;
+            }
+
+            // API 호출
+            const result = await toggleBookmark(placeId);
+
+            // 성공 시 Redux 상태 업데이트
+            if (result.bookmarked !== undefined) {
+                dispatch(toggleBookmarkAction(facilityId));
+            }
+        } catch (error) {
+            console.error('북마크 토글 실패:', error);
+            // 로그인 에러인 경우 특별 처리
+            if (error.message && error.message.includes('로그인')) {
+                alert('로그인이 필요합니다.');
+            } else {
+                alert(error.message || '북마크 처리에 실패했습니다.');
+            }
+        }
     };
 
     return (
