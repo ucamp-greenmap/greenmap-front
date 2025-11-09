@@ -40,7 +40,7 @@ export default function PointExchangeScreen({ onNavigate }) {
     const { usedLogs, loading: isLoadingLogs } = useUsedPointLogs(true); // 자동 로드
 
     const [activeTab, setActiveTab] = useState('gifticon'); // gifticon or transfer
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [selectedCategory, setSelectedCategory] = useState('전체');
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('popular');
     const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -115,8 +115,10 @@ export default function PointExchangeScreen({ onNavigate }) {
     const filteredGifticons = useMemo(() => {
         let result = gifticons;
 
+        console.log('기프티콘들: ', result);
+
         // 카테고리 필터
-        if (selectedCategory !== 'all') {
+        if (selectedCategory !== '전체') {
             result = result.filter((g) => g.category === selectedCategory);
         }
 
@@ -310,9 +312,9 @@ export default function PointExchangeScreen({ onNavigate }) {
                                         <button
                                             key={cat.id}
                                             onClick={() =>
-                                                setSelectedCategory(cat.id)
+                                                setSelectedCategory(cat.label)
                                             }
-                                            className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-all flex items-center gap-1 ${selectedCategory === cat.id
+                                            className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-all flex items-center gap-1 ${selectedCategory === cat.label
                                                     ? 'bg-[#4CAF50] text-white shadow-md'
                                                     : 'bg-white text-gray-700 hover:bg-gray-50'
                                                 }`}
