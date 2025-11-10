@@ -70,6 +70,7 @@ export default function HomeScreen({ onNavigate }) {
 
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
+    
     // 회원탈퇴 플래그 확인 및 삭제 (회원탈퇴 직후 홈 화면 표시 유지)
     useEffect(() => {
         const accountDeactivated = localStorage.getItem('accountDeactivated');
@@ -79,6 +80,12 @@ export default function HomeScreen({ onNavigate }) {
             localStorage.removeItem('accountDeactivated');
         }
     }, []);
+//콘솔확인
+   useEffect(() => {
+  console.log("📍 Redux 프로필 상태:", profile);
+  console.log("📍 아바타 URL:", profile.avatar);
+  console.log("유저 이미지", profile.image?.imageUrl);
+}, [profile]);
 
     // 토큰 확인 및 초기 데이터 로드
     const [isInitializing, setIsInitializing] = useState(true);
@@ -381,7 +388,7 @@ export default function HomeScreen({ onNavigate }) {
                                 <div className='relative'>
                                     <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
                                         <img
-                                            src={profile.avatar}
+                                            src={profile.avatar||profile.image?.imageUrl||profile.profileImage}
                                             alt='프로필'
                                             className='w-full h-full object-cover'
                                         />

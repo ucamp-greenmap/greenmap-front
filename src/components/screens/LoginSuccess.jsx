@@ -33,8 +33,9 @@ export default function LoginSuccess() {
                             name: res.data.data.nickname,
                             email: res.data.data.email,
                             nickname: res.data.data.nickname,
-                            avatar: res.data.data.imageUrl,
+                            avatar: res.data.data.image.imageUrl,
                             memberId: res.data.data.memberId,
+                            badgeUrl: res.data.data.badgeUrl
                         })
                     );
                     // 포인트 정보 가져오기
