@@ -48,11 +48,10 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                 <h2 className='text-lg font-bold'>랭킹</h2>
             </div>
 
-            <p className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-4">
-                <RefreshCcw className="w-4 h-4" />
+            <p className='flex items-center justify-center gap-2 text-sm text-gray-500 mb-4'>
+                <RefreshCcw className='w-4 h-4' />
                 <span>랭킹은 매월 1일에 초기화됩니다.</span>
             </p>
-
 
             {/* 내 랭킹 표시 (Top 10 이내면 상단 고정 카드 숨김)
                 - 목적: 상위권에 있을 때 중복 노출을 피하고, 리스트/카드에서 자연스럽게 강조
@@ -147,7 +146,10 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                 <div className='relative mx-auto mb-2 w-14 h-14'>
                                                     {ranks[1]?.imageUrl ? (
                                                         <img
-                                                            src={ranks[1].imageUrl}
+                                                            src={
+                                                                ranks[1]
+                                                                    .imageUrl
+                                                            }
                                                             alt='2위 프로필'
                                                             className='w-14 h-14 rounded-full ring-2 ring-gray-300 object-cover'
                                                             referrerPolicy='no-referrer'
@@ -159,7 +161,10 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                     )}
                                                     {ranks[1]?.badgeUrl && (
                                                         <img
-                                                            src={ranks[1].badgeUrl}
+                                                            src={
+                                                                ranks[1]
+                                                                    .badgeUrl
+                                                            }
                                                             alt='뱃지'
                                                             className='absolute -bottom-1 -right-1 w-5 h-5 rounded-full border border-white shadow'
                                                             referrerPolicy='no-referrer'
@@ -167,7 +172,8 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                     )}
                                                 </div>
                                                 <div className='text-sm font-semibold text-gray-900 truncate mb-1'>
-                                                    {ranks[1]?.nickname || '익명'}
+                                                    {ranks[1]?.nickname ||
+                                                        '익명'}
                                                 </div>
                                                 <div className='text-xs text-gray-500'>
                                                     {(
@@ -180,7 +186,8 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                 <div className='mt-1 text-[11px] text-emerald-600 font-medium'>
                                                     탄소{' '}
                                                     {(
-                                                        ranks[1]?.carbonSave || 0
+                                                        ranks[1]?.carbonSave ||
+                                                        0
                                                     ).toFixed(1)}
                                                     kg
                                                 </div>
@@ -189,9 +196,18 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
 
                                         {/* 1위 (👑 중심 강조) */}
                                         <motion.div
-                                            initial={{ scale: 0.95, opacity: 0 }}
-                                            animate={{ scale: 1.05, opacity: 1 }}
-                                            transition={{ duration: 0.6, ease: 'easeOut' }}
+                                            initial={{
+                                                scale: 0.95,
+                                                opacity: 0,
+                                            }}
+                                            animate={{
+                                                scale: 1.05,
+                                                opacity: 1,
+                                            }}
+                                            transition={{
+                                                duration: 0.6,
+                                                ease: 'easeOut',
+                                            }}
                                             className='bg-white ml-1 rounded-2xl border border-emerald-200 shadow-lg p-5 text-center relative overflow-hidden w-[95%] ring-2 ring-emerald-200'
                                         >
                                             <div className='flex items-center justify-center gap-1 text-emerald-700 text-xs font-semibold mb-3'>
@@ -202,7 +218,10 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                 <div className='relative w-20 h-20'>
                                                     {ranks[0]?.imageUrl ? (
                                                         <img
-                                                            src={ranks[0].imageUrl}
+                                                            src={
+                                                                ranks[0]
+                                                                    .imageUrl
+                                                            }
                                                             alt='1위 프로필'
                                                             className='w-20 h-20 rounded-full ring-2 ring-emerald-400 object-cover shadow-md'
                                                             referrerPolicy='no-referrer'
@@ -215,7 +234,10 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
 
                                                     {ranks[0]?.badgeUrl && (
                                                         <img
-                                                            src={ranks[0].badgeUrl}
+                                                            src={
+                                                                ranks[0]
+                                                                    .badgeUrl
+                                                            }
                                                             alt='뱃지'
                                                             className='absolute -bottom-1 -right-1 w-6 h-6 rounded-full border border-white shadow'
                                                             referrerPolicy='no-referrer'
@@ -231,13 +253,21 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                 {ranks[0]?.nickname || '익명'}
                                             </div>
                                             <div className='text-lg font-extrabold text-gray-900'>
-                                                {(ranks[0]?.memberPoint || ranks[0]?.point || 0).toLocaleString()}P
+                                                {(
+                                                    ranks[0]?.memberPoint ||
+                                                    ranks[0]?.point ||
+                                                    0
+                                                ).toLocaleString()}
+                                                P
                                             </div>
                                             <div className='mt-1 text-[11px] text-emerald-700 font-semibold'>
-                                                탄소 {(ranks[0]?.carbonSave || 0).toFixed(1)}kg
+                                                탄소{' '}
+                                                {(
+                                                    ranks[0]?.carbonSave || 0
+                                                ).toFixed(1)}
+                                                kg
                                             </div>
                                         </motion.div>
-
 
                                         {/* 3위 */}
                                         <div className='bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center relative overflow-hidden'>
@@ -248,7 +278,10 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                 <div className='relative mx-auto mb-2 w-14 h-14'>
                                                     {ranks[2]?.imageUrl ? (
                                                         <img
-                                                            src={ranks[2].imageUrl}
+                                                            src={
+                                                                ranks[2]
+                                                                    .imageUrl
+                                                            }
                                                             alt='3위 프로필'
                                                             className='w-14 h-14 rounded-full ring-2 ring-amber-300 object-cover'
                                                             referrerPolicy='no-referrer'
@@ -260,7 +293,10 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                     )}
                                                     {ranks[2]?.badgeUrl && (
                                                         <img
-                                                            src={ranks[2].badgeUrl}
+                                                            src={
+                                                                ranks[2]
+                                                                    .badgeUrl
+                                                            }
                                                             alt='뱃지'
                                                             className='absolute -bottom-1 -right-1 w-5 h-5 rounded-full border border-white shadow'
                                                             referrerPolicy='no-referrer'
@@ -268,7 +304,8 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                     )}
                                                 </div>
                                                 <div className='text-sm font-semibold text-gray-900 truncate mb-1'>
-                                                    {ranks[2]?.nickname || '익명'}
+                                                    {ranks[2]?.nickname ||
+                                                        '익명'}
                                                 </div>
                                                 <div className='text-xs text-gray-700 font-semibold'>
                                                     {(
@@ -281,7 +318,8 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                 <div className='mt-1 text-[11px] text-amber-700 font-medium'>
                                                     탄소{' '}
                                                     {(
-                                                        ranks[2]?.carbonSave || 0
+                                                        ranks[2]?.carbonSave ||
+                                                        0
                                                     ).toFixed(1)}
                                                     kg
                                                 </div>
@@ -322,18 +360,20 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                     transition={{
                                                         delay: index * 0.05,
                                                     }}
-                                                    className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between border ${isMe
-                                                        ? 'border-[#4CAF50]/60'
-                                                        : 'border-gray-100'
-                                                        } hover:border-[#4CAF50]/30 group`}
+                                                    className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between border ${
+                                                        isMe
+                                                            ? 'border-[3px] border-[#4CAF50]/60'
+                                                            : 'border-gray-100'
+                                                    } hover:border-[#4CAF50]/30 group`}
                                                 >
                                                     <div className='flex items-center gap-4 flex-1'>
                                                         {/* 순위 배지 */}
                                                         <div
-                                                            className={`flex items-center justify-center min-w-[44px] h-11 rounded-xl font-bold text-sm transition-all ${isTop10
-                                                                ? 'bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] text-white shadow-md group-hover:scale-110'
-                                                                : 'bg-gray-100 text-gray-600'
-                                                                }`}
+                                                            className={`flex items-center justify-center min-w-[44px] h-11 rounded-xl font-bold text-sm transition-all ${
+                                                                isTop10
+                                                                    ? 'bg-gradient-to-br from-[#4CAF50] to-[#8BC34A] text-white shadow-md group-hover:scale-110'
+                                                                    : 'bg-gray-100 text-gray-600'
+                                                            }`}
                                                         >
                                                             {currentRank}
                                                         </div>
@@ -399,7 +439,8 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                        - 내 항목(isMe)은 경계선 색으로 은은하게 강조 */}
                                                     <div className='text-right ml-4'>
                                                         <div className='font-bold text-gray-900 text-lg'>
-                                                            {currentPoint.toLocaleString()}P
+                                                            {currentPoint.toLocaleString()}
+                                                            P
                                                         </div>
                                                     </div>
                                                 </motion.div>
