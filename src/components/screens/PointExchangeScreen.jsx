@@ -867,7 +867,7 @@ export default function PointExchangeScreen({ onNavigate }) {
 
                             <h3 className="text-xl font-bold mb-2">수령자 정보 입력</h3>
                             <p className="text-gray-600 mb-4 text-sm">
-                                기프티콘을 받을 휴대폰 번호를 입력해주세요 📱
+                                기프티콘을 받을 휴대폰 번호를 입력해주세요
                             </p>
 
                             <input
