@@ -164,7 +164,7 @@ export default function PointHistoryScreen({ onNavigate }) {
             ) : (
                 <div className='space-y-3'>
                     {logs.map((log, index) => {
-                        const isEarned = log.pointAmount > 0;
+                        const isEarned = log.pointAmount >= 0;
                         return (
                             <div
                                 key={`${log.date}-${index}`}
