@@ -14,15 +14,16 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
     const [isSelecting, setIsSelecting] = useState(false);
 
     const handleGoBack = () => {
-        if (onBack) {
-            onBack();
-        } else if (navigation) {
-            navigation.goBack();
-        } else if (onNavigate) {
-            onNavigate('mypage');
-        } else if (window.history.length > 1) {
-            window.history.back();
-        }
+        // if (onBack) {
+        //     onBack();
+        // } else if (navigation) {
+        //     navigation.goBack();
+        // } else if (onNavigate) {
+        //     onNavigate('mypage');
+        // } else if (window.history.length > 1) {
+        //     window.history.back();
+        // }
+        window.history.back();
     };
 
     const fetchBadges = async () => {
@@ -146,15 +147,15 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
                 </div>
 
                 <div className='relative z-10'>
-                    <div className='flex items-center gap-4 mb-6'>
+                    <div className='relative z-10 mb-6'>
                         <button
                             onClick={handleGoBack}
-                            className='p-2 bg-white/20 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm'
+                            className='absolute left-0 top-1/2 -translate-y-1/2 p-2 bg-white/20 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm'
                             aria-label='뒤로가기'
                         >
                             <ArrowLeft className='w-6 h-6 text-white' />
                         </button>
-                        <div className='flex-1'>
+                        <div className='text-center'>
                             <h1 className='text-2xl font-bold mb-1'>
                                 뱃지 컬렉션
                             </h1>
