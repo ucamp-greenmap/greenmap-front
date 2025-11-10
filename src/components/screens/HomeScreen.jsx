@@ -250,7 +250,7 @@ export default function HomeScreen({ onNavigate }) {
                 <div className='flex flex-col items-center mb-6'>
                     <div className='bg-white rounded-full p-5 shadow-xl mb-4'>
                         <div className='w-12 h-12 flex items-center justify-center text-[#4CAF50] text-3xl'>
-                            🌿
+                           <img src="/src/assets/favicon.png" alt="logo" className="w-full h-full object-contain" />
                         </div>
                     </div>
                     <h1 className='text-white text-2xl font-bold mb-1'>
