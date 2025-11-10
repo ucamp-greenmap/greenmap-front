@@ -70,7 +70,6 @@ export default function HomeScreen({ onNavigate }) {
 
     const { isLoggedIn, profile, stats, loading } = useSelector((s) => s.user);
 
-    
     // 회원탈퇴 플래그 확인 및 삭제 (회원탈퇴 직후 홈 화면 표시 유지)
     useEffect(() => {
         const accountDeactivated = localStorage.getItem('accountDeactivated');
@@ -80,12 +79,12 @@ export default function HomeScreen({ onNavigate }) {
             localStorage.removeItem('accountDeactivated');
         }
     }, []);
-//콘솔확인
-   useEffect(() => {
-  console.log("📍 Redux 프로필 상태:", profile);
-  console.log("📍 아바타 URL:", profile.avatar);
-  console.log("유저 이미지", profile.image?.imageUrl);
-}, [profile]);
+    //콘솔확인
+    useEffect(() => {
+        console.log('📍 Redux 프로필 상태:', profile);
+        console.log('📍 아바타 URL:', profile.avatar);
+        console.log('유저 이미지', profile.image?.imageUrl);
+    }, [profile]);
 
     // 토큰 확인 및 초기 데이터 로드
     const [isInitializing, setIsInitializing] = useState(true);
@@ -250,7 +249,11 @@ export default function HomeScreen({ onNavigate }) {
                 <div className='flex flex-col items-center mb-6'>
                     <div className='bg-white rounded-full p-5 shadow-xl mb-4'>
                         <div className='w-12 h-12 flex items-center justify-center text-[#4CAF50] text-3xl'>
-                           <img src="/src/assets/favicon.png" alt="logo" className="w-full h-full object-contain" />
+                            <img
+                                src='/src/assets/favicon.png'
+                                alt='logo'
+                                className='w-full h-full object-contain'
+                            />
                         </div>
                     </div>
                     <h1 className='text-white text-2xl font-bold mb-1'>
@@ -265,7 +268,7 @@ export default function HomeScreen({ onNavigate }) {
                     <input
                         ref={searchInputRef}
                         type='text'
-                        placeholder='지도 검색... (예: LG사이언스파크 E13, 서울식물원 )'
+                        placeholder='지도 검색... (예: 한강공원,광화문)'
                         value={searchQuery}
                         onChange={handleSearchChange}
                         onFocus={() =>
@@ -388,7 +391,11 @@ export default function HomeScreen({ onNavigate }) {
                                 <div className='relative'>
                                     <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
                                         <img
-                                            src={profile.avatar||profile.image?.imageUrl||profile.profileImage}
+                                            src={
+                                                profile.avatar ||
+                                                profile.image?.imageUrl ||
+                                                profile.profileImage
+                                            }
                                             alt='프로필'
                                             className='w-full h-full object-cover'
                                         />
