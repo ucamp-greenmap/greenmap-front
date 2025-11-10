@@ -1,8 +1,10 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
+
 import { setActiveTab } from '../../store/slices/appSlice';
 import { usePointRanking } from '../../hooks/usePointApi';
 import { ArrowLeft } from 'lucide-react';
+import { RefreshCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function RankingScreen({ onNavigate, onBack, navigation }) {
@@ -45,6 +47,12 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                 </button>
                 <h2 className='text-lg font-bold'>랭킹</h2>
             </div>
+
+            <p className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-4">
+                <RefreshCcw className="w-4 h-4" />
+                <span>랭킹은 매월 1일에 초기화됩니다.</span>
+            </p>
+
 
             {/* 내 랭킹 표시 (Top 10 이내면 상단 고정 카드 숨김)
                 - 목적: 상위권에 있을 때 중복 노출을 피하고, 리스트/카드에서 자연스럽게 강조
@@ -190,7 +198,6 @@ export default function RankingScreen({ onNavigate, onBack, navigation }) {
                                                 <span>1위</span>
                                             </div>
 
-                                            {/* ✅ 프로필 중앙 정렬만 적용 */}
                                             <div className='flex justify-center mb-3'>
                                                 <div className='relative w-20 h-20'>
                                                     {ranks[0]?.imageUrl ? (
