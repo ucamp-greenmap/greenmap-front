@@ -1,7 +1,6 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 
-// 인증 타입 카드 컴포넌트
 export default function CertTypeCard({ type, onClick }) {
     return (
         <button
