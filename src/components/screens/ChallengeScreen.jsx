@@ -749,11 +749,17 @@ function ChallengeCard({
                                     expiryDateStr = start.toISOString().split('T')[0];
                                 }
 
-                                return expiryDateStr ? (
-                                    <p className='text-sm text-gray-500 mt-1'>
-                                        만료일: {expiryDateStr}
-                                    </p>
-                                ) : null;
+                                // return expiryDateStr ? (
+                                //     null;
+
+                                //     // <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                                //     //     <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                //     //     <span>
+                                //     //         <span className="font-medium text-gray-600">만료일:</span>{' '}
+                                //     //         <span className="font-semibold text-gray-700">{expiryDateStr}</span>
+                                //     //     </span>
+                                //     // </p>
+                                // ) : null;
                             })()}
 
                         {filter === 'completed' && createdAt && (
