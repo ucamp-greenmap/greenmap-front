@@ -54,7 +54,7 @@ const ChallengeForm = () => {
         // updatedAt: 관리자가 입력한 만료 기한을 ISO 8601 형식으로 변환
         const expirationDate = new Date(updatedAt);
         if (isNaN(expirationDate.getTime())) {
-            setError('만료 기한 날짜 형식이 올바르지 않습니다.');
+            setError('모집 종료 날짜 형식이 올바르지 않습니다.');
             return;
         }
         const updatedAtISO = expirationDate.toISOString();
@@ -63,7 +63,7 @@ const ChallengeForm = () => {
         const descriptionWithCategory = `${category} ${description}`;
 
         const data = {
-            updatedAt: updatedAtISO, // 챌린지 만료 기한 (이벤트 종료일)
+            updatedAt: updatedAtISO, // (이벤트 종료일)
             challengeName, // 챌린지명은 자유롭게 입력한 그대로 전송
             description: descriptionWithCategory, // 카테고리 + 설명
             success: successNum,
@@ -165,24 +165,6 @@ const ChallengeForm = () => {
 
                 <div>
                     <label className='block font-medium text-gray-700 mb-1'>
-                        시작 인원수
-                    </label>
-                    <input
-                        type='number'
-                        id='memberCount'
-                        required
-                        readOnly
-                        defaultValue='0'
-                        disabled={isLoading}
-                        className='w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 cursor-not-allowed'
-                    />
-                    <p className='text-xs text-gray-500 mt-1'>
-                        초기 참여 인원수는 0으로 고정됩니다.
-                    </p>
-                </div>
-
-                <div>
-                    <label className='block font-medium text-gray-700 mb-1'>
                         성공 조건
                     </label>
                     <div className='flex items-center space-x-2'>
@@ -195,9 +177,9 @@ const ChallengeForm = () => {
                             disabled={isLoading}
                             className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
                         />
-                        <span className='text-gray-600 whitespace-nowrap'>
+                        {/* <span className='text-gray-600 whitespace-nowrap'>
                             km / 원
-                        </span>
+                        </span> */}
                     </div>
                     <p className='text-xs text-gray-500 mt-1'>
                         따릉이는 km, 충전/상점은 원(₩) 단위입니다.
@@ -239,7 +221,7 @@ const ChallengeForm = () => {
 
                 <div>
                     <label className='block font-medium text-gray-700 mb-1'>
-                        만료 기한 <span className='text-red-500'>*</span>
+                        모집 종료 날짜 <span className='text-red-500'>*</span>
                     </label>
                     <input
                         type='datetime-local'
@@ -249,7 +231,7 @@ const ChallengeForm = () => {
                         className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
                     />
                     <p className='text-xs text-gray-500 mt-1'>
-                        챌린지 이벤트 종료일을 선택해주세요.
+                        챌린지 모집 종료 종료일을 선택해주세요.
                     </p>
                 </div>
 

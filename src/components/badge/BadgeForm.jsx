@@ -111,7 +111,7 @@ const BadgeForm = () => {
         const requirementNum = parseInt(requirement, 10);
 
         if (isNaN(requirementNum) || requirementNum <= 0) {
-            setError('요구 포인트는 양수여야 합니다.');
+            setError('획득 기준은 양수여야 합니다.');
             return;
         }
 
@@ -224,7 +224,7 @@ const BadgeForm = () => {
                 </div>
                 <div>
                     <label className='block font-medium text-gray-700 mb-1'>
-                        요구 포인트 <span className='text-red-500'>*</span>
+                        획득 기준 <span className='text-red-500'>*</span>
                     </label>
                     <input
                         type='number'
@@ -237,7 +237,7 @@ const BadgeForm = () => {
                         placeholder='1000'
                     />
                     <p className='text-xs text-gray-500 mt-1'>
-                        이 뱃지를 획득하기 위해 필요한 포인트를 입력하세요.
+                        이 뱃지를 획득하기 위해 필요한 획득 기준을 입력하세요.
                     </p>
                 </div>
 
@@ -282,7 +282,7 @@ const BadgeForm = () => {
                                 type='button'
                                 onClick={handleImageUpload}
                                 disabled={isUploading || isLoading}
-                                className='w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition disabled:bg-gray-400 disabled:cursor-not-allowed'
+                                className='w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition disabled:bg-gray-400 disabled:cursor-not-allowed'
                             >
                                 {isUploading
                                     ? 'Firebase에 업로드 중...'

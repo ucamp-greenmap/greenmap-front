@@ -103,8 +103,8 @@ const ShopForm = () => {
         setError('');
 
         // 필수 필드 검사
-        if (!name || !price) {
-            setError('상품 이름과 가격은 필수 입력 항목입니다.');
+        if (!name || !price || !category || !brand || !imageUrl) {
+            setError('상품 이름, 가격, 카테고리, 브랜드, 이미지는 필수 입력 항목입니다.');
             return;
         }
 
@@ -214,7 +214,7 @@ const ShopForm = () => {
                 {/* 이미지 업로드 섹션 */}
                 <div>
                     <label className='block font-medium text-gray-700 mb-1'>
-                        상품 이미지 <span className='text-gray-400'>(선택사항)</span>
+                        상품 이미지 
                     </label>
                     
                     <div className='space-y-3'>
@@ -250,7 +250,7 @@ const ShopForm = () => {
                                 type='button'
                                 onClick={handleImageUpload}
                                 disabled={isUploading || isLoading}
-                                className='w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition disabled:bg-gray-400 disabled:cursor-not-allowed'
+                                className='w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition disabled:bg-gray-400 disabled:cursor-not-allowed'
                             >
                                 {isUploading ? 'Firebase에 업로드 중...' : '이미지 업로드'}
                             </button>
@@ -303,7 +303,7 @@ const ShopForm = () => {
                     </div>
                     
                     <p className='text-xs text-gray-500 mt-1'>
-                        상품 이미지를 업로드하거나 URL을 직접 입력하세요. (최대 5MB, 선택사항)
+                        상품 이미지를 업로드하거나 URL을 직접 입력하세요. (최대 5MB)
                     </p>
                 </div>
 
@@ -326,7 +326,7 @@ const ShopForm = () => {
                         ))}
                     </select>
                     <p className='text-xs text-gray-500 mt-1'>
-                        상품 카테고리를 입력하세요. (선택사항)
+                        상품 카테고리를 입력하세요.
                     </p>
                 </div>
 
@@ -343,7 +343,7 @@ const ShopForm = () => {
                         placeholder='예: GreenBrand'
                     />
                     <p className='text-xs text-gray-500 mt-1'>
-                        상품 브랜드를 입력하세요. (선택사항)
+                        상품 브랜드를 입력하세요.
                     </p>
                 </div>
 
@@ -361,7 +361,7 @@ const ShopForm = () => {
                         </span>
                     </label>
                     <p className='text-xs text-gray-500 mt-1 ml-6'>
-                        인기 상품으로 표시할지 선택하세요. (선택사항)
+                        인기 상품으로 표시할지 선택하세요.
                     </p>
                 </div>
 
