@@ -90,6 +90,14 @@ export default function LoginSignupScreen({ onNavigate }) {
   const [modal, setModal] = useState(null);
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const oauth2Error = params.get('message');
+    if (oauth2Error) {
+      setModal({ message: oauth2Error, type: 'error', action: 'login' });
+    }
+  }, []);
+
   // 로그인 유지
   useEffect(() => {
     const token = localStorage.getItem('token');
