@@ -15,7 +15,7 @@ function MessageModal({ message, type = 'info', onClose }) {
                 >
                     {type === 'success' ? '🌳' : '🍂'}
                 </div>
-                <p className='text-gray-800 font-semibold mb-4 mt-4'>
+                <p className='text-gray-800 font-semibold mb-4 mt-4 whitespace-pre-line'>
                     {message}
                 </p>
                 <button

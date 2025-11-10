@@ -94,7 +94,7 @@ export const useKakaoMap = (mapRef, KAKAO_KEY, onMapClick) => {
         // Case 3: Script tag doesn't exist, need to load
         const script = document.createElement('script');
         script.id = scriptId;
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_KEY}&autoload=false`;
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_KEY}&autoload=false&libraries=clusterer`;
         script.async = true;
         script.onload = () => {
             if (window.kakao && window.kakao.maps) {
