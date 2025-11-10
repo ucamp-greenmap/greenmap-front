@@ -3,6 +3,18 @@ import { addShopVoucher } from '../../util/pointApi';
 import { uploadImageToFirebase } from '../../util/imageUpload';
 import { Upload, X } from 'lucide-react';
 
+// 챌린지 타입 키워드 (백엔드 자동 인증 연동용)
+const VALID_VOUCHER_TYPES = [
+    'LG전자',
+    '뷰티/생활',
+    '카페/음료',
+    '외식',
+    '편의점',
+    '문화',
+    '패션',
+    '쇼핑',
+];
+
 const ShopForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -104,7 +116,7 @@ const ShopForm = () => {
         }
 
         const shopData = {
-            imageUrl: imageUrl.trim() || undefined,
+            imageUrl: imageUrl !== null ? imageUrl.trim() : undefined,
             price: priceNum,
             name: name.trim(),
             category: category.trim() || undefined,
@@ -299,14 +311,20 @@ const ShopForm = () => {
                     <label className='block font-medium text-gray-700 mb-1'>
                         카테고리
                     </label>
-                    <input
-                        type='text'
+                    <select
+                        id='category'
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
                         disabled={isLoading}
                         className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed'
-                        placeholder='예: lifestyle, food, etc.'
-                    />
+                    >
+                        <option value=''>카테고리를 선택하세요</option>
+                        {VALID_VOUCHER_TYPES.map((type) => (
+                            <option key={type} value={type}>
+                                {type}
+                            </option>
+                        ))}
+                    </select>
                     <p className='text-xs text-gray-500 mt-1'>
                         상품 카테고리를 입력하세요. (선택사항)
                     </p>
