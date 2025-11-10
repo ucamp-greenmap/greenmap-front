@@ -340,47 +340,60 @@ function ChallengeCard({
     const [isExpired, setIsExpired] = useState(false);
 
     useEffect(() => {
-        const updateRemainingTime = () => {
-            const now = new Date();
-            let expiryDate = null;
+  const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
-            if (filter === 'ongoing' && createdAt && deadline) {
-                const start = new Date(createdAt);
-                expiryDate = new Date(start);
-                expiryDate.setDate(start.getDate() + deadline);
-            } else if (filter === 'available' && updatedAt && deadline) {
-                const start = new Date(updatedAt);
-                expiryDate = new Date(start);
-                expiryDate.setDate(start.getDate());
-            }
+  const updateRemainingTime = () => {
+    const now = new Date();
+    let expiryDate = null;
 
-            if (!expiryDate) {
-                setRemainingTime('');
-                return;
-            }
+    if (filter === 'ongoing' && createdAt && deadline != null) {
+      const start = new Date(createdAt);
+      // ✅ ongoing만 KST(+9h) 보정
+      const startKST = new Date(start.getTime() + KST_OFFSET_MS);
 
-            const diff = expiryDate - now;
-            if (diff <= 0) {
-                setRemainingTime('만료됨');
-                setIsExpired(true);
-                return;
-            }
+      const d = Number(deadline);
+      if (!Number.isFinite(d)) { setRemainingTime(''); return; }
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((diff / (1000 * 60)) % 60);
-            const seconds = Math.floor((diff / 1000) % 60);
+      expiryDate = new Date(startKST);
+      expiryDate.setDate(expiryDate.getDate() + d);
 
-            setRemainingTime(
-                `${days}일 ${hours}시간 ${minutes}분 ${seconds}초`
-            );
-            setIsExpired(false);
-        };
+    } else if (filter === 'available' && updatedAt && deadline != null) {
+      // available은 보정 없음 (요구사항대로 유지)
+      const start = new Date(updatedAt);
+      const d = Number(deadline);
+      if (!Number.isFinite(d)) { setRemainingTime(''); return; }
 
-        updateRemainingTime();
-        const timer = setInterval(updateRemainingTime, 1000);
-        return () => clearInterval(timer);
-    }, [filter, createdAt, updatedAt, deadline]);
+      expiryDate = new Date(start);
+      // 정책상 available 도 +deadline 이라면 아래 주석 해제
+      // expiryDate.setDate(expiryDate.getDate() + d);
+      expiryDate.setDate(expiryDate.getDate());
+    }
+
+    if (!expiryDate) {
+      setRemainingTime('');
+      return;
+    }
+
+    const diff = expiryDate - now;
+    if (diff <= 0) {
+      setRemainingTime('만료됨');
+      setIsExpired(true);
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    setRemainingTime(`${days}일 ${hours}시간 ${minutes}분 ${seconds}초`);
+    setIsExpired(false);
+  };
+
+  updateRemainingTime();
+  const timer = setInterval(updateRemainingTime, 1000);
+  return () => clearInterval(timer);
+}, [filter, createdAt, updatedAt, deadline]);
 
     const handleChallengeConfirm = async () => {
         setShowConfirmModal(false);
@@ -559,19 +572,15 @@ function ChallengeCard({
                         : ''
                 }`}
             >
-                {(filter === 'available' || filter === 'ongoing') &&
-                    daysStyle && (
-                        <div
-                            className={`absolute top-3 right-3 ${
-                                isExpired
-                                    ? 'bg-gray-500 text-white'
-                                    : 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white'
-                            } px-4 py-2 rounded-xl text-sm font-bold shadow-xl flex items-center gap-2 border-2 border-white/80 z-20`}
-                        >
-                            <Clock className='w-4 h-4' />
-                            <span>{remainingTime}</span>
-                        </div>
-                    )}
+               {(filter === 'available' || filter === 'ongoing') && remainingTime && (
+    <div className={`absolute top-3 right-3 ${
+      isExpired ? 'bg-gray-500 text-white'
+                : 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white'
+    } px-4 py-2 rounded-xl text-sm font-bold shadow-xl flex items-center gap-2 border-2 border-white/80 z-20`}>
+      <Clock className='w-4 h-4' />
+      <span>{remainingTime}</span>
+    </div>
+)}
 
                 <div className='flex-1 flex flex-col'>
                     {image_url ? (
@@ -710,16 +719,22 @@ function ChallengeCard({
                                     createdAt &&
                                     deadline
                                 ) {
-                                    const startDate = new Date(createdAt);
-                                    startDate.setHours(startDate.getHours());
+                                    // const startDate = new Date(createdAt);
+                                    // startDate.setHours(startDate.getHours());
 
-                                    const expiryDate = new Date(startDate);
-                                    expiryDate.setDate(
-                                        startDate.getDate() + deadline
-                                    );
-                                    expiryDate.setHours(
-                                        expiryDate.getHours() + 9
-                                    );
+                                    // const expiryDate = new Date(startDate);
+                                    // expiryDate.setDate(
+                                    //     startDate.getDate() + deadline
+                                    // );
+                                    // expiryDate.setHours(
+                                    //     expiryDate.getHours() + 9
+                                    // );
+                                    const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+   const startDate = new Date(createdAt);
+   const startKST = new Date(startDate.getTime() + KST_OFFSET_MS);
+   const d = Number(deadline);
+   const expiryDate = new Date(startKST);
+   expiryDate.setDate(startKST.getDate() + (Number.isFinite(d) ? d : 0));
 
                                     expiryDateStr = expiryDate
                                         .toISOString()
@@ -729,12 +744,14 @@ function ChallengeCard({
                                     deadline &&
                                     updatedAt
                                 ) {
-                                    const expiryDate = new Date(updatedAt);
-                                    expiryDate.setHours(expiryDate.getHours());
+                                    // const expiryDate = new Date(updatedAt);
+                                    // expiryDate.setHours(expiryDate.getHours());
 
-                                    expiryDateStr = expiryDate
-                                        .toISOString()
-                                        .split('T')[0];
+                                    // expiryDateStr = expiryDate
+                                    //     .toISOString()
+                                    //     .split('T')[0];
+                                      const start = new Date(updatedAt); // 보정 없음
+                                      expiryDateStr = start.toISOString().split('T')[0];
                                 }
 
                                 return expiryDateStr ? (
