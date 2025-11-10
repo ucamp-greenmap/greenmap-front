@@ -19,6 +19,7 @@ import {
     verifyHCar,
     verifyShop,
 } from '../../util/certApi';
+
 function Modal({ message, type = 'info', onClose, onSuccess }) {
     const handleClick = () => {
         onClose();
@@ -27,15 +28,17 @@ function Modal({ message, type = 'info', onClose, onSuccess }) {
         }
     };
 
+    const isSuccess = type === 'success' || type === 'info-success';
+
     return (
         <div className='fixed inset-0 flex items-center justify-center bg-black/40 z-[1000]'>
             <div className='bg-white rounded-2xl shadow-xl w-80 p-6 text-center'>
                 <div
                     className={`text-4xl mb-3 ${
-                        type === 'success' ? 'text-green-500' : 'text-red-500'
+                        isSuccess ? 'text-green-500' : 'text-red-500'
                     }`}
                 >
-                    {type === 'success' ? '🌳' : '🍂'}
+                    {isSuccess ? '🌳' : '🍂'}
                 </div>
 
                 <p className='text-gray-800 font-semibold mb-4 mt-4 whitespace-pre-line'>
@@ -46,8 +49,7 @@ function Modal({ message, type = 'info', onClose, onSuccess }) {
                     onClick={handleClick}
                     className='w-full py-2 rounded-xl font-bold text-white'
                     style={{
-                        background:
-                            type === 'success' ? '#96cb6f' : '#e63e3eff',
+                        background: isSuccess ? '#96cb6f' : '#e63e3eff',
                     }}
                 >
                     확인
@@ -66,16 +68,13 @@ export default function CertModal({
     const dispatch = useDispatch();
     const { isLoggedIn } = useSelector((state) => state.user);
 
-    // 모달이 열릴 때 토큰이 있으면 로그인 상태 확인
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token && !isLoggedIn) {
-            // 토큰이 있지만 Redux 상태가 업데이트되지 않은 경우
             api.get('/member/me', {
                 headers: { Authorization: `Bearer ${token}` },
             })
                 .then((res) => {
-                    // Redux 상태 업데이트
                     dispatch(login({ token }));
                     dispatch(
                         updateProfile({
@@ -86,11 +85,9 @@ export default function CertModal({
                             memberId: res.data.data.memberId,
                         })
                     );
-                    // 포인트 정보 가져오기
                     dispatch(fetchPointInfo());
                 })
                 .catch(() => {
-                    // 토큰이 유효하지 않으면 제거
                     localStorage.removeItem('token');
                     localStorage.removeItem('memberId');
                 });
@@ -191,10 +188,10 @@ export default function CertModal({
 
                 if (hasRecycleKeyword) {
                     setDetectedCategory('recycle');
-                    showModal('재활용센터로 인식되었습니다', 'info');
+                    showModal('재활용센터로 인식되었습니다', 'info-success');
                 } else if (hasZeroKeyword) {
                     setDetectedCategory('zero');
-                    showModal('제로웨이스트로 인식되었습니다', 'info');
+                    showModal('제로웨이스트로 인식되었습니다', 'info-success');
                 } else {
                     showModal(
                         '키워드를 인식하지 못했습니다. 영수증을 다시 확인해주세요.',
@@ -209,7 +206,7 @@ export default function CertModal({
                 if (hasKeyword) {
                     showModal(
                         '인식 완료! 값을 확인 후 인증 요청을 눌러주세요',
-                        'info'
+                        'info-success'
                     );
                 } else {
                     showModal(
@@ -241,9 +238,7 @@ export default function CertModal({
         if (file) processImageWithOCR(file);
     }
 
-    // 버튼 비활성화 조건 계산
     const isButtonDisabled = () => {
-        // type이 없으면 비활성화
         if (!type || !type.id) {
             return true;
         }
@@ -368,7 +363,6 @@ export default function CertModal({
                 const successMessage = `인증 성공! ${result.message}\n\n획득 포인트: ${result.data.point}P\n탄소 감소량: ${carbonAmount}kg`;
 
                 showModal(successMessage, 'success');
-                // onClose();
             } else {
                 let userMessage = result.message || '인증에 실패했습니다.';
                 if (
@@ -392,12 +386,12 @@ export default function CertModal({
     };
 
     return (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto'>
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto'>
             <div
-                className='rounded-2xl max-w-md w-full my-4 flex flex-col shadow-2xl overflow-hidden bg-clip-padding'
+                className='rounded-2xl max-w-md w-full my-8 flex flex-col shadow-2xl overflow-hidden bg-clip-padding'
                 style={{
                     backgroundColor: 'transparent',
-                    maxHeight: 'calc(100vh - 64px)',
+                    maxHeight: '85vh',
                 }}
             >
                 {/* 상단 헤더 */}
@@ -421,12 +415,11 @@ export default function CertModal({
                 </div>
 
                 {/* 내부 내용 */}
-                <div className='bg-white flex flex-col flex-1'>
+                <div className='bg-white flex flex-col flex-1 overflow-hidden'>
                     <div
-                        className='overflow-y-auto p-6 space-y-4'
+                        className='overflow-y-auto p-6 space-y-4 flex-1'
                         style={{
                             overscrollBehavior: 'contain',
-                            maxHeight: 'calc(100vh - 400px)',
                         }}
                     >
                         {/* 파일 업로드 */}
