@@ -251,7 +251,7 @@ export default function MyPageScreen({ onNavigate }) {
                                             DEFAULT_BADGE_IMAGE
                                         }
                                         alt='뱃지'
-                                        className='w-5 h-5 object-cover'
+                                        className='w-full h-full object-cover rounded-full'
                                         onError={(e) => {
                                             // 이미지 로드 실패 시 기본 이미지로 설정
                                             if (

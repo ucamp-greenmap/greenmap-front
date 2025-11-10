@@ -151,7 +151,7 @@ export default function HomeScreen({ onNavigate }) {
 
     const placeholderSvg = encodeURIComponent(
         "<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'>" +
-            "<rect fill='%23e5e7eb' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23939' font-size='12'>이미지</text></svg>"
+        "<rect fill='%23e5e7eb' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23939' font-size='12'>이미지</text></svg>"
     );
     const placeholder = `data:image/svg+xml;charset=UTF-8,${placeholderSvg}`;
 
@@ -294,12 +294,12 @@ export default function HomeScreen({ onNavigate }) {
                                             {place.categoryId === 1
                                                 ? '🚲'
                                                 : place.categoryId === 2
-                                                ? '🛍️'
-                                                : place.categoryId === 3
-                                                ? '⚡'
-                                                : place.categoryId === 5
-                                                ? '♻️'
-                                                : '📍'}
+                                                    ? '🛍️'
+                                                    : place.categoryId === 3
+                                                        ? '⚡'
+                                                        : place.categoryId === 5
+                                                            ? '♻️'
+                                                            : '📍'}
                                         </div>
                                         <div className='flex-1 min-w-0'>
                                             <div className='font-medium text-gray-900 truncate'>
@@ -389,28 +389,28 @@ export default function HomeScreen({ onNavigate }) {
                                     {/* 뱃지 이미지 - 프로필 이미지 오른쪽 하단 */}
                                     {(profile.badgeUrl ||
                                         profile.image?.imageUrl) && (
-                                        <div className='absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg overflow-hidden'>
-                                            <img
-                                                src={
-                                                    profile.badgeUrl ||
-                                                    profile.image?.imageUrl ||
-                                                    DEFAULT_BADGE_IMAGE
-                                                }
-                                                alt='뱃지'
-                                                className='w-5 h-5 object-cover'
-                                                onError={(e) => {
-                                                    // 이미지 로드 실패 시 기본 이미지로 설정
-                                                    if (
-                                                        e.target.src !==
+                                            <div className='absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg overflow-hidden'>
+                                                <img
+                                                    src={
+                                                        profile.badgeUrl ||
+                                                        profile.image?.imageUrl ||
                                                         DEFAULT_BADGE_IMAGE
-                                                    ) {
-                                                        e.target.src =
-                                                            DEFAULT_BADGE_IMAGE;
                                                     }
-                                                }}
-                                            />
-                                        </div>
-                                    )}
+                                                    alt='뱃지'
+                                                    className='w-full h-full object-cover rounded-full'
+                                                    onError={(e) => {
+                                                        // 이미지 로드 실패 시 기본 이미지로 설정
+                                                        if (
+                                                            e.target.src !==
+                                                            DEFAULT_BADGE_IMAGE
+                                                        ) {
+                                                            e.target.src =
+                                                                DEFAULT_BADGE_IMAGE;
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
                                 </div>
 
                                 {/* 닉네임 */}
