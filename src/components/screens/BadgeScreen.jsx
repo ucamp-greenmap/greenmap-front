@@ -14,15 +14,16 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
     const [isSelecting, setIsSelecting] = useState(false);
 
     const handleGoBack = () => {
-        if (onBack) {
-            onBack();
-        } else if (navigation) {
-            navigation.goBack();
-        } else if (onNavigate) {
-            onNavigate('mypage');
-        } else if (window.history.length > 1) {
-            window.history.back();
-        }
+        // if (onBack) {
+        //     onBack();
+        // } else if (navigation) {
+        //     navigation.goBack();
+        // } else if (onNavigate) {
+        //     onNavigate('mypage');
+        // } else if (window.history.length > 1) {
+        //     window.history.back();
+        // }
+        window.history.back();
     };
 
     const fetchBadges = async () => {
