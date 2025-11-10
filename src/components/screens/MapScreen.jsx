@@ -24,44 +24,7 @@ import CurrentLocationButton from '../map/CurrentLocationButton';
 import BottomSheet from '../map/BottomSheet';
 import FacilityList from '../map/FacilityList';
 import FacilityDetail from '../map/FacilityDetail';
-
-// 모달 컴포넌트
-function Modal({ message, type = 'info', onClose }) {
-    const handleClick = () => {
-        if (type === 'success') {
-            window.location.href = '/';
-        } else {
-            onClose();
-        }
-    };
-
-    return (
-        <div className='fixed inset-0 flex items-center justify-center bg-black/40 z-50'>
-            <div className='bg-white rounded-2xl shadow-xl w-80 h-100 p-6 text-center'>
-                <div
-                    className={`text-4xl mb-3 ${
-                        type === 'success' ? 'text-green-500' : 'text-red-500'
-                    }`}
-                >
-                    {type === 'success' ? '🌳' : '🍂'}
-                </div>
-                <p className='text-gray-800 font-semibold mb-4 mt-4'>
-                    {message}
-                </p>
-                <button
-                    onClick={handleClick}
-                    className='w-full py-2 rounded-xl font-bold text-white'
-                    style={{
-                        background:
-                            type === 'success' ? '#96cb6f' : '#e63e3eff',
-                    }}
-                >
-                    확인
-                </button>
-            </div>
-        </div>
-    );
-}
+import MessageModal from '../common/MessageModal';
 
 export default function MapScreen() {
     const dispatch = useDispatch();
@@ -334,7 +297,10 @@ export default function MapScreen() {
             }
         } catch (error) {
             console.error('Failed to get current location:', error);
-            alert('현재 위치를 가져올 수 없습니다. 위치 권한을 확인해주세요.');
+            setModalMessage(
+                '현재 위치를 가져올 수 없습니다. 위치 권한을 확인해주세요.'
+            );
+            setShowModal(true);
         }
     };
 
@@ -464,9 +430,9 @@ export default function MapScreen() {
 
                     {/* 모달 표시 */}
                     {showModal && (
-                        <Modal
+                        <MessageModal
                             message={modalMessage}
-                            type='info'
+                            type='error'
                             onClose={handleCloseModal}
                         />
                     )}
