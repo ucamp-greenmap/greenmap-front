@@ -361,6 +361,11 @@ const userSlice = createSlice({
                 state.error = null;
             })
             .addCase(fetchPointInfo.fulfilled, (state, action) => {
+
+
+    console.log("🎯 MyPage API 응답 전체:", action.payload);
+    console.log("🎯 member 객체:", action.payload.member);
+
                 state.loading = false;
                 state.isLoggedIn = true;
 
@@ -372,11 +377,19 @@ const userSlice = createSlice({
 
                 if (action.payload.member) {
                     const member = action.payload.member;
+                    console.log("member객체 조회----------------------", JSON.stringify(member))
                     state.profile = {
+
                         memberId: member.memberId,
                         name: member.nickname,
                         email: member.email,
-                        avatar: member.image?.imageUrl || null,
+                        avatar:
+                            member.image ||              // 일반 로그인
+                            member.image?.imageUrl ||       // 객체로 감싼 경우
+                            member.profileImage ||          // 카카오 로그인 응답
+                            member.imageUrl||
+                            null,
+
                         nickname: member.nickname,
                         badgeUrl: member.badgeUrl || state.profile.badgeUrl || null,
                     };
@@ -403,7 +416,12 @@ const userSlice = createSlice({
                     memberId: member.memberId,
                     name: member.nickname,
                     email: member.email,
-                    avatar: member.imageUrl,
+                    avatar:
+                            member.image ||              // 일반 로그인
+                            member.image?.imageUrl ||       // 객체로 감싼 경우
+                            member.profileImage ||          // 카카오 로그인 응답
+                            member.imageUrl||
+                            null,
                     nickname: member.nickname,
                     badgeUrl: member.badgeUrl || null,
                 };

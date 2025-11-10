@@ -19,6 +19,7 @@ export const useMarkers = (
     const _isMountedRef = useRef(true); // 마운트 상태 추적 (언더스코어로 unused 허용)
     const _abortControllerRef = useRef(null); // 마커 생성 중단용 (언더스코어로 unused 허용)
     const isCreatingMarkersRef = useRef(false); // 마커 생성 중인지 추적
+    const clustererRef = useRef(null); // MarkerClusterer 인스턴스
 
     // 현재 화면에 표시되는 시설 목록 (BottomSheet용)
     const [visibleFacilities, setVisibleFacilities] = useState([]);
@@ -97,80 +98,58 @@ export const useMarkers = (
         bookmarkedIdsRef.current = bookmarkedIds || [];
     }, [bookmarkedIds]);
 
-    // 지도 이동/줌 이벤트 시 마커 표시 업데이트 - 필터 적용
+    // 클러스터에 마커 업데이트 (필터 적용)
+    const updateClusterMarkers = useCallback(() => {
+        if (!clustererRef.current || !mapInstance || !window.kakao) return;
+
+        const bounds = mapInstance.getBounds();
+        const bookmarkSet = new Set(bookmarkedIdsRef.current || []);
+
+        // 현재 화면에 표시되는 시설들을 추적
+        const currentlyVisible = [];
+
+        // 필터링된 마커만 추출
+        const filteredMarkers = markersRef.current
+            .filter(({ id, category, marker, data }) => {
+                // 필터 조건 확인
+                const shouldShow =
+                    selectedFilter === 'all'
+                        ? true
+                        : selectedFilter === 'bookmark'
+                        ? bookmarkSet.has(id)
+                        : category === selectedFilter;
+
+                if (!shouldShow) return false;
+
+                // 화면 영역 확인
+                const isVisible = isMarkerInBounds(marker, bounds);
+
+                // BottomSheet용 시설 목록에 추가
+                if (isVisible) {
+                    currentlyVisible.push(data);
+                }
+
+                return true; // 필터 조건만 확인 (화면 영역은 클러스터가 자동 처리)
+            })
+            .map(({ marker }) => marker);
+
+        // 클러스터에 마커 업데이트
+        clustererRef.current.clear();
+        if (filteredMarkers.length > 0) {
+            clustererRef.current.addMarkers(filteredMarkers);
+        }
+
+        // BottomSheet에 표시할 시설 목록 업데이트
+        setVisibleFacilities(currentlyVisible);
+    }, [mapInstance, isMarkerInBounds, selectedFilter]);
+
+    // 지도 이동/줌 이벤트 시 마커 표시 업데이트 - 필터 적용 (클러스터 사용)
     const updateVisibleMarkers = useCallback(
         (immediate = false) => {
             if (!mapInstance || !window.kakao) return;
 
             const performUpdate = () => {
-                const bounds = mapInstance.getBounds();
-                const currentLevel = mapInstance.getLevel();
-                // ref에서 최신 bookmarkedIds 가져오기 (함수 재생성 방지)
-                const bookmarkSet = new Set(bookmarkedIdsRef.current || []);
-
-                // 줌 레벨 6 이하(더 확대)일 때만 마커 표시
-                const shouldShowMarkers = currentLevel <= 6;
-
-                // 현재 화면에 표시되는 시설들을 추적
-                const currentlyVisible = [];
-
-                // 변경할 마커들을 수집 (배치 처리)
-                const markersToShow = [];
-                const markersToHide = [];
-
-                // 각 마커의 표시 여부를 결정
-                markersRef.current.forEach(({ id, category, marker, data }) => {
-                    const isVisible = isMarkerInBounds(marker, bounds);
-
-                    // 필터 조건 확인
-                    const shouldShow =
-                        selectedFilter === 'all'
-                            ? true
-                            : selectedFilter === 'bookmark'
-                            ? bookmarkSet.has(id)
-                            : category === selectedFilter;
-
-                    // 최종 표시 여부 결정
-                    const shouldDisplay =
-                        shouldShowMarkers && isVisible && shouldShow;
-
-                    // 이전 표시 상태와 비교
-                    const prevVisibility = markerVisibilityRef.current.get(id);
-                    const markerCurrentMap = marker.getMap();
-
-                    // 상태가 변경된 경우에만 마커 업데이트 (깜빡임 방지)
-                    if (prevVisibility !== shouldDisplay) {
-                        if (shouldDisplay) {
-                            // 표시해야 하는 경우
-                            if (!markerCurrentMap) {
-                                markersToShow.push(marker);
-                            }
-                        } else {
-                            // 숨겨야 하는 경우
-                            if (markerCurrentMap) {
-                                markersToHide.push(marker);
-                            }
-                        }
-                        // 상태 업데이트
-                        markerVisibilityRef.current.set(id, shouldDisplay);
-                    } else if (shouldDisplay && !markerCurrentMap) {
-                        // 상태는 같지만 실제로 지도에 없는 경우 (초기 로드 등)
-                        markersToShow.push(marker);
-                        markerVisibilityRef.current.set(id, true);
-                    }
-
-                    // BottomSheet용 시설 목록에 추가
-                    if (shouldDisplay && isVisible) {
-                        currentlyVisible.push(data);
-                    }
-                });
-
-                // 배치로 마커 업데이트 (한 번에 처리하여 깜빡임 최소화)
-                markersToHide.forEach((marker) => marker.setMap(null));
-                markersToShow.forEach((marker) => marker.setMap(mapInstance));
-
-                // BottomSheet에 표시할 시설 목록 업데이트
-                setVisibleFacilities(currentlyVisible);
+                updateClusterMarkers();
             };
 
             // 즉시 실행이거나 requestAnimationFrame이 없으면 바로 실행
@@ -188,8 +167,7 @@ export const useMarkers = (
                     requestAnimationFrame(performUpdate);
             }
         },
-        [mapInstance, isMarkerInBounds, selectedFilter]
-        // bookmarkedIds는 ref로 관리하므로 의존성에서 제외 (함수 재생성 방지)
+        [mapInstance, updateClusterMarkers]
     );
 
     // Create/update markers based on facilities
@@ -210,9 +188,55 @@ export const useMarkers = (
         // 대용량 데이터는 비동기로 처리하여 UI 블로킹 방지
         const createMarkers = async () => {
             try {
-                // Clear existing markers
+                // 클러스터 초기화
+                if (
+                    !clustererRef.current &&
+                    window.kakao?.maps?.MarkerClusterer
+                ) {
+                    clustererRef.current =
+                        new window.kakao.maps.MarkerClusterer({
+                            map: mapInstance,
+                            markers: [],
+                            gridSize: 60, // 클러스터 그리드 크기
+                            minLevel: 2, // 최소 클러스터링 레벨
+                            averageCenter: true, // 클러스터 중심점을 평균으로
+                            minClusterSize: 3, // 최소 클러스터 마커 수
+                        });
+
+                    // 클러스터 클릭 이벤트: 클러스터 영역으로 지도 확대
+                    window.kakao.maps.event.addListener(
+                        clustererRef.current,
+                        'clusterclick',
+                        (cluster) => {
+                            const markers = cluster.getMarkers();
+                            if (markers.length === 0) return;
+
+                            const bounds = new window.kakao.maps.LatLngBounds();
+                            markers.forEach((marker) => {
+                                bounds.extend(marker.getPosition());
+                            });
+
+                            // 클러스터 영역으로 지도 이동 (약간의 패딩 추가)
+                            mapInstance.setBounds(bounds, 100);
+                        }
+                    );
+                }
+
+                // 기존 클러스터 마커 제거
+                if (clustererRef.current) {
+                    clustererRef.current.clear();
+                }
+
+                // 기존 마커 정리
                 markersRef.current.forEach((m) => {
-                    if (m.marker) m.marker.setMap(null);
+                    if (m.marker) {
+                        // 클러스터에서 제거되므로 개별 setMap 불필요
+                        window.kakao.maps.event.removeListener(
+                            m.marker,
+                            'click',
+                            m.clickHandler
+                        );
+                    }
                 });
 
                 // 마커 재생성 시 visibility 상태 초기화
@@ -240,22 +264,26 @@ export const useMarkers = (
                             image: markerImage,
                         });
 
+                        // 마커 클릭 이벤트 핸들러 생성
+                        const clickHandler = () => {
+                            if (onMarkerClick) {
+                                updateSelectedMarker(f.id);
+                                onMarkerClick(f);
+                            }
+                        };
+
                         // 마커 클릭 이벤트: InfoWindow 대신 콜백 호출
                         window.kakao.maps.event.addListener(
                             marker,
                             'click',
-                            () => {
-                                if (onMarkerClick) {
-                                    updateSelectedMarker(f.id);
-                                    onMarkerClick(f);
-                                }
-                            }
+                            clickHandler
                         );
 
                         return {
                             id: f.id,
                             category: f.category,
                             marker,
+                            clickHandler, // 이벤트 리스너 제거를 위해 저장
                             infowindow: null, // InfoWindow 더 이상 사용 안 함
                             data: f,
                         };
@@ -273,7 +301,7 @@ export const useMarkers = (
                 if (!abortController.signal.aborted) {
                     markersRef.current = newMarkers;
                     isCreatingMarkersRef.current = false;
-                    // 마커 생성 후 즉시 업데이트 (다음 프레임에)
+                    // 마커 생성 후 클러스터 업데이트
                     updateVisibleMarkers(false);
                 }
             } catch (error) {
@@ -301,6 +329,7 @@ export const useMarkers = (
         getMarkerImage,
         onMarkerClick,
         updateSelectedMarker,
+        updateClusterMarkers,
     ]);
 
     // 지도 이동/줌 이벤트 리스너 등록
@@ -340,29 +369,31 @@ export const useMarkers = (
         };
     }, [mapInstance, updateVisibleMarkers]);
 
-    // 필터 변경 시 마커 업데이트 (즉시 실행)
+    // 필터 변경 시 클러스터 마커 업데이트 (즉시 실행)
     useEffect(() => {
         // 마커가 생성 중이거나 아직 생성되지 않았으면 스킵
         if (
             isCreatingMarkersRef.current ||
             !mapInstance ||
-            markersRef.current.length === 0
+            markersRef.current.length === 0 ||
+            !clustererRef.current
         ) {
             return;
         }
         // 필터 변경은 즉시 반영
-        updateVisibleMarkers(true);
+        updateClusterMarkers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedFilter]);
 
-    // 북마크 변경 시 마커 업데이트 (북마크 필터일 때만, 그리고 실제 변경이 있을 때만)
+    // 북마크 변경 시 클러스터 마커 업데이트 (북마크 필터일 때만, 그리고 실제 변경이 있을 때만)
     const prevBookmarkedIdsRef = useRef(bookmarkedIds || []);
     useEffect(() => {
         // 마커가 생성 중이거나 아직 생성되지 않았으면 스킵
         if (
             isCreatingMarkersRef.current ||
             !mapInstance ||
-            markersRef.current.length === 0
+            markersRef.current.length === 0 ||
+            !clustererRef.current
         ) {
             prevBookmarkedIdsRef.current = bookmarkedIds || [];
             return;
@@ -382,10 +413,8 @@ export const useMarkers = (
                 [...currentSet].some((id) => !prevSet.has(id));
 
             if (hasChanges) {
-                // 배치 처리로 깜빡임 최소화 (약간의 지연으로 DOM 업데이트와 분리)
-                setTimeout(() => {
-                    updateVisibleMarkers(false);
-                }, 0);
+                // 클러스터 마커 업데이트
+                updateClusterMarkers();
             }
         }
 
@@ -408,6 +437,12 @@ export const useMarkers = (
                 _abortControllerRef.current = null;
             }
 
+            // 클러스터 정리
+            if (clustererRef.current) {
+                clustererRef.current.clear();
+                clustererRef.current = null;
+            }
+
             // 마커 제거를 requestIdleCallback으로 지연시켜 페이지 전환 속도 향상
             const markers = markersRef.current;
             markersRef.current = [];
@@ -416,14 +451,38 @@ export const useMarkers = (
             if (markers.length > 0 && window.requestIdleCallback) {
                 window.requestIdleCallback(() => {
                     markers.forEach((m) => {
-                        if (m.marker) m.marker.setMap(null);
+                        if (m.marker && m.clickHandler) {
+                            // 이벤트 리스너 제거
+                            try {
+                                window.kakao?.maps?.event?.removeListener(
+                                    m.marker,
+                                    'click',
+                                    m.clickHandler
+                                );
+                            } catch (e) {
+                                // 무시
+                            }
+                            m.marker.setMap(null);
+                        }
                     });
                 });
             } else if (markers.length > 0) {
                 // requestIdleCallback이 없으면 setTimeout으로 지연
                 setTimeout(() => {
                     markers.forEach((m) => {
-                        if (m.marker) m.marker.setMap(null);
+                        if (m.marker && m.clickHandler) {
+                            // 이벤트 리스너 제거
+                            try {
+                                window.kakao?.maps?.event?.removeListener(
+                                    m.marker,
+                                    'click',
+                                    m.clickHandler
+                                );
+                            } catch (e) {
+                                // 무시
+                            }
+                            m.marker.setMap(null);
+                        }
                     });
                 }, 0);
             }

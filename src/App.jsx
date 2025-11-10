@@ -172,6 +172,7 @@ export default function App() {
                     location.pathname !== '/points' &&
                     location.pathname !== '/point-exchange' &&
                     location.pathname !== '/badge' &&
+                    location.pathname !== '/carbon-info' &&
                     location.pathname !== '/cert-history' && (
                         <BottomNavigation
                             active={activeTab}

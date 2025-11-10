@@ -83,7 +83,9 @@ export default function PointExchangeScreen({ onNavigate }) {
             dispatch(fetchUsedPointLogs());
         } catch (error) {
             console.error('포인트 사용 실패:', error);
-            alert('구매에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+            alert(
+                '구매에 실패했습니다: ' + (error.message || '알 수 없는 오류')
+            );
         }
     };
 
@@ -206,7 +208,7 @@ export default function PointExchangeScreen({ onNavigate }) {
             console.error('포인트전환 실패:', error);
             alert(
                 '포인트전환 신청에 실패했습니다: ' +
-                (error.message || '알 수 없는 오류')
+                    (error.message || '알 수 없는 오류')
             );
         }
     };
@@ -264,20 +266,22 @@ export default function PointExchangeScreen({ onNavigate }) {
             <div className='mx-4 mb-4 bg-white rounded-2xl p-1 shadow-sm flex gap-1'>
                 <button
                     onClick={() => setActiveTab('gifticon')}
-                    className={`flex-1 py-3 rounded-xl font-medium transition-all ${activeTab === 'gifticon'
+                    className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                        activeTab === 'gifticon'
                             ? 'bg-[#4CAF50] text-white shadow-md'
                             : 'text-gray-600 hover:bg-gray-50'
-                        }`}
+                    }`}
                 >
                     <Gift className='w-5 h-5 inline-block mr-2' />
                     기프티콘
                 </button>
                 <button
                     onClick={() => setActiveTab('transfer')}
-                    className={`flex-1 py-3 rounded-xl font-medium transition-all ${activeTab === 'transfer'
+                    className={`flex-1 py-3 rounded-xl font-medium transition-all ${
+                        activeTab === 'transfer'
                             ? 'bg-[#4CAF50] text-white shadow-md'
                             : 'text-gray-600 hover:bg-gray-50'
-                        }`}
+                    }`}
                 >
                     <Wallet className='w-5 h-5 inline-block mr-2' />
                     포인트전환
@@ -314,10 +318,11 @@ export default function PointExchangeScreen({ onNavigate }) {
                                             onClick={() =>
                                                 setSelectedCategory(cat.label)
                                             }
-                                            className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-all flex items-center gap-1 ${selectedCategory === cat.label
+                                            className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-all flex items-center gap-1 ${
+                                                selectedCategory === cat.label
                                                     ? 'bg-[#4CAF50] text-white shadow-md'
                                                     : 'bg-white text-gray-700 hover:bg-gray-50'
-                                                }`}
+                                            }`}
                                         >
                                             <span>{cat.icon}</span>
                                             <span>{cat.label}</span>
@@ -373,10 +378,11 @@ export default function PointExchangeScreen({ onNavigate }) {
                                                             false
                                                         );
                                                     }}
-                                                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${sortBy === opt.id
+                                                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
+                                                        sortBy === opt.id
                                                             ? 'bg-green-50 text-[#4CAF50] font-medium'
                                                             : ''
-                                                        }`}
+                                                    }`}
                                                 >
                                                     {opt.label}
                                                 </button>
@@ -437,10 +443,11 @@ export default function PointExchangeScreen({ onNavigate }) {
                                                         )
                                                     }
                                                     disabled={!canAfford}
-                                                    className={`w-full py-2.5 px-3 rounded-lg text-sm font-bold transition-all ${canAfford
+                                                    className={`w-full py-2.5 px-3 rounded-lg text-sm font-bold transition-all ${
+                                                        canAfford
                                                             ? 'bg-[#4CAF50] text-white hover:bg-[#45a049] shadow-sm'
                                                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                        }`}
+                                                    }`}
                                                 >
                                                     {canAfford
                                                         ? '구매하기'
@@ -582,20 +589,48 @@ export default function PointExchangeScreen({ onNavigate }) {
                                     />
                                 </div>
 
-                                {/* 계좌번호 */}
                                 <div className='mb-4'>
                                     <label className='block text-sm font-medium text-gray-700 mb-2'>
                                         계좌번호
                                     </label>
                                     <input
                                         type='text'
+                                        inputMode='numeric'
                                         value={accountNumber}
                                         onChange={(e) =>
                                             setAccountNumber(e.target.value)
                                         }
-                                        placeholder="'-' 없이 입력"
+                                        placeholder=" '-' 없이 숫자만 입력"
                                         className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
                                     />
+                                    {/* 숫자만 입력하세요 경고 */}
+                                    {accountNumber.length > 0 &&
+                                        !/^\d+$/.test(accountNumber) && (
+                                            <p className='text-xs text-red-500 mt-1 flex items-center gap-1'>
+                                                <AlertCircle className='w-3 h-3 flex-shrink-0' />
+                                                계좌번호에는 숫자만 입력해
+                                                주세요. (예: 1234567890)
+                                            </p>
+                                        )}
+                                    {/* 최소 자릿수 경고 */}
+                                    {accountNumber.length > 0 &&
+                                        /^\d+$/.test(accountNumber) &&
+                                        accountNumber.length < 7 && (
+                                            <p className='text-xs text-red-500 mt-1 flex items-center gap-1'>
+                                                <AlertCircle className='w-3 h-3 flex-shrink-0' />
+                                                계좌번호는 최소 7자리 이상이어야
+                                                합니다. (현재:{' '}
+                                                {accountNumber.length}자리)
+                                            </p>
+                                        )}
+                                    {/* 최대 자릿수 경고 */}
+                                    {accountNumber.length > 15 && (
+                                        <p className='text-xs text-red-500 mt-1 flex items-center gap-1'>
+                                            <AlertCircle className='w-3 h-3 flex-shrink-0' />
+                                            계좌번호는 최대 15자리입니다. (현재:{' '}
+                                            {accountNumber.length}자리)
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* 예금주 */}
@@ -609,11 +644,19 @@ export default function PointExchangeScreen({ onNavigate }) {
                                         onChange={(e) =>
                                             setAccountHolder(e.target.value)
                                         }
-                                        placeholder='예금주명'
+                                        placeholder='예금주명 (숫자 입력 불가)'
                                         className='w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent'
                                     />
+                                    {/* 숫자 포함 경고 */}
+                                    {accountHolder.length > 0 &&
+                                        /\d/.test(accountHolder) && (
+                                            <p className='text-xs text-red-500 mt-1 flex items-center gap-1'>
+                                                <AlertCircle className='w-3 h-3 flex-shrink-0' />
+                                                예금주명에는 숫자를 포함할 수
+                                                없습니다.
+                                            </p>
+                                        )}
                                 </div>
-
                                 {/* 신청 버튼 */}
                                 <button
                                     onClick={() => setShowTransferModal(true)}
@@ -684,7 +727,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                         </p>
                     </div>
                 ) : usedLogs &&
-                    usedLogs.filter((item) => item.pointAmount < 0).length > 0 ? (
+                  usedLogs.filter((item) => item.pointAmount < 0).length > 0 ? (
                     <div className='space-y-3'>
                         {usedLogs
                             .filter((item) => item.pointAmount < 0) // 사용(음수)만 필터링
@@ -708,12 +751,13 @@ export default function PointExchangeScreen({ onNavigate }) {
                                         <div className='flex items-center justify-between'>
                                             <div className='flex items-center gap-3'>
                                                 <div
-                                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${isVoucher
+                                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                                        isVoucher
                                                             ? 'bg-purple-100'
                                                             : isCash
-                                                                ? 'bg-blue-100'
-                                                                : 'bg-red-100'
-                                                        }`}
+                                                            ? 'bg-blue-100'
+                                                            : 'bg-red-100'
+                                                    }`}
                                                 >
                                                     {isVoucher ? (
                                                         <Gift className='w-5 h-5 text-purple-600' />
@@ -828,7 +872,6 @@ export default function PointExchangeScreen({ onNavigate }) {
                                 >
                                     구매하기
                                 </button>
-
                             </div>
                         </motion.div>
                     </motion.div>
@@ -842,7 +885,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                        className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'
                         onClick={() => setShowPhoneModal(false)}
                     >
                         <motion.div
@@ -850,7 +893,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-3xl p-6 max-w-sm w-full text-center"
+                            className='bg-white rounded-3xl p-6 max-w-sm w-full text-center'
                         >
                             <motion.div
                                 initial={{ scale: 0 }}
@@ -860,46 +903,49 @@ export default function PointExchangeScreen({ onNavigate }) {
                                     type: 'spring',
                                     stiffness: 200,
                                 }}
-                                className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                                className='w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4'
                             >
-                                <Gift className="w-8 h-8 text-[#4CAF50]" />
+                                <Gift className='w-8 h-8 text-[#4CAF50]' />
                             </motion.div>
 
-                            <h3 className="text-xl font-bold mb-2">수령자 정보 입력</h3>
-                            <p className="text-gray-600 mb-4 text-sm">
-                                기프티콘을 받을 휴대폰 번호를 입력해주세요
+                            <h3 className='text-xl font-bold mb-2'>
+                                수령자 정보 입력
+                            </h3>
+                            <p className='text-gray-600 mb-4 text-sm'>
+                                기프티콘을 받을 휴대폰 번호를 입력해주세요 📱
                             </p>
 
                             <input
-                                type="tel"
+                                type='tel'
                                 value={phoneNumber}
                                 onChange={(e) => setPhoneNumber(e.target.value)}
-                                placeholder="010-1234-5678"
-                                className={`w-full border rounded-xl px-3 py-2 text-center text-gray-700 focus:outline-none focus:ring-2 ${phoneError
+                                placeholder='010-1234-5678'
+                                className={`w-full border rounded-xl px-3 py-2 text-center text-gray-700 focus:outline-none focus:ring-2 ${
+                                    phoneError
                                         ? 'border-red-400 focus:ring-red-300'
                                         : 'border-gray-300 focus:ring-[#4CAF50]'
-                                    }`}
+                                }`}
                             />
                             {phoneError && (
-                                <p className="text-sm text-red-500 mt-2">
+                                <p className='text-sm text-red-500 mt-2'>
                                     번호를 입력해주세요.
                                 </p>
                             )}
 
-                            <p className="text-xs text-gray-400 mt-2">
+                            <p className='text-xs text-gray-400 mt-2'>
                                 ※ 입력된 번호는 저장되지 않습니다.
                             </p>
 
-                            <div className="flex gap-3 mt-6">
+                            <div className='flex gap-3 mt-6'>
                                 <button
                                     onClick={() => setShowPhoneModal(false)}
-                                    className="flex-1 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                                    className='flex-1 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-colors'
                                 >
                                     취소
                                 </button>
                                 <button
                                     onClick={handlePhoneSubmit}
-                                    className="flex-1 py-3 bg-[#4CAF50] text-white rounded-xl font-medium hover:bg-[#45a049] transition-colors"
+                                    className='flex-1 py-3 bg-[#4CAF50] text-white rounded-xl font-medium hover:bg-[#45a049] transition-colors'
                                 >
                                     확인
                                 </button>
@@ -908,7 +954,6 @@ export default function PointExchangeScreen({ onNavigate }) {
                     </motion.div>
                 )}
             </AnimatePresence>
-
 
             {/* 포인트전환 확인 모달 */}
             <AnimatePresence>
@@ -969,7 +1014,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                                         <span className='font-semibold text-red-600'>
                                             {Math.ceil(
                                                 parseInt(transferAmount || 0) *
-                                                1.05
+                                                    1.05
                                             ).toLocaleString()}
                                             P
                                         </span>
@@ -1016,7 +1061,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                        className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'
                         onClick={() => setShowSuccessModal(false)}
                     >
                         <motion.div
@@ -1024,7 +1069,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-3xl p-6 max-w-sm w-full text-center"
+                            className='bg-white rounded-3xl p-6 max-w-sm w-full text-center'
                         >
                             <motion.div
                                 initial={{ scale: 0 }}
@@ -1034,12 +1079,14 @@ export default function PointExchangeScreen({ onNavigate }) {
                                     type: 'spring',
                                     stiffness: 200,
                                 }}
-                                className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                                className='w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4'
                             >
-                                <CheckCircle2 className="w-12 h-12 text-[#4CAF50]" />
+                                <CheckCircle2 className='w-12 h-12 text-[#4CAF50]' />
                             </motion.div>
 
-                            <h3 className="text-2xl font-bold mb-2">신청 완료!</h3>
+                            <h3 className='text-2xl font-bold mb-2'>
+                                신청 완료!
+                            </h3>
 
                             {/* {activeTab === 'gifticon' && (
                                 <div className="mb-4">
@@ -1059,8 +1106,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                                 </div>
                             )} */}
 
-
-                            <p className="text-gray-600 mb-6">
+                            <p className='text-gray-600 mb-6'>
                                 {activeTab === 'gifticon'
                                     ? '번호 입력 후 해당 번호로 기프티콘이 발송됩니다. ( 영업일 기준 1~3일 내 )'
                                     : '포인트전환 신청이 완료되었습니다. 영업일 기준 1~3일 내 입금됩니다.'}
@@ -1068,7 +1114,7 @@ export default function PointExchangeScreen({ onNavigate }) {
 
                             <button
                                 onClick={() => setShowSuccessModal(false)}
-                                className="w-full py-3 bg-[#4CAF50] text-white rounded-xl font-medium hover:bg-[#45a049] transition-colors"
+                                className='w-full py-3 bg-[#4CAF50] text-white rounded-xl font-medium hover:bg-[#45a049] transition-colors'
                             >
                                 확인
                             </button>
@@ -1076,7 +1122,6 @@ export default function PointExchangeScreen({ onNavigate }) {
                     </motion.div>
                 )}
             </AnimatePresence>
-
         </div>
     );
 }

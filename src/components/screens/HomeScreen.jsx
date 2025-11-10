@@ -79,6 +79,12 @@ export default function HomeScreen({ onNavigate }) {
             localStorage.removeItem('accountDeactivated');
         }
     }, []);
+    //콘솔확인
+    useEffect(() => {
+        console.log('📍 Redux 프로필 상태:', profile);
+        console.log('📍 아바타 URL:', profile.avatar);
+        console.log('유저 이미지', profile.image?.imageUrl);
+    }, [profile]);
 
     // 토큰 확인 및 초기 데이터 로드
     const [isInitializing, setIsInitializing] = useState(true);
@@ -151,7 +157,7 @@ export default function HomeScreen({ onNavigate }) {
 
     const placeholderSvg = encodeURIComponent(
         "<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'>" +
-        "<rect fill='%23e5e7eb' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23939' font-size='12'>이미지</text></svg>"
+            "<rect fill='%23e5e7eb' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23939' font-size='12'>이미지</text></svg>"
     );
     const placeholder = `data:image/svg+xml;charset=UTF-8,${placeholderSvg}`;
 
@@ -243,7 +249,11 @@ export default function HomeScreen({ onNavigate }) {
                 <div className='flex flex-col items-center mb-6'>
                     <div className='bg-white rounded-full p-5 shadow-xl mb-4'>
                         <div className='w-12 h-12 flex items-center justify-center text-[#4CAF50] text-3xl'>
-                            🌿
+                            <img
+                                src='/src/assets/favicon.png'
+                                alt='logo'
+                                className='w-full h-full object-contain'
+                            />
                         </div>
                     </div>
                     <h1 className='text-white text-2xl font-bold mb-1'>
@@ -258,7 +268,7 @@ export default function HomeScreen({ onNavigate }) {
                     <input
                         ref={searchInputRef}
                         type='text'
-                        placeholder='지도 검색... (예: LG사이언스파크 E13, 서울식물원 )'
+                        placeholder='지도 검색... (예: 한강공원,광화문)'
                         value={searchQuery}
                         onChange={handleSearchChange}
                         onFocus={() =>
@@ -294,12 +304,12 @@ export default function HomeScreen({ onNavigate }) {
                                             {place.categoryId === 1
                                                 ? '🚲'
                                                 : place.categoryId === 2
-                                                    ? '🛍️'
-                                                    : place.categoryId === 3
-                                                        ? '⚡'
-                                                        : place.categoryId === 5
-                                                            ? '♻️'
-                                                            : '📍'}
+                                                ? '🛍️'
+                                                : place.categoryId === 3
+                                                ? '⚡'
+                                                : place.categoryId === 5
+                                                ? '♻️'
+                                                : '📍'}
                                         </div>
                                         <div className='flex-1 min-w-0'>
                                             <div className='font-medium text-gray-900 truncate'>
@@ -381,7 +391,11 @@ export default function HomeScreen({ onNavigate }) {
                                 <div className='relative'>
                                     <div className='w-16 h-16 rounded-full overflow-hidden bg-white border-4 border-[#4CAF50] flex items-center justify-center shadow-md'>
                                         <img
-                                            src={profile.avatar}
+                                            src={
+                                                profile.avatar ||
+                                                profile.image?.imageUrl ||
+                                                profile.profileImage
+                                            }
                                             alt='프로필'
                                             className='w-full h-full object-cover'
                                         />
@@ -389,28 +403,28 @@ export default function HomeScreen({ onNavigate }) {
                                     {/* 뱃지 이미지 - 프로필 이미지 오른쪽 하단 */}
                                     {(profile.badgeUrl ||
                                         profile.image?.imageUrl) && (
-                                            <div className='absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg overflow-hidden'>
-                                                <img
-                                                    src={
-                                                        profile.badgeUrl ||
-                                                        profile.image?.imageUrl ||
+                                        <div className='absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-[#4CAF50] flex items-center justify-center shadow-lg overflow-hidden'>
+                                            <img
+                                                src={
+                                                    profile.badgeUrl ||
+                                                    profile.image?.imageUrl ||
+                                                    DEFAULT_BADGE_IMAGE
+                                                }
+                                                alt='뱃지'
+                                                className='w-full h-full object-cover rounded-full'
+                                                onError={(e) => {
+                                                    // 이미지 로드 실패 시 기본 이미지로 설정
+                                                    if (
+                                                        e.target.src !==
                                                         DEFAULT_BADGE_IMAGE
+                                                    ) {
+                                                        e.target.src =
+                                                            DEFAULT_BADGE_IMAGE;
                                                     }
-                                                    alt='뱃지'
-                                                    className='w-full h-full object-cover rounded-full'
-                                                    onError={(e) => {
-                                                        // 이미지 로드 실패 시 기본 이미지로 설정
-                                                        if (
-                                                            e.target.src !==
-                                                            DEFAULT_BADGE_IMAGE
-                                                        ) {
-                                                            e.target.src =
-                                                                DEFAULT_BADGE_IMAGE;
-                                                        }
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
+                                                }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* 닉네임 */}
@@ -511,7 +525,7 @@ export default function HomeScreen({ onNavigate }) {
                             </button>
 
                             <button
-                                onClick={() => navigate('mypage')}
+                                onClick={() => navigate('login')}
                                 className='bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-shadow border border-gray-100'
                             >
                                 <div className='text-4xl mb-3'>👤</div>
