@@ -14,9 +14,8 @@ const validatePassword = (password) => password.length >= 6;
 
 //  카카오 로그인
 const kakaoLogin = () => {
-  window.location.href = `${
-    import.meta.env.VITE_APP_SERVER_URL
-  }/oauth2/authorization/kakao`;
+  window.location.href = `${import.meta.env.VITE_APP_SERVER_URL
+    }/oauth2/authorization/kakao`;
 };
 
 //  스타일
@@ -46,27 +45,26 @@ const styles = `
 `;
 
 /*  모달 */
-function Modal({ message, type = 'info', onClose, action,setPage,setModal }) {
+function Modal({ message, type = 'info', onClose, action, setPage, setModal }) {
   const navigate = useNavigate();
 
-const handleClick = () => {
+  const handleClick = () => {
 
-  if (action === 'mypage') navigate('/mypage');
-  else if (action === 'home') navigate('/');
-  else if (action === 'login') {
-    setModal(null); 
-    setPage('login');  
-  }
-  onClose();
-};
+    if (action === 'mypage') navigate('/mypage');
+    else if (action === 'home') navigate('/');
+    else if (action === 'login') {
+      setModal(null);
+      setPage('login');
+    }
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
       <div className="bg-white rounded-2xl shadow-xl w-80 p-6 text-center animate-fadeIn">
         <div
-          className={`text-4xl mb-3 ${
-            type === 'success' ? 'text-green-500' : 'text-red-500'
-          }`}
+          className={`text-4xl mb-3 ${type === 'success' ? 'text-green-500' : 'text-red-500'
+            }`}
         >
           {type === 'success' ? '🌳' : '🍂'}
         </div>
@@ -132,70 +130,68 @@ export default function LoginSignupScreen({ onNavigate }) {
     <>
       <div className="auth-wrap">
         <style>{styles}</style>
-        <div className="card">
-          <div className="title">GreenMap</div>
-          <div className="subtitle">그린맵</div>
+        {!userInfo ? (
+    <div className="card">
+      <div className="title">GreenMap</div>
+      <div className="subtitle">그린맵</div>
 
-          {!userInfo && (
-            <div className="tabs">
-              {['login', 'signup'].map((tab) => (
-                <button
-                  key={tab}
-                  className={`tab ${page === tab ? 'active' : ''}`}
-                  onClick={() => setPage(tab)}
-                >
-                  {tab === 'login' ? '로그인' : '회원가입'}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {!userInfo ? (
-            page === 'login' ? (
-              <LoginForm
-                setUserInfo={setUserInfo}
-                setModal={setModal}
-                onNavigate={onNavigate}
-              />
-            ) : (
-              <SignupForm setPage={setPage} setModal={setModal} />
-            )
-          ) : (
-            <HomeScreen onNavigate={onNavigate} />
-          )}
-
-          {!userInfo && page === 'login' && (
-            <button
-              onClick={kakaoLogin}
-              style={{
-                width: '100%',
-                marginTop: '12px',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                padding: 0,
-              }}
-            >
-              <img
-                src={kakaoBtn}
-                alt="카카오 로그인"
-                style={{ width: '100%', display: 'block' }}
-              />
-            </button>
-          )}
-        </div>
-
-        {modal && (
-  <Modal
-    message={modal.message}
-    type={modal.type}
-    onClose={() => setModal(null)}
-    action={modal.action}
-    setPage={setPage} 
-    setModal={setModal}
-  />
-)}
-
+      <div className="tabs">
+        {['login', 'signup'].map((tab) => (
+          <button
+            key={tab}
+            className={`tab ${page === tab ? 'active' : ''}`}
+            onClick={() => setPage(tab)}
+          >
+            {tab === 'login' ? '로그인' : '회원가입'}
+          </button>
+        ))}
       </div>
+
+      {page === 'login' ? (
+        <LoginForm
+          setUserInfo={setUserInfo}
+          setModal={setModal}
+          onNavigate={onNavigate}
+        />
+      ) : (
+        <SignupForm setPage={setPage} setModal={setModal} />
+      )}
+
+      {page === 'login' && (
+        <button
+          onClick={kakaoLogin}
+          style={{
+            width: '100%',
+            marginTop: '12px',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            padding: 0,
+          }}
+        >
+          <img
+            src={kakaoBtn}
+            alt="카카오 로그인"
+            style={{ width: '100%', display: 'block' }}
+          />
+        </button>
+      )}
+    </div>
+  ) : (
+    !modal && <HomeScreen onNavigate={onNavigate} /> 
+  )}
+
+  {/* 모달 */}
+  {modal && (
+    <Modal
+      message={modal.message}
+      type={modal.type}
+      onClose={() => setModal(null)}
+      action={modal.action}
+      setPage={setPage}
+      setModal={setModal}
+    />
+  )}
+</div>
     </>
   );
 }
@@ -282,7 +278,7 @@ function LoginForm({ setUserInfo, setModal, onNavigate }) {
   );
 }
 
-function SignupForm({ setPage, setModal,onBack }) {
+function SignupForm({ setPage, setModal, onBack }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [emailAvailable, setEmailAvailable] = useState(null);
@@ -343,20 +339,20 @@ function SignupForm({ setPage, setModal,onBack }) {
   }, [nickname]);
 
   const submitSignup = async () => {
-  try {
-    await api.post('/member', { email, password, nickname });
-    console.log("아무거나----------------------")
-    setModal({ message: '회원가입 성공', type: 'success', action: 'login' });
-     setTimeout(() => {
-      setPage('login');  
-    }, 1000);
-  } catch {
-    setModal({
-      message: '다시 시도해주세요',
-      type: 'error',
-    });
-  }
-};
+    try {
+      await api.post('/member', { email, password, nickname });
+      console.log("아무거나----------------------")
+      setModal({ message: '회원가입 성공', type: 'success', action: 'login' });
+      setTimeout(() => {
+        setPage('login');
+      }, 1000);
+    } catch {
+      setModal({
+        message: '다시 시도해주세요',
+        type: 'error',
+      });
+    }
+  };
 
   return (
     <form onSubmit={(e) => e.preventDefault()}>
