@@ -136,7 +136,9 @@ green-map/
 ├── .github/
 │   ├── workflows/
 │   │   └── deploy.yml              # GitHub Actions 배포 워크플로우
-│   └── pull_request_template.md    # PR 템플릿
+│   ├── pull_request_template.md    # PR 템플릿
+│   └── commit_template.txt         # 커밋 메시지 템플릿
+├── CONTRIBUTING.md                 # 협업 가이드 및 Git 컨벤션
 ├── docs/
 │   ├── CSS_ADJUSTMENT_GUIDE.md     # CSS 조정 가이드
 │   └── CURRENT_LOCATION.md         # 현재 위치 기능 문서
@@ -191,6 +193,15 @@ green-map/
 -   🔖 북마크 기능
 -   📱 PWA 지원 (오프라인 사용 가능)
 -   🎨 반응형 디자인
+
+## 🤝 기여하기
+
+프로젝트에 기여하고 싶으시다면 [CONTRIBUTING.md](./CONTRIBUTING.md)를 참고해주세요.
+
+- [브랜치 전략](./CONTRIBUTING.md#브랜치-전략)
+- [Git 커밋 컨벤션](./CONTRIBUTING.md#git-커밋-컨벤션)
+- [Pull Request 가이드](./CONTRIBUTING.md#pull-request-가이드)
+- [코드 스타일](./CONTRIBUTING.md#코드-스타일)
 
 ## 📝 라이선스
 
