@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const FILTER_OPTIONS = [
     { key: 'all', label: '전체' },
@@ -7,15 +7,30 @@ const FILTER_OPTIONS = [
     { key: 'hcar', label: '수소차' },
     { key: 'store', label: '제로웨이스트' },
     { key: 'bike', label: '따릉이' },
-    { key: 'bookmark', label: '북마크' },
+    { key: 'bookmark', label: '북마크', requiresLogin: true },
 ];
 
 export default function FilterBar({ selectedFilter, onFilterChange }) {
+    // 로그인 상태 확인
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        setIsLoggedIn(!!token);
+    }, []);
+
+    const visibleFilters = FILTER_OPTIONS.filter((filter) => {
+        if (filter.requiresLogin && !isLoggedIn) {
+            return false;
+        }
+        return true;
+    });
+
     return (
         <div className='absolute top-2 left-0 right-0 z-10 w-full px-4 pointer-events-none'>
             <div className='max-w-full mx-auto flex justify-center'>
                 <div className='inline-flex gap-2 overflow-x-auto pb-2 pointer-events-auto bg-white/90 backdrop-blur-sm shadow-lg rounded-full px-3 py-2'>
-                    {FILTER_OPTIONS.map((filter) => (
+                    {visibleFilters.map((filter) => (
                         <button
                             key={filter.key}
                             onClick={() => onFilterChange(filter.key)}

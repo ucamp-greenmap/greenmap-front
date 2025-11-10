@@ -25,6 +25,44 @@ import BottomSheet from '../map/BottomSheet';
 import FacilityList from '../map/FacilityList';
 import FacilityDetail from '../map/FacilityDetail';
 
+// 모달 컴포넌트
+function Modal({ message, type = 'info', onClose }) {
+    const handleClick = () => {
+        if (type === 'success') {
+            window.location.href = '/';
+        } else {
+            onClose();
+        }
+    };
+
+    return (
+        <div className='fixed inset-0 flex items-center justify-center bg-black/40 z-50'>
+            <div className='bg-white rounded-2xl shadow-xl w-80 h-100 p-6 text-center'>
+                <div
+                    className={`text-4xl mb-3 ${
+                        type === 'success' ? 'text-green-500' : 'text-red-500'
+                    }`}
+                >
+                    {type === 'success' ? '🌳' : '🍂'}
+                </div>
+                <p className='text-gray-800 font-semibold mb-4 mt-4'>
+                    {message}
+                </p>
+                <button
+                    onClick={handleClick}
+                    className='w-full py-2 rounded-xl font-bold text-white'
+                    style={{
+                        background:
+                            type === 'success' ? '#96cb6f' : '#e63e3eff',
+                    }}
+                >
+                    확인
+                </button>
+            </div>
+        </div>
+    );
+}
+
 export default function MapScreen() {
     const dispatch = useDispatch();
     const bookmarkedIds = useSelector((s) => s.facility.bookmarkedIds || []);
@@ -35,6 +73,10 @@ export default function MapScreen() {
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [selectedFacility, setSelectedFacility] = useState(null);
 
+    // 모달 상태 추가
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+
     // Map refs
     const mapRef = useRef(null);
     const bottomSheetRef = useRef(null);
@@ -42,7 +84,7 @@ export default function MapScreen() {
     const currentLocationOverlayRef = useRef(null);
     const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_KEY || '';
 
-    // Current location hook - useMemo보다 먼저 호출
+    // Current location hook
     const {
         currentLocation,
         isLoading: isLocationLoading,
@@ -54,7 +96,6 @@ export default function MapScreen() {
         if (places.length === 0) return [];
         const facilities = places.map(convertPlaceToFacility);
 
-        // 현재 위치가 있으면 거리 계산
         if (currentLocation) {
             return calculateDistancesForFacilities(facilities, currentLocation);
         }
@@ -71,12 +112,10 @@ export default function MapScreen() {
     const closeDetail = useCallback(() => {
         setSelectedFacility(null);
 
-        // BottomSheet 축소
         if (bottomSheetRef.current) {
             bottomSheetRef.current.collapse();
         }
 
-        // Close infowindow
         if (currentInfoWindowRef.current) {
             currentInfoWindowRef.current.close();
             currentInfoWindowRef.current = null;
@@ -103,20 +142,17 @@ export default function MapScreen() {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    // 로그인하지 않은 경우 북마크 목록 초기화
                     dispatch(setBookmarkedIds([]));
                     return;
                 }
 
                 const bookmarks = await getMyBookmarks();
-                // placeId를 facility id 형식으로 변환 (place-${placeId})
                 const bookmarkIds = bookmarks.map(
                     (bookmark) => `place-${bookmark.placeId}`
                 );
                 dispatch(setBookmarkedIds(bookmarkIds));
             } catch (error) {
                 console.error('북마크 목록 로드 실패:', error);
-                // 에러 발생 시 빈 배열로 설정
                 dispatch(setBookmarkedIds([]));
             }
         };
@@ -127,7 +163,6 @@ export default function MapScreen() {
     // 장소 데이터 로드
     useEffect(() => {
         const loadPlaces = async () => {
-            // 현재 위치 또는 기본 위치 사용 (강남역 근처)
             const location = currentLocation || { lat: 37.4979, lng: 127.0276 };
 
             try {
@@ -144,18 +179,16 @@ export default function MapScreen() {
         loadPlaces();
     }, [currentLocation]);
 
-    // showDetail 콜백 - useMarkers보다 먼저 정의
+    // showDetail 콜백
     const showDetail = useCallback(
         (facility) => {
             setSelectedFacility(facility);
 
-            // BottomSheet 확장
             if (bottomSheetRef.current) {
                 bottomSheetRef.current.expand();
             }
 
-            // Focus on map marker
-            let offsetLat = 0.002; // 위로 약간 이동 (값은 지도의 줌 레벨에 따라 조정)
+            let offsetLat = 0.002;
             if (mapInstance) {
                 const zoomLevel = mapInstance.getLevel();
                 console.log('Current zoom level:', zoomLevel);
@@ -195,7 +228,7 @@ export default function MapScreen() {
         currentInfoWindowRef,
         selectedFilter,
         bookmarkedIds,
-        showDetail // 마커 클릭 콜백 전달
+        showDetail
     );
 
     // 검색에서 선택된 시설로 자동 포커스
@@ -208,16 +241,13 @@ export default function MapScreen() {
             if (selectedFacilityData) {
                 const facility = JSON.parse(selectedFacilityData);
 
-                // sessionStorage 클리어
                 sessionStorage.removeItem('selectedFacility');
 
-                // 해당 시설 찾기
                 const targetFacility = allFacilities.find(
                     (f) => f.placeId === facility.placeId
                 );
 
                 if (targetFacility) {
-                    // 지도 중심 이동 및 줌
                     setTimeout(() => {
                         if (mapInstance) {
                             mapInstance.setCenter(
@@ -226,14 +256,12 @@ export default function MapScreen() {
                                     targetFacility.lng
                                 )
                             );
-                            mapInstance.setLevel(3); // 줌인
+                            mapInstance.setLevel(3);
 
-                            // 마커 애니메이션 적용
                             if (updateSelectedMarker) {
                                 updateSelectedMarker(targetFacility.id);
                             }
 
-                            // 시설 상세 표시
                             showDetail(targetFacility);
                         }
                     }, 300);
@@ -259,10 +287,9 @@ export default function MapScreen() {
         return () => window.removeEventListener('resize', onResize);
     }, [mapInstance]);
 
-    // Cleanup on unmount - 즉시 반환하여 페이지 전환 속도 향상
+    // Cleanup on unmount
     useEffect(() => {
         return () => {
-            // 백그라운드에서 정리 (페이지 전환을 블로킹하지 않음)
             if (window.requestIdleCallback) {
                 window.requestIdleCallback(() => {
                     if (currentInfoWindowRef.current) {
@@ -274,7 +301,6 @@ export default function MapScreen() {
                 });
             }
 
-            // 참조는 즉시 초기화
             currentInfoWindowRef.current = null;
             currentLocationOverlayRef.current = null;
         };
@@ -284,12 +310,10 @@ export default function MapScreen() {
     useEffect(() => {
         if (!mapInstance || !currentLocation || !window.kakao) return;
 
-        // Remove old overlay
         if (currentLocationOverlayRef.current) {
             currentLocationOverlayRef.current.setMap(null);
         }
 
-        // Create and add new overlay
         const overlay = createCurrentLocationOverlay(
             window.kakao,
             currentLocation
@@ -306,7 +330,7 @@ export default function MapScreen() {
                 mapInstance.setCenter(
                     new window.kakao.maps.LatLng(location.lat, location.lng)
                 );
-                mapInstance.setLevel(3); // Zoom in to level 3
+                mapInstance.setLevel(3);
             }
         } catch (error) {
             console.error('Failed to get current location:', error);
@@ -314,7 +338,7 @@ export default function MapScreen() {
         }
     };
 
-    // facility.id에서 placeId 추출 (place-${placeId} 형식)
+    // facility.id에서 placeId 추출
     const getPlaceIdFromFacilityId = (facilityId) => {
         if (typeof facilityId === 'string' && facilityId.startsWith('place-')) {
             return parseInt(facilityId.replace('place-', ''), 10);
@@ -322,12 +346,16 @@ export default function MapScreen() {
         return null;
     };
 
+    // 북마크 토글 함수 (모달 추가)
     const toggleBookmarkLocal = async (facilityId) => {
         try {
-            // 로그인 체크
+            // 로그인 체크 - 모달 표시
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('북마크 기능을 사용하려면 로그인이 필요합니다.');
+                setModalMessage(
+                    '북마크 기능을 사용하려면\n로그인이 필요합니다.'
+                );
+                setShowModal(true);
                 return;
             }
 
@@ -347,31 +375,24 @@ export default function MapScreen() {
             }
         } catch (error) {
             console.error('북마크 토글 실패:', error);
-            // 로그인 에러인 경우 특별 처리
+            // 로그인 에러인 경우 모달 표시
             if (error.message && error.message.includes('로그인')) {
-                alert('로그인이 필요합니다.');
+                setModalMessage('로그인이 필요합니다.');
+                setShowModal(true);
             } else {
-                alert(error.message || '북마크 처리에 실패했습니다.');
+                setModalMessage(error.message || '북마크 처리에 실패했습니다.');
+                setShowModal(true);
             }
         }
     };
 
+    // 모달 닫기 함수
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setModalMessage('');
+    };
+
     return (
-        /**
-         * 🎨 MapScreen 최상위 컨테이너 레이아웃 설정
-         *
-         * height: calc(100vh - var(--bottom-nav-inset))
-         * - 화면 전체 높이(100vh)에서 BottomNavigation 영역(--bottom-nav-inset)을 뺀 높이
-         * - 이렇게 하면 지도가 BottomNavigation과 겹치지 않음
-         * - --bottom-nav-inset는 index.css에서 정의 (기본값: 96px)
-         *
-         * 조정 방법:
-         * - 지도 영역을 더 크게: index.css에서 --bottom-nav-inset 값을 줄임
-         * - 지도 영역을 더 작게: index.css에서 --bottom-nav-inset 값을 늘림
-         *
-         * relative: 내부의 absolute 요소들(FilterBar, CurrentLocationButton, BottomSheet)의 기준점
-         * overflow-hidden: 지도가 컨테이너 밖으로 넘치지 않도록 제한
-         */
         <div
             className='relative w-full overflow-hidden'
             style={{ height: 'calc(100vh - var(--bottom-nav-inset))' }}
@@ -390,19 +411,6 @@ export default function MapScreen() {
                 </div>
             ) : (
                 <>
-                    {/**
-                     * 🗺️ 카카오 지도 컨테이너
-                     *
-                     * w-full h-full: 부모 컨테이너의 너비와 높이를 100% 채움
-                     * - w-full (width: 100%): 좌우 여백 없이 전체 너비 사용
-                     * - h-full (height: 100%): 상하 여백 없이 전체 높이 사용
-                     *
-                     * z-0: 다른 UI 요소들(FilterBar, BottomSheet) 아래에 배치
-                     *
-                     * ⚠️ 주의: absolute inset-0 대신 w-full h-full 사용
-                     * - absolute inset-0을 사용하면 좌측에 여백이 생김
-                     * - w-full h-full은 부모의 크기를 그대로 따라감
-                     */}
                     <div
                         ref={mapRef}
                         role='application'
@@ -410,11 +418,9 @@ export default function MapScreen() {
                         className='w-full h-full z-0'
                     />
 
-                    {/* 지도 로딩 인디케이터 */}
                     {!mapLoaded && (
                         <div className='absolute inset-0 bg-white z-10 flex flex-col items-center justify-center'>
                             <div className='relative'>
-                                {/* 회전하는 원형 로더 */}
                                 <div className='w-16 h-16 border-4 border-gray-200 rounded-full'></div>
                                 <div className='w-16 h-16 border-4 border-[#4CAF50] border-t-transparent rounded-full animate-spin absolute top-0 left-0'></div>
                             </div>
@@ -455,6 +461,15 @@ export default function MapScreen() {
                             />
                         )}
                     </BottomSheet>
+
+                    {/* 모달 표시 */}
+                    {showModal && (
+                        <Modal
+                            message={modalMessage}
+                            type='info'
+                            onClose={handleCloseModal}
+                        />
+                    )}
                 </>
             )}
         </div>
