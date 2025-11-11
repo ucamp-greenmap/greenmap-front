@@ -107,8 +107,8 @@ export function extractApiData(text) {
 
     const approveMatch =
         text.match(/주\s*문\s*번\s*호[:\s#]*(\d+)/i) ||
-        text.match(/승인\s*번\s*호?[:\s]*(\d{8,16})/i) ||
-        text.match(/거래\s*번\s*호?[:\s]*(\d{8,16})/i);
+        text.match(/승인\s*번\s*호?[:\s]*(\d{4,16})/i) ||
+        text.match(/거래\s*번\s*호?[:\s]*(\d{4,16})/i);
 
     // 자전거 번호 추출
     let bikeNumber = '';
@@ -167,13 +167,23 @@ export function extractApiData(text) {
         }
     }
 
-    const nameMatch = text.match(/[가-힣a-zA-Z]{2,}\s*(주|센터|점|소)/);
+    const nameMatch =
+        text.match(/매\s*장\s*명[:\s]*([가-힣a-zA-Z\s]{2,20})/i) ||
+        text.match(/[가-힣a-zA-Z]{2,}\s*(주|센터|점|소|샵|스토어|마켓)/);
 
+    let finalName = '미확인 상호';
+    if (nameMatch) {
+        finalName = (nameMatch[1] || nameMatch[0])
+            .replace(/\s+/g, '')
+            .replace(/\n/g, '') // 줄바꿈 제거
+            .trim() // 앞뒤 공백 제거
+            .replace(/샵/g, '');
+    }
     return {
         approveNum: approveMatch ? approveMatch[1] : '',
         bike_number: bikeNumber,
         startTime: startTime,
         endTime: endTime,
-        name: nameMatch ? nameMatch[0].trim() : '미확인 상호',
+        name: finalName,
     };
 }
