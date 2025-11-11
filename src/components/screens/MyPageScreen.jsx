@@ -232,7 +232,7 @@ export default function MyPageScreen({ onNavigate }) {
                                     <img
                                         src={profile.avatar}
                                         alt='프로필'
-                                        className='w-full h-full object-cover'
+                                        className="w-24 h-24 rounded-full object-cover bg-transparent"
                                     />
                                 ) : (
                                     <span className='text-4xl'>👤</span>
