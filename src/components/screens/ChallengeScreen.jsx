@@ -198,18 +198,20 @@ export default function ChallengeScreen({ onNavigate }) {
                             <button
                                 key={key}
                                 onClick={() => setFilter(key)}
-                                className={`flex-1 relative px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${filter === key
+                                className={`flex-1 relative px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                                    filter === key
                                         ? 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white shadow-lg shadow-green-500/30 scale-105'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-102'
-                                    }`}
+                                }`}
                             >
                                 <span className='text-sm'>{label}</span>
                                 {count > 0 && (
                                     <span
-                                        className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${filter === key
+                                        className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                                            filter === key
                                                 ? 'bg-white text-[#4CAF50]'
                                                 : 'bg-[#4CAF50] text-white'
-                                            }`}
+                                        }`}
                                     >
                                         {count}
                                     </span>
@@ -267,8 +269,8 @@ export default function ChallengeScreen({ onNavigate }) {
                             {filter === 'available'
                                 ? '참여 가능한 챌린지가 없습니다'
                                 : filter === 'ongoing'
-                                    ? '진행 중인 챌린지가 없습니다'
-                                    : '완료한 챌린지가 없습니다'}
+                                ? '진행 중인 챌린지가 없습니다'
+                                : '완료한 챌린지가 없습니다'}
                         </p>
                         <p className='text-sm text-gray-400 text-center'>
                             {filter === 'available'
@@ -296,10 +298,11 @@ export default function ChallengeScreen({ onNavigate }) {
             {toastMessage && (
                 <div className='fixed inset-0 pointer-events-none z-[9999] flex items-end justify-center pb-20'>
                     <div
-                        className={`pointer-events-auto ${toastMessage.startsWith('⚠️')
+                        className={`pointer-events-auto ${
+                            toastMessage.startsWith('⚠️')
                                 ? 'bg-red-600'
                                 : 'bg-black/90'
-                            } text-white px-6 py-3 rounded-lg shadow-2xl transition-all duration-300 animate-bounce-in`}
+                        } text-white px-6 py-3 rounded-lg shadow-2xl transition-all duration-300 animate-bounce-in`}
                     >
                         {toastMessage}
                     </div>
@@ -349,19 +352,27 @@ function ChallengeCard({
                 const startKST = new Date(start.getTime() + KST_OFFSET_MS);
 
                 const d = Number(deadline);
-                if (!Number.isFinite(d)) { setRemainingTime(''); return; }
+                if (!Number.isFinite(d)) {
+                    setRemainingTime('');
+                    return;
+                }
 
                 expiryDate = new Date(startKST);
                 expiryDate.setDate(expiryDate.getDate() + d);
-
-            } else if (filter === 'available' && updatedAt && deadline != null) {
+            } else if (
+                filter === 'available' &&
+                updatedAt &&
+                deadline != null
+            ) {
                 // available은 보정 없음 (요구사항대로 유지)
                 const end = new Date(updatedAt);
                 const endKST = new Date(end.getTime()+ KST_OFFSET_MS);
 
                 const d = Number(deadline);
-
-                if (!Number.isFinite(d)) { setRemainingTime(''); return; }
+                if (!Number.isFinite(d)) {
+                    setRemainingTime('');
+                    return;
+                }
 
                 expiryDate = new Date(endKST);
                 // 정책상 available 도 +deadline 이라면 아래 주석 해제
@@ -386,7 +397,9 @@ function ChallengeCard({
             const minutes = Math.floor((diff / (1000 * 60)) % 60);
             const seconds = Math.floor((diff / 1000) % 60);
 
-            setRemainingTime(`${days}일 ${hours}시간 ${minutes}분 ${seconds}초`);
+            setRemainingTime(
+                `${days}일 ${hours}시간 ${minutes}분 ${seconds}초`
+            );
             setIsExpired(false);
         };
 
@@ -414,7 +427,6 @@ function ChallengeCard({
         if (!description) return 'TIMES';
 
         const firstWord = description.trim().split(' ')[0].toLowerCase();
-
         if (firstWord === '따릉이' || firstWord.includes('bike')) {
             return 'Km';
         } else if (
@@ -566,19 +578,25 @@ function ChallengeCard({
         <>
             <div
                 onClick={handleCardClick}
-                className={`group relative bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 ${filter !== 'completed'
+                className={`group relative bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 ${
+                    filter !== 'completed'
                         ? 'cursor-pointer hover:scale-[1.02]'
                         : ''
-                    }`}
+                }`}
             >
-                {(filter === 'available' || filter === 'ongoing') && remainingTime && (
-                    <div className={`absolute top-3 right-3 z-10 ${isExpired ? 'bg-gray-500 text-white'
-                            : 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white'
-                        } px-4 py-2 rounded-xl text-sm font-bold shadow-xl flex items-center gap-2 border-2 border-white/80 z-10`}>
-                        <Clock className='w-4 h-4' />
-                        <span>{remainingTime}</span>
-                    </div>
-                )}
+                {(filter === 'available' || filter === 'ongoing') &&
+                    remainingTime && (
+                        <div
+                            className={`absolute top-3 right-3 z-10 ${
+                                isExpired
+                                    ? 'bg-gray-500 text-white'
+                                    : 'bg-gradient-to-br from-[#4CAF50] to-[#66BB6A] text-white'
+                            } px-4 py-2 rounded-xl text-sm font-bold shadow-xl flex items-center gap-2 border-2 border-white/80 z-10`}
+                        >
+                            <Clock className='w-4 h-4' />
+                            <span>{remainingTime}</span>
+                        </div>
+                    )}
 
                 <div className='flex-1 flex flex-col'>
                     {image_url ? (
@@ -628,7 +646,7 @@ function ChallengeCard({
                             {challengeName}
                         </h3>
                         <p className='text-xs text-gray-500 mb-3 line-clamp-2 leading-relaxed'>
-                            {description}
+                            {description.split(' ').slice(1).join(' ')}
                         </p>
 
                         {filter === 'ongoing' && (
@@ -729,10 +747,15 @@ function ChallengeCard({
                                     // );
                                     const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
                                     const startDate = new Date(createdAt);
-                                    const startKST = new Date(startDate.getTime() + KST_OFFSET_MS);
+                                    const startKST = new Date(
+                                        startDate.getTime() + KST_OFFSET_MS
+                                    );
                                     const d = Number(deadline);
                                     const expiryDate = new Date(startKST);
-                                    expiryDate.setDate(startKST.getDate() + (Number.isFinite(d) ? d : 0));
+                                    expiryDate.setDate(
+                                        startKST.getDate() +
+                                            (Number.isFinite(d) ? d : 0)
+                                    );
 
                                     expiryDateStr = expiryDate
                                         .toISOString()
@@ -749,7 +772,9 @@ function ChallengeCard({
                                     //     .toISOString()
                                     //     .split('T')[0];
                                     const start = new Date(updatedAt); // 보정 없음
-                                    expiryDateStr = start.toISOString().split('T')[0];
+                                    expiryDateStr = start
+                                        .toISOString()
+                                        .split('T')[0];
                                 }
 
                                 // return expiryDateStr ? (
