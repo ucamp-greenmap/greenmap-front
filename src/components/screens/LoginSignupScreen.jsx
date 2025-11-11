@@ -291,7 +291,7 @@ function LoginForm({ setUserInfo, setModal, onNavigate }) {
       />
 
       <button
-        style={{ padding: 15, marginTop: 10, fontSize: 19 }}
+        style={{ padding: 12, marginTop: 10, fontSize: 19 }}
                 className='btn'
                 type='submit'
         disabled={!formValid}
