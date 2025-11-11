@@ -398,7 +398,8 @@ const userSlice = createSlice({
             .addCase(fetchPointInfo.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                state.isLoggedIn = false;
+                // 포인트 정보 조회 실패는 로그인 상태와 무관하므로 isLoggedIn을 변경하지 않음
+                // 토큰이 유효하면 로그인 상태 유지
             })
 
             .addCase(fetchMyPageData.pending, (state) => {
@@ -439,7 +440,9 @@ const userSlice = createSlice({
             .addCase(fetchMyPageData.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                state.isLoggedIn = false;
+                // 마이페이지 데이터 조회 실패는 로그인 상태와 무관할 수 있음
+                // 토큰이 유효하면 로그인 상태 유지 (401 에러가 아닌 경우)
+                // 401 에러는 axios 인터셉터에서 처리하므로 여기서는 로그인 상태 유지
             });
     },
 });
