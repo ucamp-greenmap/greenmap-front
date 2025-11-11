@@ -93,32 +93,39 @@ export default function HomeScreen({ onNavigate }) {
     useEffect(() => {
         const token = localStorage.getItem('token');
 
-        if (token) {
-            // 토큰이 있으면 데이터 로드 시도
-            if (!hasLoadedMyPageDataRef.current) {
+        if (token && isLoggedIn) {
+            // 토큰이 있고 로그인 상태이면 데이터 로드 시도
+            // 단, 프로필 정보가 없을 때만 로드 (로그인 직후에는 이미 로드됨)
+            if (!hasLoadedMyPageDataRef.current && !profile.memberId) {
                 hasLoadedMyPageDataRef.current = true;
                 dispatch(fetchMyPageData())
                     .then(() => {
                         // 성공 시 초기화 완료
                         setIsInitializing(false);
                     })
-                    .catch(() => {
-                        // 실패 시에도 초기화 완료 (토큰이 유효하지 않을 수 있음)
+                    .catch((error) => {
+                        console.warn(
+                            '마이페이지 데이터 로드 실패 (로그인 상태는 유지):',
+                            error
+                        );
+                        // 실패 시에도 초기화 완료 (로그인 상태는 유지)
                         setIsInitializing(false);
                     });
             } else {
-                // 이미 로드 시도했으면, 로그인 상태 확인 후 초기화 완료
-                // 짧은 지연 후 초기화 완료 (Redux 상태 업데이트 대기)
-                const timer = setTimeout(() => {
-                    setIsInitializing(false);
-                }, 100);
-                return () => clearTimeout(timer);
+                // 이미 로드했거나 프로필이 있으면 초기화 완료
+                setIsInitializing(false);
             }
-        } else {
+        } else if (!token) {
             // 토큰이 없으면 즉시 초기화 완료
             setIsInitializing(false);
+        } else {
+            // 토큰은 있지만 로그인 상태가 아니면 짧은 대기 후 초기화
+            const timer = setTimeout(() => {
+                setIsInitializing(false);
+            }, 200);
+            return () => clearTimeout(timer);
         }
-    }, [dispatch]);
+    }, [dispatch, isLoggedIn, profile.memberId]);
 
     // isLoggedIn이 변경되면 초기화 상태 업데이트 (데이터 로드 완료 신호)
     useEffect(() => {
