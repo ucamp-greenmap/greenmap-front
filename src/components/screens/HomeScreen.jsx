@@ -4,6 +4,7 @@ import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchPointInfo, fetchMyPageData } from '../../store/slices/userSlice';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
+import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 import { useMemo } from 'react';
 import {
     searchCachedPlaces,
@@ -11,6 +12,7 @@ import {
 } from '../../util/placeApi';
 import { formatDistance, calculateDistance } from '../../util/location';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
+
 
 const DEFAULT_BADGE_IMAGE =
     'https://em-content.zobj.net/thumbs/120/apple/325/leaf-fluttering-in-wind_1f343.png';
@@ -275,7 +277,7 @@ export default function HomeScreen({ onNavigate }) {
                     <input
                         ref={searchInputRef}
                         type='text'
-                        placeholder='지도 검색... (예: 한강공원,광화문)'
+                        placeholder='지도 검색... (예 : 한강공원, 광화문)'
                         value={searchQuery}
                         onChange={handleSearchChange}
                         onFocus={() =>
@@ -460,7 +462,7 @@ export default function HomeScreen({ onNavigate }) {
                                     onClick={() => navigate('badge')}
                                     className='bg-white/20 p-3 rounded-2xl backdrop-blur-sm hover:bg-white/30 transition-colors'
                                 >
-                                    <TrophyIcon className='w-6 h-6 text-white' />
+                                    <CheckBadgeIcon className='w-6 h-6 text-white' />
                                 </button>
                             </div>
 
