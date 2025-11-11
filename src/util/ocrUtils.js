@@ -110,19 +110,15 @@ export function extractApiData(text) {
         text.match(/승인\s*번\s*호?[:\s]*(\d{4,16})/i) ||
         text.match(/거래\s*번\s*호?[:\s]*(\d{4,16})/i);
 
-    // 자전거 번호 추출
+    // 자전거 번호 추출 (기존 로직 유지)
     let bikeNumber = '';
-
-    // 패턴 1: "자전거 번호 35719 3798" 형식 (두 숫자가 분리됨)
     const bikePattern1 = text.match(
         /자\s*전\s*거\s*번\s*호[:\s]*(\d+)\s+(\d+)/i
     );
 
     if (bikePattern1 && bikePattern1[2]) {
-        // 두 번째 그룹이 있으면 첫 번째 숫자만 사용
-        bikeNumber = bikePattern1[1]; // "35719"
+        bikeNumber = bikePattern1[1];
     } else {
-        // 패턴 2: 나머지 형식들
         const bikePattern2 =
             text.match(/(\d[-\s]?\d{3}[-\s]?\d{8,})\s*\([^)]*자\s*전\s*거/i) ||
             flatText.match(/(\d[-]?\d{3}[-]?\d{8,})\([^)]*자전거/i) ||
@@ -137,7 +133,7 @@ export function extractApiData(text) {
         }
     }
 
-    // 시간 추출
+    // 시간 추출 (기존 로직 유지)
     let startTime = '';
     let endTime = '';
 
@@ -166,19 +162,64 @@ export function extractApiData(text) {
             endTime = validTimes[1] || '';
         }
     }
-
-    const nameMatch =
-        text.match(/매\s*장\s*명[:\s]*([가-힣a-zA-Z\s]{2,20})/i) ||
-        text.match(/[가-힣a-zA-Z]{2,}\s*(주|센터|점|소|샵|스토어|마켓)/);
-
     let finalName = '미확인 상호';
-    if (nameMatch) {
-        finalName = (nameMatch[1] || nameMatch[0])
-            .replace(/\s+/g, '')
-            .replace(/\n/g, '') // 줄바꿈 제거
-            .trim() // 앞뒤 공백 제거
-            .replace(/샵/g, '');
+    let rawName = '';
+
+    const lines = text.split('\n');
+    const nameKeywords = ['매 장 명', '매장명', '상호명'];
+
+    for (const line of lines) {
+        let lineTrimmed = line.trim();
+
+        for (const keyword of nameKeywords) {
+            if (lineTrimmed.includes(keyword)) {
+                let tempRawName = lineTrimmed.substring(
+                    lineTrimmed.indexOf(keyword) + keyword.length
+                );
+
+                const delimiterIndex = tempRawName.search(/[:/]/);
+                if (delimiterIndex !== -1) {
+                    tempRawName = tempRawName.substring(delimiterIndex + 1);
+                }
+
+                let extractedName = tempRawName.trim();
+
+                if (extractedName.length > 1) {
+                    rawName = extractedName;
+                    break;
+                }
+            }
+        }
+        if (rawName.length > 0) break;
     }
+
+    if (rawName.length === 0) {
+        const suffixMatch = text.match(
+            /([가-힣a-zA-Z\s]{2,})\s*(주|센터|점|소|샵|스토어|마켓)/i
+        );
+
+        if (suffixMatch) {
+            rawName = suffixMatch[0];
+        }
+    }
+
+    if (rawName.length > 0) {
+        finalName = rawName
+            .replace(/\s+/g, '')
+            .replace(/\n/g, '')
+            .replace(/샵/g, '')
+            .trim();
+
+        finalName = finalName.replace(
+            /(매장전화|전화번호|대표번호|문의|영업시간|번호)$/g,
+            ''
+        );
+
+        if (finalName.length > 25) {
+            finalName = finalName.substring(0, 25);
+        }
+    }
+
     return {
         approveNum: approveMatch ? approveMatch[1] : '',
         bike_number: bikeNumber,
