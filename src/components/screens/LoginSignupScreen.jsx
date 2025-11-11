@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { useDispatch } from 'react-redux';
-import { updateProfile, login, fetchPointInfo } from '../../store/slices/userSlice';
+import {
+    updateProfile,
+    login,
+    fetchPointInfo,
+} from '../../store/slices/userSlice';
 import kakaoBtn from '../../assets/kakao_login_medium_wide.png';
 import HomeScreen from './HomeScreen';
 
@@ -14,7 +18,8 @@ const validatePassword = (password) => password.length >= 6;
 
 //  카카오 로그인
 const kakaoLogin = () => {
-  window.location.href = `${import.meta.env.VITE_APP_SERVER_URL
+    window.location.href = `${
+        import.meta.env.VITE_APP_SERVER_URL
     }/oauth2/authorization/kakao`;
 };
 
@@ -46,398 +51,426 @@ const styles = `
 
 /*  모달 */
 function Modal({ message, type = 'info', onClose, action, setPage, setModal }) {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  const handleClick = () => {
+    const handleClick = () => {
+        if (action === 'mypage') navigate('/mypage');
+        else if (action === 'home') navigate('/');
+        else if (action === 'login') {
+            setModal(null);
+            setPage('login');
+        }
+        onClose();
+    };
 
-    if (action === 'mypage') navigate('/mypage');
-    else if (action === 'home') navigate('/');
-    else if (action === 'login') {
-      setModal(null);
-      setPage('login');
-    }
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-80 p-6 text-center animate-fadeIn">
-        <div
-          className={`text-4xl mb-3 ${type === 'success' ? 'text-green-500' : 'text-red-500'
-            }`}
-        >
-          {type === 'success' ? '🌳' : '🍂'}
+    return (
+        <div className='fixed inset-0 flex items-center justify-center bg-black/40 z-50'>
+            <div className='bg-white rounded-2xl shadow-xl w-80 p-6 text-center animate-fadeIn'>
+                <div
+                    className={`text-4xl mb-3 ${
+                        type === 'success' ? 'text-green-500' : 'text-red-500'
+                    }`}
+                >
+                    {type === 'success' ? '🌳' : '🍂'}
+                </div>
+                <p className='text-gray-800 font-semibold mb-4 mt-4'>
+                    {message}
+                </p>
+                <button
+                    onClick={handleClick}
+                    className='w-full py-2 rounded-xl font-bold text-white'
+                    style={{
+                        background: type === 'success' ? '#96cb6f' : '#e63e3e',
+                    }}
+                >
+                    확인
+                </button>
+            </div>
         </div>
-        <p className="text-gray-800 font-semibold mb-4 mt-4">{message}</p>
-        <button
-          onClick={handleClick}
-          className="w-full py-2 rounded-xl font-bold text-white"
-          style={{
-            background: type === 'success' ? '#96cb6f' : '#e63e3e',
-          }}
-        >
-          확인
-        </button>
-      </div>
-    </div>
-  );
+    );
 }
 
 /*  로그인 / 회원가입 통합 화면 */
 export default function LoginSignupScreen({ onNavigate }) {
-  const [page, setPage] = useState('login');
-  const [userInfo, setUserInfo] = useState(null);
-  const [modal, setModal] = useState(null);
-  const dispatch = useDispatch();
+    const [page, setPage] = useState('login');
+    const [userInfo, setUserInfo] = useState(null);
+    const [modal, setModal] = useState(null);
+    const dispatch = useDispatch();
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const oauth2Error = params.get('message');
-    if (oauth2Error) {
-      setModal({ message: oauth2Error, type: 'error', action: 'login' });
-    }
-  }, []);
+    // 로그인 유지
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        api.get('/member/me', {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((res) => {
+                const userData = res.data.data;
+                setUserInfo(userData);
+                dispatch(login({ token }));
+                dispatch(
+                    updateProfile({
+                        name: userData.nickname,
+                        email: userData.email,
+                        nickname: userData.nickname,
+                        avatar:
+                            userData.image?.imageUrl || // 일반 로그인 (객체로 감싼 경우)
+                            userData.image || // 일반 로그인 (직접 문자열)
+                            userData.avatarUrl || // 대체 필드
+                            userData.imageUrl || // 기본 필드
+                            userData.profileImage || // 카카오 로그인 응답
+                            null,
+                        memberId: userData.memberId,
+                        badgeUrl: userData.badgeUrl || null,
+                    })
+                );
+                dispatch(fetchPointInfo());
+            })
+            .catch(() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('memberId');
+            });
+    }, [dispatch]);
 
-  // 로그인 유지
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    api
-      .get('/member/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setUserInfo(res.data.data);
-        dispatch(login({ token }));
-        dispatch(
-          updateProfile({
-            name: res.data.data.nickname,
-            email: res.data.data.email,
-            nickname: res.data.data.nickname,
-            avatar: res.data.data.imageUrl,
-            memberId: res.data.data.memberId,
-          })
-        );
-        dispatch(fetchPointInfo());
-      })
-      .catch(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('memberId');
-      });
-  }, [dispatch]);
+    return (
+        <>
+            <div className='auth-wrap'>
+                <style>{styles}</style>
+                <div className='card'>
+                    <div className='title'>GreenMap</div>
+                    <div className='subtitle'>그린맵</div>
 
-  return (
-    <>
-      <div className="auth-wrap">
-        <style>{styles}</style>
-        {!userInfo ? (
-    <div className="card">
-      <div className="title">GreenMap</div>
-      <div className="subtitle">그린맵</div>
+                    {!userInfo && (
+                        <div className='tabs'>
+                            {['login', 'signup'].map((tab) => (
+                                <button
+                                    key={tab}
+                                    className={`tab ${
+                                        page === tab ? 'active' : ''
+                                    }`}
+                                    onClick={() => setPage(tab)}
+                                >
+                                    {tab === 'login' ? '로그인' : '회원가입'}
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
-      <div className="tabs">
-        {['login', 'signup'].map((tab) => (
-          <button
-            key={tab}
-            className={`tab ${page === tab ? 'active' : ''}`}
-            onClick={() => setPage(tab)}
-          >
-            {tab === 'login' ? '로그인' : '회원가입'}
-          </button>
-        ))}
-      </div>
+                    {!userInfo ? (
+                        page === 'login' ? (
+                            <LoginForm
+                                setUserInfo={setUserInfo}
+                                setModal={setModal}
+                                onNavigate={onNavigate}
+                            />
+                        ) : (
+                            <SignupForm setPage={setPage} setModal={setModal} />
+                        )
+                    ) : (
+                        <HomeScreen onNavigate={onNavigate} />
+                    )}
 
-      {page === 'login' ? (
-        <LoginForm
-          setUserInfo={setUserInfo}
-          setModal={setModal}
-          onNavigate={onNavigate}
-        />
-      ) : (
-        <SignupForm setPage={setPage} setModal={setModal} />
-      )}
+                    {!userInfo && page === 'login' && (
+                        <button
+                            onClick={kakaoLogin}
+                            style={{
+                                width: '100%',
+                                marginTop: '12px',
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                padding: 0,
+                            }}
+                        >
+                            <img
+                                src={kakaoBtn}
+                                alt='카카오 로그인'
+                                style={{ width: '100%', display: 'block' }}
+                            />
+                        </button>
+                    )}
+                </div>
 
-      {page === 'login' && (
-        <button
-          onClick={kakaoLogin}
-          style={{
-            width: '100%',
-            marginTop: '12px',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            padding: 0,
-          }}
-        >
-          <img
-            src={kakaoBtn}
-            alt="카카오 로그인"
-            style={{ width: '100%', display: 'block' }}
-          />
-        </button>
-      )}
-    </div>
-  ) : (
-    !modal && <HomeScreen onNavigate={onNavigate} /> 
-  )}
-
-  {/* 모달 */}
-  {modal && (
-    <Modal
-      message={modal.message}
-      type={modal.type}
-      onClose={() => setModal(null)}
-      action={modal.action}
-      setPage={setPage}
-      setModal={setModal}
-    />
-  )}
-</div>
-    </>
-  );
+                {modal && (
+                    <Modal
+                        message={modal.message}
+                        type={modal.type}
+                        onClose={() => setModal(null)}
+                        action={modal.action}
+                        setPage={setPage}
+                        setModal={setModal}
+                    />
+                )}
+            </div>
+        </>
+    );
 }
 
-
 function LoginForm({ setUserInfo, setModal, onNavigate }) {
-  const dispatch = useDispatch();
-  const [email, setEmail] = useState('');
-  const [tEmail, setTEmail] = useState(false);
-  const [password, setPassword] = useState('');
-  const [tPw, setTPw] = useState(false);
+    const dispatch = useDispatch();
+    const [email, setEmail] = useState('');
+    const [tEmail, setTEmail] = useState(false);
+    const [password, setPassword] = useState('');
+    const [tPw, setTPw] = useState(false);
 
-  const emailValid = validateEmail(email);
-  const pwValid = validatePassword(password);
-  const formValid = emailValid && pwValid;
+    const emailValid = validateEmail(email);
+    const pwValid = validatePassword(password);
+    const formValid = emailValid && pwValid;
 
-  const submitLogin = async () => {
-    try {
-      const res = await api.post('/member/login', { email, password });
-      const token = res.data.data.accessToken;
-      const memberId = res.data.data.memberId;
+    const submitLogin = async () => {
+        try {
+            const res = await api.post('/member/login', { email, password });
+            const token = res.data.data.accessToken;
+            const memberId = res.data.data.memberId;
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('memberId', memberId);
+            localStorage.setItem('token', token);
+            localStorage.setItem('memberId', memberId);
 
-      const info = await api.get('/member/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+            const info = await api.get('/member/me', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
-      dispatch(login({ token }));
-      dispatch(
-        updateProfile({
-          name: info.data.data.nickname,
-          email: info.data.data.email,
-          nickname: info.data.data.nickname,
-          avatar: info.data.data.imageUrl,
-          memberId: info.data.data.memberId,
-        })
-      );
-      dispatch(fetchPointInfo());
+            const userData = info.data.data;
+            dispatch(login({ token }));
+            dispatch(
+                updateProfile({
+                    name: userData.nickname,
+                    email: userData.email,
+                    nickname: userData.nickname,
+                    avatar:
+                        userData.image?.imageUrl || // 일반 로그인 (객체로 감싼 경우)
+                        userData.image || // 일반 로그인 (직접 문자열)
+                        userData.avatarUrl || // 대체 필드
+                        userData.imageUrl || // 기본 필드
+                        userData.profileImage || // 카카오 로그인 응답
+                        null,
+                    memberId: userData.memberId,
+                    badgeUrl: userData.badgeUrl || null,
+                })
+            );
+            dispatch(fetchPointInfo());
 
-      setUserInfo(info.data.data);
-      setModal({ message: '로그인 성공!', type: 'success', action: 'home' });
-    } catch {
-      setModal({
-        message: '이메일 또는 비밀번호를 확인해주세요.',
-        type: 'error',
-      });
-    }
-  };
+            setUserInfo(info.data.data);
+            setModal({
+                message: '로그인 성공!',
+                type: 'success',
+                action: 'home',
+            });
+        } catch {
+            setModal({
+                message: '이메일 또는 비밀번호를 확인해주세요.',
+                type: 'error',
+            });
+        }
+    };
 
-  return (
-    <form onSubmit={(e) => e.preventDefault()}>
-      <InputField
-        label="이메일"
-        type="email"
-        value={email}
-        onChange={setEmail}
-        onBlur={() => setTEmail(true)}
-        isValid={emailValid}
-        touched={tEmail}
-      />
+    return (
+        <form onSubmit={(e) => e.preventDefault()}>
+            <InputField
+                label='이메일'
+                type='email'
+                value={email}
+                onChange={setEmail}
+                onBlur={() => setTEmail(true)}
+                isValid={emailValid}
+                touched={tEmail}
+            />
 
-      <InputField
-        label="비밀번호"
-        type="password"
-        value={password}
-        onChange={setPassword}
-        onBlur={() => setTPw(true)}
-        isValid={pwValid}
-        touched={tPw}
-      />
+            <InputField
+                label='비밀번호'
+                type='password'
+                value={password}
+                onChange={setPassword}
+                onBlur={() => setTPw(true)}
+                isValid={pwValid}
+                touched={tPw}
+            />
 
-      <button
-        style={{ padding: 15, marginTop: 10, fontSize: 19 }}
-        className="btn"
-        type="submit"
-        disabled={!formValid}
-        onClick={submitLogin}
-      >
-        로그인
-      </button>
-    </form>
-  );
+            <button
+                style={{ padding: 15, marginTop: 10, fontSize: 19 }}
+                className='btn'
+                type='submit'
+                disabled={!formValid}
+                onClick={submitLogin}
+            >
+                로그인
+            </button>
+        </form>
+    );
 }
 
 function SignupForm({ setPage, setModal, onBack }) {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [emailAvailable, setEmailAvailable] = useState(null);
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [nickAvailable, setNickAvailable] = useState(null);
+    const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [emailAvailable, setEmailAvailable] = useState(null);
+    const [password, setPassword] = useState('');
+    const [confirm, setConfirm] = useState('');
+    const [nickname, setNickname] = useState('');
+    const [nickAvailable, setNickAvailable] = useState(null);
 
-  const emailValid = validateEmail(email);
-  const pwValid = validatePassword(password);
-  const confirmValid = confirm === password && confirm.length > 0;
-  const nicknameValid = nickname.length >= 2;
+    const emailValid = validateEmail(email);
+    const pwValid = validatePassword(password);
+    const confirmValid = confirm === password && confirm.length > 0;
+    const nicknameValid = nickname.length >= 2;
 
-  const formValid =
-    emailValid &&
-    pwValid &&
-    confirmValid &&
-    nicknameValid &&
-    emailAvailable === true &&
-    nickAvailable === true;
+    const formValid =
+        emailValid &&
+        pwValid &&
+        confirmValid &&
+        nicknameValid &&
+        emailAvailable === true &&
+        nickAvailable === true;
 
-  // 이메일 중복 검사
-  useEffect(() => {
-    if (!emailValid) {
-      setEmailAvailable(null);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await api.get('/member/check-email', { params: { email } });
-        const state = res.data.data.state;
-        setEmailAvailable(!state);
-      } catch {
-        setEmailAvailable(false);
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [email]);
+    // 이메일 중복 검사
+    useEffect(() => {
+        if (!emailValid) {
+            setEmailAvailable(null);
+            return;
+        }
+        const timer = setTimeout(async () => {
+            try {
+                const res = await api.get('/member/check-email', {
+                    params: { email },
+                });
+                const state = res.data.data.state;
+                setEmailAvailable(!state);
+            } catch {
+                setEmailAvailable(false);
+            }
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [email]);
 
-  // 닉네임 중복 검사
-  useEffect(() => {
-    if (!nicknameValid) {
-      setNickAvailable(null);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await api.get('/member/check-nickname', {
-          params: { nickname },
-        });
-        const state = res.data.data.state;
-        setNickAvailable(!state);
-      } catch {
-        setNickAvailable(true);
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [nickname]);
+    // 닉네임 중복 검사
+    useEffect(() => {
+        if (!nicknameValid) {
+            setNickAvailable(null);
+            return;
+        }
+        const timer = setTimeout(async () => {
+            try {
+                const res = await api.get('/member/check-nickname', {
+                    params: { nickname },
+                });
+                const state = res.data.data.state;
+                setNickAvailable(!state);
+            } catch {
+                setNickAvailable(true);
+            }
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [nickname]);
 
-  const submitSignup = async () => {
-    try {
-      await api.post('/member', { email, password, nickname });
-      console.log("아무거나----------------------")
-      setModal({ message: '회원가입 성공', type: 'success', action: 'login' });
-      setTimeout(() => {
-        setPage('login');
-      }, 1000);
-    } catch {
-      setModal({
-        message: '다시 시도해주세요',
-        type: 'error',
-      });
-    }
-  };
+    const submitSignup = async () => {
+        try {
+            await api.post('/member', { email, password, nickname });
+            console.log('아무거나----------------------');
+            setModal({
+                message: '회원가입 성공',
+                type: 'success',
+                action: 'login',
+            });
+            setTimeout(() => {
+                setPage('login');
+            }, 1000);
+        } catch {
+            setModal({
+                message: '다시 시도해주세요',
+                type: 'error',
+            });
+        }
+    };
 
-  return (
-    <form onSubmit={(e) => e.preventDefault()}>
-      <InputField
-        label="이메일"
-        type="email"
-        value={email}
-        onChange={setEmail}
-        isValid={emailValid}
-        touched={email.length > 0}
-      />
-      {emailValid && emailAvailable === true && (
-        <span className="valid-text">사용 가능한 이메일입니다</span>
-      )}
-      {emailValid && emailAvailable === false && (
-        <span className="invalid-text">이미 등록된 이메일입니다</span>
-      )}
+    return (
+        <form onSubmit={(e) => e.preventDefault()}>
+            <InputField
+                label='이메일'
+                type='email'
+                value={email}
+                onChange={setEmail}
+                isValid={emailValid}
+                touched={email.length > 0}
+            />
+            {emailValid && emailAvailable === true && (
+                <span className='valid-text'>사용 가능한 이메일입니다</span>
+            )}
+            {emailValid && emailAvailable === false && (
+                <span className='invalid-text'>이미 등록된 이메일입니다</span>
+            )}
 
-      <InputField
-        label="비밀번호"
-        type="password"
-        value={password}
-        onChange={setPassword}
-        isValid={pwValid}
-        touched={password.length > 0}
-      />
+            <InputField
+                label='비밀번호'
+                type='password'
+                value={password}
+                onChange={setPassword}
+                isValid={pwValid}
+                touched={password.length > 0}
+            />
 
-      <InputField
-        label="비밀번호 확인"
-        type="password"
-        value={confirm}
-        onChange={setConfirm}
-        isValid={confirmValid}
-        touched={confirm.length > 0}
-      />
+            <InputField
+                label='비밀번호 확인'
+                type='password'
+                value={confirm}
+                onChange={setConfirm}
+                isValid={confirmValid}
+                touched={confirm.length > 0}
+            />
 
-      <InputField
-        label="닉네임"
-        type="text"
-        value={nickname}
-        onChange={setNickname}
-        isValid={nicknameValid}
-        touched={nickname.length > 0}
-      />
-      {nicknameValid && nickAvailable === true && (
-        <span className="valid-text">사용 가능한 닉네임입니다</span>
-      )}
-      {nicknameValid && nickAvailable === false && (
-        <span className="invalid-text">이미 존재하는 닉네임입니다</span>
-      )}
+            <InputField
+                label='닉네임'
+                type='text'
+                value={nickname}
+                onChange={setNickname}
+                isValid={nicknameValid}
+                touched={nickname.length > 0}
+            />
+            {nicknameValid && nickAvailable === true && (
+                <span className='valid-text'>사용 가능한 닉네임입니다</span>
+            )}
+            {nicknameValid && nickAvailable === false && (
+                <span className='invalid-text'>이미 존재하는 닉네임입니다</span>
+            )}
 
-      <button
-        style={{ padding: 19, marginTop: 10, fontSize: 19 }}
-        className="btn"
-        disabled={!formValid}
-        onClick={submitSignup}
-      >
-        회원가입
-      </button>
-    </form>
-  );
+            <button
+                style={{ padding: 19, marginTop: 10, fontSize: 19 }}
+                className='btn'
+                disabled={!formValid}
+                onClick={submitSignup}
+            >
+                회원가입
+            </button>
+        </form>
+    );
 }
 
+function InputField({
+    label,
+    type,
+    value,
+    onChange,
+    onBlur,
+    isValid,
+    touched,
+}) {
+    const filled = value?.length > 0;
+    const showInvalid = touched && !isValid && filled;
 
-function InputField({ label, type, value, onChange, onBlur, isValid, touched }) {
-  const filled = value?.length > 0;
-  const showInvalid = touched && !isValid && filled;
+    const inputClass =
+        'input ' +
+        (filled ? 'filled ' : '') +
+        (isValid && filled ? 'valid ' : '') +
+        (showInvalid ? 'invalid' : '');
 
-  const inputClass =
-    'input ' +
-    (filled ? 'filled ' : '') +
-    (isValid && filled ? 'valid ' : '') +
-    (showInvalid ? 'invalid' : '');
-
-  return (
-    <div className="field">
-      <label className={`label ${filled ? 'filled' : ''}`}>{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        className={inputClass}
-        placeholder={label}
-      />
-    </div>
-  );
+    return (
+        <div className='field'>
+            <label className={`label ${filled ? 'filled' : ''}`}>{label}</label>
+            <input
+                type={type}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                onBlur={onBlur}
+                className={inputClass}
+                placeholder={label}
+            />
+        </div>
+    );
 }
