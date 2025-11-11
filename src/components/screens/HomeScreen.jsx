@@ -4,7 +4,7 @@ import { setActiveTab } from '../../store/slices/appSlice';
 import { fetchPointInfo, fetchMyPageData } from '../../store/slices/userSlice';
 import EcoNewsList from '../screens/EcoNewsList';
 import { TrophyIcon } from '@heroicons/react/24/solid';
-import { CheckBadgeIcon } from '@heroicons/react/24/outline';
+import { CheckBadgeIcon } from '@heroicons/react/24/solid';
 import { useMemo } from 'react';
 import {
     searchCachedPlaces,
