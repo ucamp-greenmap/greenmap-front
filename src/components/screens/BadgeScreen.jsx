@@ -14,15 +14,6 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
     const [isSelecting, setIsSelecting] = useState(false);
 
     const handleGoBack = () => {
-        // if (onBack) {
-        //     onBack();
-        // } else if (navigation) {
-        //     navigation.goBack();
-        // } else if (onNavigate) {
-        //     onNavigate('mypage');
-        // } else if (window.history.length > 1) {
-        //     window.history.back();
-        // }
         window.history.back();
     };
 
@@ -203,7 +194,17 @@ export default function BadgeScreen({ onBack, navigation, onNavigate }) {
                                         </h2>
                                     </div>
                                     <p className='text-white/80 text-sm mb-2 text-left'>
-                                        {selectedBadge.description}
+                                        {selectedBadge.description &&
+                                        selectedBadge.description
+                                            .trim()
+                                            .split(' ')
+                                            .slice(1)
+                                            .join(' ') !== ''
+                                            ? selectedBadge.description
+                                                  .split(' ')
+                                                  .slice(1)
+                                                  .join(' ')
+                                            : '\u00A0'}
                                     </p>
                                     {selectedBadge.isAcquired && (
                                         <div className='flex items-center gap-2'>
