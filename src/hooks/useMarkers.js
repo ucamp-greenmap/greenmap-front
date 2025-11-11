@@ -116,8 +116,8 @@ export const useMarkers = (
                     selectedFilter === 'all'
                         ? true
                         : selectedFilter === 'bookmark'
-                        ? bookmarkSet.has(id)
-                        : category === selectedFilter;
+                            ? bookmarkSet.has(id)
+                            : category === selectedFilter;
 
                 if (!shouldShow) return false;
 
@@ -197,10 +197,10 @@ export const useMarkers = (
                         new window.kakao.maps.MarkerClusterer({
                             map: mapInstance,
                             markers: [],
-                            gridSize: 60, // 클러스터 그리드 크기
-                            minLevel: 2, // 최소 클러스터링 레벨
-                            averageCenter: true, // 클러스터 중심점을 평균으로
-                            minClusterSize: 3, // 최소 클러스터 마커 수
+                            averageCenter: true,      // 중심 맞추기
+                            minLevel: 5,              // 🔥 클러스터가 풀리는 최소 레벨 (값이 낮을수록 오래 묶임)
+                            gridSize: 160,            // 🔥 클러스터 범위 확대 (픽셀 단위)
+                            disableClickZoom: false,
                         });
 
                     // 클러스터 클릭 이벤트: 클러스터 영역으로 지도 확대
@@ -408,7 +408,7 @@ export const useMarkers = (
             // 변경 사항이 있는지 확인
             const hasChanges =
                 prevBookmarkedIdsRef.current.length !==
-                    (bookmarkedIds || []).length ||
+                (bookmarkedIds || []).length ||
                 [...prevSet].some((id) => !currentSet.has(id)) ||
                 [...currentSet].some((id) => !prevSet.has(id));
 
