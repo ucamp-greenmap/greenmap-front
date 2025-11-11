@@ -356,11 +356,14 @@ function ChallengeCard({
 
             } else if (filter === 'available' && updatedAt && deadline != null) {
                 // available은 보정 없음 (요구사항대로 유지)
-                const start = new Date(updatedAt);
+                const end = new Date(updatedAt);
+                const endKST = new Date(end.getTime()+ KST_OFFSET_MS);
+
                 const d = Number(deadline);
+
                 if (!Number.isFinite(d)) { setRemainingTime(''); return; }
 
-                expiryDate = new Date(start);
+                expiryDate = new Date(endKST);
                 // 정책상 available 도 +deadline 이라면 아래 주석 해제
                 // expiryDate.setDate(expiryDate.getDate() + d);
                 expiryDate.setDate(expiryDate.getDate());

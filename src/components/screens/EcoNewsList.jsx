@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPointInfo } from '../../store/slices/pointSlice';
-import news from '../../assets/newsImg3.png';
+import news from '../../assets/newsImg3.jpg';
 import api from '../../api/axios';
 
 /**
