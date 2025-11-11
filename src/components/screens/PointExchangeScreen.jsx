@@ -1044,7 +1044,7 @@ export default function PointExchangeScreen({ onNavigate }) {
                                 </button>
                                 <button
                                     onClick={handleTransferSubmit}
-                                    className='flex-1 py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors'
+                                    className='flex-1 py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-900 transition-colors'
                                 >
                                     신청하기
                                 </button>
