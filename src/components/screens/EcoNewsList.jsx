@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPointInfo } from '../../store/slices/pointSlice';
-import news1 from '../../assets/news1.png';
-import news2 from '../../assets/news2.png';
-import news3 from '../../assets/news3.png';
-import news4 from '../../assets/news4.png';
+import news from '../../assets/newsImg3.png';
 import api from '../../api/axios';
 
 /**
@@ -17,7 +14,7 @@ export default function EcoNewsList() {
     const memberId = useSelector((s) => s.user.profile?.memberId);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const newsImages = [news1, news2, news3, news4];
+    const newsImages = [news];
 
     // 사용자별 sessionStorage 키 생성
     const getStorageKey = (userId) => {
@@ -355,7 +352,7 @@ export default function EcoNewsList() {
                                 } cursor-pointer`}
                             >
                                 <img
-                                    src={newsImages[index % 4]}
+                                    src={newsImages}
                                     alt={cleanTitle}
                                     loading='lazy'
                                     className='w-20 h-20 object-cover rounded-xl flex-shrink-0 mr-3'
