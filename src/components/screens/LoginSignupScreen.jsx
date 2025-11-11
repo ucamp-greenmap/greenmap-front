@@ -28,7 +28,7 @@ const styles = `
   :root { --brand: ${themeColor}; }
   *{ box-sizing: border-box; }
   body{ background:#f6f9f2; }
-  .auth-wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .auth-wrap{ min-height:100vh; display:flex; align-items:start; justify-content:center; padding:16px; }
   .card{ width:100%; max-width:480px; background:#fff; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.08); padding:28px; }
   .title{ font-size:20px; font-weight:800; margin-bottom:6px; color:#1f2937; }
   .subtitle{ color:#6b7280; margin-bottom:14px; }
