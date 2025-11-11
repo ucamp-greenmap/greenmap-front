@@ -532,11 +532,15 @@ export default function HomeScreen({ onNavigate }) {
                             </button>
 
                             <button
-                                onClick={() => navigate(isLoggedIn ? 'mypage' : 'login')}
+                                onClick={() =>
+                                    navigate(isLoggedIn ? 'mypage' : 'login')
+                                }
                                 className='bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-shadow border border-gray-100'
                             >
                                 <div className='text-4xl mb-3'>👤</div>
-                                <p className='text-gray-900'>{isLoggedIn ? '내프로필' : '로그인'}</p>
+                                <p className='text-gray-900'>
+                                    {isLoggedIn ? '마이페이지' : '로그인'}
+                                </p>
                             </button>
                         </div>
                     </div>
